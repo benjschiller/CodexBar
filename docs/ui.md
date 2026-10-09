@@ -142,8 +142,7 @@ model-generic token label while the rendered menu-bar prefix and accessibility l
 - 18×18 template image.
 - Bar windows are provider/style-specific primary and secondary windows.
 - Fill represents percent remaining by default; “Show usage as used” flips to percent used.
-- Synthetic placeholder windows (for example Claude web's `0%` session when `five_hour` is null) never fill a lane.
-- Spend-only accounts, such as Claude Enterprise with a spend cap and no session or weekly window, draw one tall Meter bar from the spend cap instead of an empty or dimmed second lane. Accounts with real quota windows keep both lanes.
+- Spend-only accounts, such as Claude Enterprise with a spend cap and no session or weekly window, draw one tall Meter bar from the spend cap instead of an empty or dimmed second lane, from both the OAuth and Web sources. Accounts with real quota windows keep both lanes.
 - Renderer/critter icons dim when last refresh failed and can render incident indicators; brand display mode uses provider branding plus title text.
 - Loading animation runs at a bounded frame rate and has a hard continuous-duration ceiling so provider hangs cannot keep
   the menu bar redrawing forever.

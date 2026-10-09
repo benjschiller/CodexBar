@@ -254,9 +254,7 @@ public enum ClaudeProviderDescriptor {
         if let spendWindow = context.snapshot.claudeSpendOnlyWindow {
             return ProviderUsageWindowPair(primary: spendWindow, secondary: nil, lanesAreSpendCaps: true)
         }
-        return ProviderUsageWindowPair(
-            primary: context.snapshot.primary?.measured,
-            secondary: context.snapshot.secondary)
+        return ProviderUsageWindowPair(primary: context.snapshot.primary, secondary: context.snapshot.secondary)
     }
 
     private static func menuBarWindow(

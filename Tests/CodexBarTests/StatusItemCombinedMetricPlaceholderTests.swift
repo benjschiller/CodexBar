@@ -1,7 +1,7 @@
 import AppKit
-import CodexBarCore
 import Testing
 @testable import CodexBar
+@testable import CodexBarCore
 
 /// Regression coverage for the combined "Session + Weekly" menu-bar metric ignoring Claude web's
 /// synthetic `five_hour: null` session placeholder. Claude web parses an account with no live session
@@ -118,6 +118,30 @@ struct StatusItemCombinedMetricPlaceholderTests {
         #expect(displayText?.hasPrefix("58%") == true)
         #expect(displayText?.hasPrefix("100%") == false)
         // The placeholder session lane never surfaces, so no "5h" label appears.
+        #expect(displayText?.contains("5h") == false)
+    }
+
+    @Test
+    func `combined metric shows the weekly lane for a web payload without a session window`() throws {
+        let (controller, store) = self.makeClaudeCombinedController(
+            suiteName: "StatusItemCombinedMetricPlaceholderTests-web-weekly-only",
+            displayMode: .percent,
+            showUsed: true)
+        defer { controller.releaseStatusItemsForTesting() }
+
+        // Web builds `primary` like OAuth: `five_hour: null` parks the weekly window there, never a 0% session.
+        let payload = #"""
+        {"five_hour": null, "seven_day": {"utilization": 42, "resets_at": "2099-01-01T00:00:00Z"}}
+        """#
+        let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(payload.utf8))
+        let usage = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false)
+        let snapshot = ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
+        store._setSnapshotForTesting(snapshot, provider: .claude)
+        store._setErrorForTesting(nil, provider: .claude)
+
+        let displayText = controller.menuBarDisplayText(for: .claude, snapshot: snapshot)
+
+        #expect(displayText == "W 42%")
         #expect(displayText?.contains("5h") == false)
     }
 

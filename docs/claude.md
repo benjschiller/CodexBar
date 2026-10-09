@@ -288,7 +288,7 @@ the cookie import.
   - `GET https://claude.ai/api/account` → email + plan hints.
 - Outputs:
   - Session + weekly + model-specific percent used.
-  - A missing session measurement does not render as 100% remaining. Measured weekly and extra windows stay visible; when only a synthetic session placeholder exists, menus and plain CLI output report that limits are unavailable. Raw JSON retains the placeholder for diagnostics.
+  - A missing session measurement does not render as 100% remaining. When the usage response has `five_hour: null`, Web builds the primary window like OAuth: the weekly window (or the model-specific fallback) if present, otherwise the monthly spend cap, and a response with none of them has no usage to show (`missing session data`). Web never synthesizes a 0% session window. Cached snapshots written by older builds can still carry a flagged placeholder; menus and plain CLI output report that limits are unavailable for those until the next refresh.
   - Daily Routines extra window when returned by the usage API.
   - Extra usage spend/limit (if enabled), with its rollover date and pace. Compact Overview keeps this section when no measured quota bars exist, including Enterprise accounts with unavailable limits.
   - Remaining Usage credits balance (if enabled). Custom menu bar layouts can show it with the **Balance** element

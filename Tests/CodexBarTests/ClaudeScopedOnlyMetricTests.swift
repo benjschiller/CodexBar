@@ -32,6 +32,28 @@ struct ClaudeScopedOnlyMetricTests {
         #expect(MenuBarMetricWindowResolver.claudeSpendLimitWindow(snapshot: snapshot) == nil)
     }
 
+    @Test
+    func `web scoped payload with a spend cap maps to the spend only shape`() throws {
+        let data = Data(#"""
+        {"five_hour": null, "seven_day": null,
+         "extra_usage": {"monthly_limit": 10000, "used_credits": 2000},
+         "limits": [
+          {"kind": "weekly_scoped", "group": "weekly", "percent": 6,
+           "resets_at": "2026-10-07T09:00:00Z",
+           "scope": {"model": {"display_name": "Fable"}}, "is_active": true}
+        ]}
+        """#.utf8)
+        let parsed = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(data)
+        let usage = try ClaudeUsageFetcher.mapWebUsage(parsed, includeAccountIdentity: false, now: Self.now)
+        let snapshot = ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
+
+        #expect(usage.primaryWindowKind == .spendLimit)
+        #expect(snapshot.primary == nil)
+        #expect(snapshot.claudeScopedWeeklyWindow?.window.usedPercent == 6)
+        #expect(snapshot.providerCost?.limit == 100)
+        #expect(MenuBarMetricWindowResolver.claudeSpendLimitWindow(snapshot: snapshot) == nil)
+    }
+
     @MainActor
     @Test
     func `render synthetic scoped only metric proof`() throws {
@@ -112,8 +134,9 @@ struct ClaudeScopedOnlyMetricTests {
             currencyCode: "USD",
             period: "Monthly",
             updatedAt: Self.now)
+        // Web builds `primary` like OAuth, so a payload without session or weekly windows has no primary lane.
         return UsageSnapshot(
-            primary: ClaudeUsageFetcher.webPrimaryWindow(from: parsed),
+            primary: nil,
             secondary: nil,
             extraRateWindows: parsed.extraRateWindows,
             providerCost: withSpendLimit ? cost : nil,

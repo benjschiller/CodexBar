@@ -1107,22 +1107,6 @@ extension ClaudeUsageFetcher {
 
     // MARK: - Web API path (uses browser cookies)
 
-    /// The 5-hour session (`primary`) window for a Claude web usage payload.
-    ///
-    /// When `five_hour` is null the web fetcher reports a synthesized 0% session (an account with no live
-    /// session window). Flag that placeholder so lane classifiers — e.g. the combined Session + Weekly
-    /// menu-bar metric — surface the weekly lane instead of a phantom 5h session. The flag keys off the
-    /// reported presence of the session object, so a real session that is merely idle (0% used, possibly
-    /// with no reset) stays unflagged and keeps rendering.
-    static func webPrimaryWindow(from webData: ClaudeWebAPIFetcher.WebUsageData) -> RateWindow {
-        RateWindow(
-            usedPercent: webData.sessionPercentUsed,
-            windowMinutes: 5 * 60,
-            resetsAt: webData.sessionResetsAt,
-            resetDescription: webData.sessionResetsAt.map { Self.formatResetDate($0) },
-            isSyntheticPlaceholder: !webData.hasLiveSessionWindow)
-    }
-
     private func loadViaWebAPI() async throws -> ClaudeUsageSnapshot {
         let webData: ClaudeWebAPIFetcher.WebUsageData =
             if let header = self.manualCookieHeader {
@@ -1142,8 +1126,23 @@ extension ClaudeUsageFetcher {
                     Self.log.debug(msg)
                 }
             }
-        // Convert web API data to ClaudeUsageSnapshot format
-        let primary = Self.webPrimaryWindow(from: webData)
+        return try Self.mapWebUsage(webData, includeAccountIdentity: self.includeAccountIdentity)
+    }
+
+    /// Maps a web payload the way `mapOAuthUsage` maps an OAuth one: the session window when reported, then the
+    /// weekly fallbacks, then the monthly spend cap. A payload with none of them has no usage to show.
+    static func mapWebUsage(
+        _ webData: ClaudeWebAPIFetcher.WebUsageData,
+        includeAccountIdentity: Bool,
+        now: Date = Date()) throws -> ClaudeUsageSnapshot
+    {
+        let session: RateWindow? = webData.sessionPercentUsed.map { pct in
+            RateWindow(
+                usedPercent: pct,
+                windowMinutes: 5 * 60,
+                resetsAt: webData.sessionResetsAt,
+                resetDescription: webData.sessionResetsAt.map { Self.formatResetDate($0) })
+        }
 
         let secondary: RateWindow? = webData.weeklyPercentUsed.map { pct in
             RateWindow(
@@ -1161,20 +1160,29 @@ extension ClaudeUsageFetcher {
                 resetDescription: webData.weeklyResetsAt.map { Self.formatResetDate($0) })
         }
 
+        let usagePrimary = session ?? secondary ?? opus
+        let spendWindow = usagePrimary == nil
+            ? Self.oauthSpendLimitWindow(from: webData.extraUsageCost, extraUsage: nil)
+            : nil
+        guard let primary = usagePrimary ?? spendWindow else {
+            throw ClaudeUsageError.parseFailed("missing session data")
+        }
+
         return ClaudeUsageSnapshot(
             primary: primary,
+            primaryWindowKind: spendWindow == nil ? .usage : .spendLimit,
             secondary: secondary,
             opus: opus,
             extraRateWindows: webData.extraRateWindows,
             providerCost: webData.extraUsageCost,
             resetCredits: webData.resetCredits,
             cloudCredits: webData.cloudCredits,
-            updatedAt: Date(),
+            updatedAt: now,
             accountEmail: webData.accountEmail,
             accountOrganization: webData.accountOrganization,
             loginMethod: webData.loginMethod,
             rawText: nil,
-            accountID: self.includeAccountIdentity ? ClaudeVerifiedAccountOwner.ownerID(
+            accountID: includeAccountIdentity ? ClaudeVerifiedAccountOwner.ownerID(
                 accountUUID: nil,
                 email: webData.accountEmail,
                 organizationUUID: webData.accountOrganizationID) : nil)

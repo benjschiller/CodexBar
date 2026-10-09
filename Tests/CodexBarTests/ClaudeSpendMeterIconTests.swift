@@ -1,7 +1,7 @@
 import AppKit
-import CodexBarCore
 import Testing
 @testable import CodexBar
+@testable import CodexBarCore
 
 @MainActor
 @Suite(.serialized)
@@ -19,6 +19,17 @@ struct ClaudeSpendMeterIconTests {
 
     private static func spendCost(limit: Double = 100) -> ProviderCostSnapshot {
         ProviderCostSnapshot(used: 25, limit: limit, currencyCode: "USD", period: "Spend limit", updatedAt: self.now)
+    }
+
+    private static func webSnapshot(_ payload: String) throws -> UsageSnapshot {
+        let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(payload.utf8), now: self.now)
+        let usage = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false, now: self.now)
+        return ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
+    }
+
+    private static func oauthSnapshot(_ payload: String) throws -> UsageSnapshot {
+        let usage = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(payload.utf8), now: self.now)
+        return ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
     }
 
     private func pixels(_ image: NSImage) throws -> Data {
@@ -78,27 +89,48 @@ struct ClaudeSpendMeterIconTests {
 
     @Test
     func `web placeholder never fills the session lane`() throws {
-        let weeklyOnly = UsageSnapshot(
-            primary: Self.placeholderSession,
-            secondary: Self.weekly,
-            updatedAt: Self.now)
+        // Web maps `five_hour: null` like OAuth, so no 0% session window can fill the top lane.
+        let weeklyPayload = #"""
+        {"five_hour": null, "seven_day": {"utilization": 40, "resets_at": "2026-10-10T00:00:00Z"}}
+        """#
+        let weeklyOnly = try Self.webSnapshot(weeklyPayload)
         let weeklyPercents = self.claudePercents(weeklyOnly)
         let weeklyPolicy = self.claudePolicy(weeklyOnly)
 
-        #expect(weeklyPercents.primary == nil)
+        #expect(weeklyOnly.primary?.isSyntheticPlaceholder == false)
+        #expect(weeklyOnly.primary?.windowMinutes == 7 * 24 * 60)
+        #expect(weeklyPercents.primary == 60)
         #expect(weeklyPercents.secondary == 60)
         #expect(weeklyPolicy == .provider(.claude))
-        let honest = self.icon(weeklyPercents, policy: weeklyPolicy)
-        let filledSession = self.icon((primary: 100, secondary: 60), policy: weeklyPolicy)
-        #expect(try self.pixels(honest) != self.pixels(filledSession))
 
-        let spendOnly = UsageSnapshot(
+        let oauthWeeklyOnly = try Self.oauthSnapshot(weeklyPayload)
+        let oauthPercents = self.claudePercents(oauthWeeklyOnly)
+        #expect(weeklyPercents.primary == oauthPercents.primary)
+        #expect(weeklyPercents.secondary == oauthPercents.secondary)
+        let webIcon = self.icon(weeklyPercents, policy: weeklyPolicy)
+        let oauthIcon = self.icon(oauthPercents, policy: self.claudePolicy(oauthWeeklyOnly))
+        let filledSession = self.icon((primary: 100, secondary: 60), policy: weeklyPolicy)
+        #expect(try self.pixels(webIcon) == self.pixels(oauthIcon))
+        #expect(try self.pixels(webIcon) != self.pixels(filledSession))
+
+        let spendPayload = #"""
+        {"five_hour": null, "seven_day": null,
+         "extra_usage": {"monthly_limit": 10000, "used_credits": 2500}}
+        """#
+        let spendOnly = try Self.webSnapshot(spendPayload)
+        #expect(spendOnly.primary == nil)
+        #expect(self.claudePercents(spendOnly, showUsed: false).primary == 75)
+        #expect(self.claudePercents(spendOnly, showUsed: true).primary == 25)
+        #expect(self.claudePolicy(spendOnly).reservesMissingSecondaryLane == false)
+
+        // Snapshots cached by older builds can still carry the placeholder beside a spend cap.
+        let cachedSpendOnly = UsageSnapshot(
             primary: Self.placeholderSession,
             secondary: nil,
             providerCost: Self.spendCost(),
             updatedAt: Self.now)
-        #expect(self.claudePercents(spendOnly, showUsed: false).primary == 75)
-        #expect(self.claudePercents(spendOnly, showUsed: true).primary == 25)
+        #expect(self.claudePercents(cachedSpendOnly, showUsed: false).primary == 75)
+        #expect(self.claudePercents(cachedSpendOnly, showUsed: true).primary == 25)
     }
 
     @Test
@@ -152,7 +184,6 @@ struct ClaudeSpendMeterIconTests {
             UsageSnapshot(primary: nil, secondary: nil, providerCost: balanceOnly, updatedAt: Self.now),
             UsageSnapshot(primary: nil, secondary: nil, providerCost: Self.spendCost(limit: 0), updatedAt: Self.now),
             UsageSnapshot(primary: nil, secondary: nil, updatedAt: Self.now),
-            UsageSnapshot(primary: Self.placeholderSession, secondary: nil, updatedAt: Self.now),
         ]
 
         for snapshot in snapshots {

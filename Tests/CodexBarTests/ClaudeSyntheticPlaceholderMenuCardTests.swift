@@ -140,6 +140,59 @@ struct ClaudeSyntheticPlaceholderMenuCardTests {
         try png.write(to: URL(fileURLWithPath: directory).appendingPathComponent("quota.png"))
     }
 
+    @MainActor
+    @Test
+    func `web enterprise spend payload builds the same card as OAuth`() throws {
+        let payload = #"""
+        {"five_hour": null, "seven_day": null,
+         "extra_usage": {"is_enabled": true, "monthly_limit": 15000, "used_credits": 995}}
+        """#
+        let web = try Self.webSnapshot(payload)
+        let oauth = try Self.oauthSnapshot(payload)
+        let webModel = Self.model(snapshot: web)
+        let oauthModel = Self.model(snapshot: oauth)
+
+        #expect(web.primary == nil)
+        #expect(oauth.primary == nil)
+        #expect(UsageLimitsAvailability.resolve(provider: .claude, snapshot: web) == .available)
+        #expect(webModel.metrics.isEmpty)
+        #expect(webModel.placeholder == oauthModel.placeholder)
+        #expect(webModel.providerCost?.percentUsed == oauthModel.providerCost?.percentUsed)
+        #expect(webModel.providerCost?.title == "Extra usage")
+        #expect(OverviewMenuCardRowView(model: webModel, storageText: nil, width: 340, layout: .compact).usesFullCard)
+    }
+
+    @MainActor
+    @Test
+    func `web weekly only payload builds the same card as OAuth`() throws {
+        let payload = #"""
+        {"five_hour": null, "seven_day": {"utilization": 42, "resets_at": "2027-01-20T00:00:00Z"}}
+        """#
+        let web = try Self.webSnapshot(payload)
+        let oauth = try Self.oauthSnapshot(payload)
+        let webModel = Self.model(snapshot: web)
+        let oauthModel = Self.model(snapshot: oauth)
+
+        #expect(web.primary?.isSyntheticPlaceholder == false)
+        #expect(UsageLimitsAvailability.resolve(provider: .claude, snapshot: web) == .available)
+        #expect(webModel.placeholder == nil)
+        #expect(webModel.metrics.map(\.id) == oauthModel.metrics.map(\.id))
+        #expect(webModel.metrics.map(\.percent) == oauthModel.metrics.map(\.percent))
+        #expect(webModel.metrics.contains { $0.id == "secondary" })
+        #expect(!OverviewMenuCardRowView(model: webModel, storageText: nil, width: 340, layout: .compact).usesFullCard)
+    }
+
+    private static func webSnapshot(_ payload: String) throws -> UsageSnapshot {
+        let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(payload.utf8), now: self.now)
+        let usage = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false, now: self.now)
+        return ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
+    }
+
+    private static func oauthSnapshot(_ payload: String) throws -> UsageSnapshot {
+        let usage = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(payload.utf8), now: self.now)
+        return ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
+    }
+
     private static var syntheticSession: RateWindow {
         RateWindow(
             usedPercent: 0,
