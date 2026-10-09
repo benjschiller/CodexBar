@@ -700,7 +700,11 @@ extension ClaudeWebAPIFetcher {
         return bodyPrefix.localizedCaseInsensitiveContains("Just a moment")
     }
 
-    private static func parseUsageResponse(_ data: Data, logger: ((String) -> Void)? = nil) throws -> WebUsageData {
+    private static func parseUsageResponse(
+        _ data: Data,
+        logger: ((String) -> Void)? = nil,
+        now: Date = Date()) throws -> WebUsageData
+    {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw FetchError.invalidResponse
         }
@@ -742,7 +746,7 @@ extension ClaudeWebAPIFetcher {
         if let sourceKey = extraRateParse.sourceKeys["claude-routines"] {
             logger?("Usage API extra window key matched: routines=\(sourceKey)")
         }
-        let extraUsageCost = ClaudeWebExtraUsageCost.parse(from: json["extra_usage"])
+        let extraUsageCost = ClaudeWebExtraUsageCost.parse(from: json["extra_usage"], now: now)
         let resetCredits = Self.parseResetCredits(from: json["cedar_ember"])
 
         return WebUsageData(
@@ -786,8 +790,8 @@ extension ClaudeWebAPIFetcher {
 
     // MARK: - Test hooks (DEBUG-only)
 
-    public static func _parseUsageResponseForTesting(_ data: Data) throws -> WebUsageData {
-        try self.parseUsageResponse(data)
+    public static func _parseUsageResponseForTesting(_ data: Data, now: Date = Date()) throws -> WebUsageData {
+        try self.parseUsageResponse(data, now: now)
     }
 
     public static func _parseOrganizationsResponseForTesting(
@@ -797,8 +801,11 @@ extension ClaudeWebAPIFetcher {
         try self.parseOrganizationResponse(data, targetOrganizationID: targetOrganizationID)
     }
 
-    public static func _parseOverageSpendLimitForTesting(_ data: Data) -> ProviderCostSnapshot? {
-        ClaudeWebExtraUsageCost.parseOverageSpendLimit(data)
+    public static func _parseOverageSpendLimitForTesting(
+        _ data: Data,
+        now: Date = Date()) -> ProviderCostSnapshot?
+    {
+        ClaudeWebExtraUsageCost.parseOverageSpendLimit(data, now: now)
     }
 
     public static func _parsePrepaidCreditsForTesting(_ data: Data) -> ProviderCostSnapshot? {
@@ -1213,7 +1220,7 @@ private enum ClaudeWebExtraUsageCost {
         let currency: String
     }
 
-    static func parse(from value: Any?) -> ProviderCostSnapshot? {
+    static func parse(from value: Any?, now: Date = Date()) -> ProviderCostSnapshot? {
         guard let extraUsage = value as? [String: Any] else { return nil }
         guard let used = Self.doubleValue(extraUsage["used_credits"]),
               let limit = Self.doubleValue(extraUsage["monthly_limit"] ?? extraUsage["monthly_credit_limit"]),
@@ -1223,7 +1230,8 @@ private enum ClaudeWebExtraUsageCost {
         return Self.makeExtraUsageCost(
             usedCredits: used,
             monthlyCreditLimit: limit,
-            currencyCode: currencyCode)
+            currencyCode: currencyCode,
+            now: now)
     }
 
     struct OverageSpendLimitResponse: Decodable {
@@ -1257,10 +1265,10 @@ private enum ClaudeWebExtraUsageCost {
             sessionKey: sessionKey,
             logger: logger,
             renewalTracker: renewalTracker)
-        return data.flatMap(Self.parseOverageSpendLimit)
+        return data.flatMap { Self.parseOverageSpendLimit($0) }
     }
 
-    static func parseOverageSpendLimit(_ data: Data) -> ProviderCostSnapshot? {
+    static func parseOverageSpendLimit(_ data: Data, now: Date = Date()) -> ProviderCostSnapshot? {
         guard let decoded = try? JSONDecoder().decode(OverageSpendLimitResponse.self, from: data) else { return nil }
         guard decoded.isEnabled == true else { return nil }
         guard let used = decoded.usedCredits,
@@ -1271,7 +1279,8 @@ private enum ClaudeWebExtraUsageCost {
         return Self.makeExtraUsageCost(
             usedCredits: used,
             monthlyCreditLimit: limit,
-            currencyCode: currency)
+            currencyCode: currency,
+            now: now)
     }
 
     /// Best-effort fetch of Claude's remaining prepaid Extra usage balance.
@@ -1372,18 +1381,21 @@ private enum ClaudeWebExtraUsageCost {
     static func makeExtraUsageCost(
         usedCredits: Double,
         monthlyCreditLimit: Double,
-        currencyCode: String) -> ProviderCostSnapshot
+        currencyCode: String,
+        now: Date = Date()) -> ProviderCostSnapshot
     {
         let usedAmount = usedCredits / 100.0
         let limitAmount = monthlyCreditLimit / 100.0
+        let rollover = ClaudeSpendRollover(now: now)
 
         return ProviderCostSnapshot(
             used: usedAmount,
             limit: limitAmount,
             currencyCode: currencyCode,
             period: "Monthly cap",
-            resetsAt: nil,
-            updatedAt: Date())
+            resetsAt: rollover?.resetsAt,
+            windowMinutes: rollover?.windowMinutes,
+            updatedAt: now)
     }
 
     static func doubleValue(_ value: Any?) -> Double? {

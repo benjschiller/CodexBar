@@ -957,7 +957,8 @@ extension ClaudeUsageFetcher {
         credentials: ClaudeOAuthCredentials,
         oauthHistoryOwnerIdentifier: String? = nil,
         oauthCredentialOwner: ClaudeOAuthCredentialOwner? = nil,
-        oauthKeychainCredentialUnavailable: Bool = false) throws -> ClaudeUsageSnapshot
+        oauthKeychainCredentialUnavailable: Bool = false,
+        now: Date = Date()) throws -> ClaudeUsageSnapshot
     {
         let oauthHistoryOwnerIdentifier = ClaudeOAuthCredentials.normalizedHistoryOwnerIdentifier(
             oauthHistoryOwnerIdentifier) ?? credentials.historyOwnerIdentifier
@@ -987,7 +988,8 @@ extension ClaudeUsageFetcher {
         let providerCost = Self.oauthExtraUsageCost(
             usage.extraUsage,
             loginMethod: loginMethod,
-            treatAsSpendLimit: treatAsSpendLimit)
+            treatAsSpendLimit: treatAsSpendLimit,
+            now: now)
 
         guard let primary = primary ?? Self.oauthSpendLimitWindow(from: providerCost, extraUsage: usage.extraUsage)
         else {
@@ -1000,7 +1002,7 @@ extension ClaudeUsageFetcher {
             windowMinutes: 7 * 24 * 60)
         let extraRateWindows = Self.oauthExtraRateWindows(from: usage)
 
-        let updatedAt = Date()
+        let updatedAt = now
         return ClaudeUsageSnapshot(
             primary: primary,
             primaryWindowKind: treatAsSpendLimit ? .spendLimit : .usage,
@@ -1023,7 +1025,8 @@ extension ClaudeUsageFetcher {
     private static func oauthExtraUsageCost(
         _ extra: OAuthExtraUsage?,
         loginMethod: String?,
-        treatAsSpendLimit: Bool = false) -> ProviderCostSnapshot?
+        treatAsSpendLimit: Bool = false,
+        now: Date = Date()) -> ProviderCostSnapshot?
     {
         guard let extra, extra.isEnabled == true else { return nil }
         guard let used = extra.usedCredits,
@@ -1033,13 +1036,15 @@ extension ClaudeUsageFetcher {
         let code = (currency?.isEmpty ?? true) ? "USD" : currency!
         let isSpendLimit = treatAsSpendLimit || ClaudePlan.fromCompatibilityLoginMethod(loginMethod) == .enterprise
         // OAuth extra usage is always in cents, including Enterprise spend-only responses.
+        let rollover = ClaudeSpendRollover(now: now)
         return ProviderCostSnapshot(
             used: used / 100,
             limit: limit / 100,
             currencyCode: code,
             period: isSpendLimit ? "Spend limit" : "Monthly cap",
-            resetsAt: nil,
-            updatedAt: Date())
+            resetsAt: rollover?.resetsAt,
+            windowMinutes: rollover?.windowMinutes,
+            updatedAt: now)
     }
 
     private static func oauthSpendLimitWindow(
@@ -1054,7 +1059,7 @@ extension ClaudeUsageFetcher {
         let limit = UsageFormatter.currencyString(providerCost.limit, currencyCode: providerCost.currencyCode)
         return RateWindow(
             usedPercent: min(100, max(0, usedPercent)),
-            windowMinutes: nil,
+            windowMinutes: providerCost.windowMinutes,
             resetsAt: providerCost.resetsAt,
             resetDescription: "\(providerCost.period ?? "Spend limit"): \(used) / \(limit)")
     }
@@ -1483,7 +1488,8 @@ extension ClaudeUsageFetcher {
     public static func _mapOAuthUsageForTesting(
         _ data: Data,
         rateLimitTier: String? = nil,
-        subscriptionType: String? = nil) throws -> ClaudeUsageSnapshot
+        subscriptionType: String? = nil,
+        now: Date = Date()) throws -> ClaudeUsageSnapshot
     {
         let usage = try ClaudeOAuthUsageFetcher.decodeUsageResponse(data)
         let creds = ClaudeOAuthCredentials(
@@ -1493,7 +1499,7 @@ extension ClaudeUsageFetcher {
             scopes: [],
             rateLimitTier: rateLimitTier,
             subscriptionType: subscriptionType)
-        return try Self.mapOAuthUsage(usage, credentials: creds)
+        return try Self.mapOAuthUsage(usage, credentials: creds, now: now)
     }
 }
 #endif

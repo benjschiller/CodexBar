@@ -361,7 +361,7 @@ struct ClaudeOAuthTests {
         #expect(snap.loginMethod == "Claude Enterprise")
         #expect(snap.primary.usedPercent == 38.15)
         #expect(snap.primaryWindowKind == .spendLimit)
-        #expect(snap.primary.windowMinutes == nil)
+        #expect(snap.primary.windowMinutes == snap.providerCost?.windowMinutes)
         #expect(snap.primary.resetDescription == "Spend limit: €7.63 / €20.00")
         #expect(snap.secondary == nil)
         #expect(snap.providerCost?.period == "Spend limit")
