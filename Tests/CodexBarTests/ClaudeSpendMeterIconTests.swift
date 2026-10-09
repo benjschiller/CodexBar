@@ -88,8 +88,8 @@ struct ClaudeSpendMeterIconTests {
     }
 
     @Test
-    func `web placeholder never fills the session lane`() throws {
-        // Web maps `five_hour: null` like OAuth, so no 0% session window can fill the top lane.
+    func `weekly only accounts never fill the session lane`() throws {
+        // Neither source reports a session for `five_hour: null`, so nothing can fill the top lane.
         let weeklyPayload = #"""
         {"five_hour": null, "seven_day": {"utilization": 40, "resets_at": "2026-10-10T00:00:00Z"}}
         """#
@@ -97,9 +97,8 @@ struct ClaudeSpendMeterIconTests {
         let weeklyPercents = self.claudePercents(weeklyOnly)
         let weeklyPolicy = self.claudePolicy(weeklyOnly)
 
-        #expect(weeklyOnly.primary?.isSyntheticPlaceholder == false)
-        #expect(weeklyOnly.primary?.windowMinutes == 7 * 24 * 60)
-        #expect(weeklyPercents.primary == 60)
+        #expect(weeklyOnly.primary == nil)
+        #expect(weeklyPercents.primary == nil)
         #expect(weeklyPercents.secondary == 60)
         #expect(weeklyPolicy == .provider(.claude))
 
@@ -131,6 +130,14 @@ struct ClaudeSpendMeterIconTests {
             updatedAt: Self.now)
         #expect(self.claudePercents(cachedSpendOnly, showUsed: false).primary == 75)
         #expect(self.claudePercents(cachedSpendOnly, showUsed: true).primary == 25)
+
+        let cachedWeeklyOnly = UsageSnapshot(
+            primary: Self.placeholderSession,
+            secondary: Self.weekly,
+            updatedAt: Self.now)
+        let cachedPercents = self.claudePercents(cachedWeeklyOnly)
+        #expect(cachedPercents.primary == nil)
+        #expect(cachedPercents.secondary == 60)
     }
 
     @Test

@@ -69,7 +69,7 @@ struct RateWindowSyntheticPlaceholderTests {
     }
 
     @Test
-    func `web mapping builds a null five-hour primary from the weekly window like OAuth`() throws {
+    func `web mapping reports no session for a null five-hour window like OAuth`() throws {
         let json = """
         {
           "five_hour": null,
@@ -80,17 +80,15 @@ struct RateWindowSyntheticPlaceholderTests {
         let usage = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false)
 
         #expect(webData.sessionPercentUsed == nil)
-        #expect(usage.primaryWindowKind == .usage)
-        #expect(usage.primary.isSyntheticPlaceholder == false)
-        #expect(usage.primary.usedPercent == 42)
-        #expect(usage.primary.windowMinutes == 7 * 24 * 60)
+        #expect(usage.primary == nil)
         #expect(usage.secondary?.usedPercent == 42)
+        #expect(usage.secondary?.windowMinutes == 7 * 24 * 60)
 
         let oauth = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(json.utf8))
-        #expect(usage.primary.usedPercent == oauth.primary.usedPercent)
-        #expect(usage.primary.windowMinutes == oauth.primary.windowMinutes)
-        #expect(usage.primary.resetsAt == oauth.primary.resetsAt)
-        #expect(usage.primaryWindowKind == oauth.primaryWindowKind)
+        #expect(oauth.primary == nil)
+        #expect(usage.secondary?.usedPercent == oauth.secondary?.usedPercent)
+        #expect(usage.secondary?.windowMinutes == oauth.secondary?.windowMinutes)
+        #expect(usage.secondary?.resetsAt == oauth.secondary?.resetsAt)
     }
 
     @Test
@@ -102,7 +100,8 @@ struct RateWindowSyntheticPlaceholderTests {
         }
         """
         let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(json.utf8))
-        let primary = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false).primary
+        let primary = try #require(
+            ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false).primary)
 
         #expect(primary.isSyntheticPlaceholder == false)
         #expect(primary.usedPercent == 11)
@@ -121,7 +120,8 @@ struct RateWindowSyntheticPlaceholderTests {
         #expect(webData.sessionPercentUsed == 45.5)
         #expect(webData.weeklyPercentUsed == 12.25)
 
-        let primary = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false).primary
+        let primary = try #require(
+            ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false).primary)
         #expect(primary.isSyntheticPlaceholder == false)
         #expect(primary.usedPercent == 45.5)
         #expect(primary.remainingPercent == 54.5)
@@ -138,7 +138,8 @@ struct RateWindowSyntheticPlaceholderTests {
         }
         """
         let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(json.utf8))
-        let primary = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false).primary
+        let primary = try #require(
+            ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false).primary)
 
         #expect(primary.isSyntheticPlaceholder == false)
         #expect(primary.usedPercent == 0)
@@ -157,7 +158,7 @@ struct RateWindowSyntheticPlaceholderTests {
             let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(payload.utf8))
             let usage = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false)
 
-            #expect(usage.primary.isSyntheticPlaceholder == false)
+            #expect(usage.primary == nil)
             #expect([usage.secondary, usage.opus].compactMap(\.self).allSatisfy { !$0.isSyntheticPlaceholder })
         }
     }

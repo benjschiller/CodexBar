@@ -122,12 +122,11 @@ struct ClaudeOAuthResetCreditsTests {
     }
 
     @Test
-    func `spend only OAuth keeps inventory and its primary window kind`() throws {
+    func `spend only OAuth keeps inventory and has no session`() throws {
         let payload = Self.payload(block: Self.eligibleBlock)
             .replacingOccurrences(of: #""five_hour":{"utilization":12},"#, with: "")
         let usage = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(payload.utf8))
-        #expect(usage.primaryWindowKind == .spendLimit)
-        #expect(usage.primary.usedPercent == 30)
+        #expect(usage.primary == nil)
         #expect(usage.secondary == nil)
         #expect(usage.opus == nil)
         #expect(usage.providerCost?.used == 3)
@@ -145,7 +144,7 @@ struct ClaudeOAuthResetCreditsTests {
     ])
     func `absent ineligible or malformed inventory preserves quota and spend`(block: String) throws {
         let usage = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(Self.payload(block: block).utf8))
-        #expect(usage.primary.usedPercent == 12)
+        #expect(usage.primary?.usedPercent == 12)
         #expect(usage.providerCost != nil)
         #expect(usage.resetCredits == nil)
     }
@@ -157,7 +156,7 @@ struct ClaudeOAuthResetCreditsTests {
             .joined(separator: ",")
         let usage = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(Self.payload(
             block: "{\"eligible\":true,\"grants\":[\(grants)]}").utf8))
-        #expect(usage.primary.usedPercent == 12)
+        #expect(usage.primary?.usedPercent == 12)
         #expect(usage.resetCredits?.expirations.count == (count <= 200 ? 1 : nil))
     }
 

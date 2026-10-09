@@ -11,6 +11,12 @@ enum ClaudeScopedWeeklyLimitMapper {
         let modelName: String?
     }
 
+    static let windowIDPrefix = "claude-weekly-scoped-"
+
+    static func containsScopedWindow(_ windows: [NamedRateWindow]) -> Bool {
+        windows.contains { $0.id.hasPrefix(Self.windowIDPrefix) && $0.usageKnown }
+    }
+
     static func extraRateWindows(
         from limits: [Limit]?,
         resetDescription: ((Date) -> String)? = nil) -> [NamedRateWindow]
@@ -27,7 +33,7 @@ enum ClaudeScopedWeeklyLimitMapper {
             let slug = self.slug(identity)
             guard !slug.isEmpty else { return nil }
 
-            let id = "claude-weekly-scoped-\(slug)"
+            let id = "\(Self.windowIDPrefix)\(slug)"
             guard seenIDs.insert(id).inserted else { return nil }
 
             return NamedRateWindow(

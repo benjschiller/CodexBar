@@ -254,7 +254,10 @@ public enum ClaudeProviderDescriptor {
         if let spendWindow = context.snapshot.claudeSpendOnlyWindow {
             return ProviderUsageWindowPair(primary: spendWindow, secondary: nil, lanesAreSpendCaps: true)
         }
-        return ProviderUsageWindowPair(primary: context.snapshot.primary, secondary: context.snapshot.secondary)
+        // Snapshots cached by older builds can still carry a flagged 0% session placeholder.
+        return ProviderUsageWindowPair(
+            primary: context.snapshot.primary?.measured,
+            secondary: context.snapshot.secondary)
     }
 
     private static func menuBarWindow(
@@ -784,13 +787,12 @@ struct ClaudeOAuthFetchStrategy: ProviderFetchStrategy {
             accountOrganization: usage.accountOrganization,
             loginMethod: usage.loginMethod,
             widgetAccountOwnerID: usage.accountID)
-        let primary = usage.primaryWindowKind == .spendLimit ? nil : usage.primary
         var details = usage.resetCredits?.detailSections(now: usage.updatedAt) ?? []
         if includeOptionalUsage {
             details += usage.cloudCredits?.detailSections(now: usage.updatedAt) ?? []
         }
         let snapshot = UsageSnapshot(
-            primary: primary,
+            primary: usage.primary,
             secondary: usage.secondary,
             tertiary: usage.opus,
             extraRateWindows: usage.extraRateWindows.isEmpty ? nil : usage.extraRateWindows,

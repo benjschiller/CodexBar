@@ -129,7 +129,7 @@ struct StatusItemCombinedMetricPlaceholderTests {
             showUsed: true)
         defer { controller.releaseStatusItemsForTesting() }
 
-        // Web builds `primary` like OAuth: `five_hour: null` parks the weekly window there, never a 0% session.
+        // `five_hour: null` reports no session, so the combined metric falls back to the weekly lane.
         let payload = #"""
         {"five_hour": null, "seven_day": {"utilization": 42, "resets_at": "2099-01-01T00:00:00Z"}}
         """#

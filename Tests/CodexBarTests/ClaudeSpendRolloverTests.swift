@@ -154,7 +154,7 @@ struct ClaudeSpendRolloverTests {
             subscriptionType: "enterprise",
             now: now)
 
-        #expect(snapshot.primaryWindowKind == .spendLimit)
+        #expect(snapshot.primary == nil)
         let expectedReset = try Self.date("2026-11-01T00:00:00Z")
         let cost = try #require(snapshot.providerCost)
         #expect(cost.period == "Spend limit")
@@ -162,8 +162,9 @@ struct ClaudeSpendRolloverTests {
         #expect(cost.used == 12.5)
         #expect(cost.resetsAt == expectedReset)
         #expect(cost.windowMinutes == 31 * 24 * 60)
-        #expect(snapshot.primary.resetsAt == cost.resetsAt)
-        #expect(snapshot.primary.windowMinutes == cost.windowMinutes)
+        let spendWindow = try #require(cost.spendLimitWindow)
+        #expect(spendWindow.resetsAt == cost.resetsAt)
+        #expect(spendWindow.windowMinutes == cost.windowMinutes)
 
         let usage = ClaudeOAuthFetchStrategy._snapshotForTesting(from: snapshot)
         #expect(usage.primary == nil)

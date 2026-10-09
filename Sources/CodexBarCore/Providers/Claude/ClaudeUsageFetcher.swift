@@ -7,13 +7,8 @@ public protocol ClaudeUsageFetching: Sendable {
 }
 
 public struct ClaudeUsageSnapshot: Sendable {
-    public enum PrimaryWindowKind: Equatable, Sendable {
-        case usage
-        case spendLimit
-    }
-
-    public let primary: RateWindow
-    public let primaryWindowKind: PrimaryWindowKind
+    /// The real 5-hour session window; nil when the source reports none (weekly-only, scoped-only, spend-only).
+    public let primary: RateWindow?
     public let secondary: RateWindow?
     public let opus: RateWindow?
     public let extraRateWindows: [NamedRateWindow]
@@ -42,8 +37,7 @@ public struct ClaudeUsageSnapshot: Sendable {
     public let oauthKeychainCredentialUnavailable: Bool
 
     public init(
-        primary: RateWindow,
-        primaryWindowKind: PrimaryWindowKind = .usage,
+        primary: RateWindow?,
         secondary: RateWindow?,
         opus: RateWindow?,
         extraRateWindows: [NamedRateWindow] = [],
@@ -64,7 +58,6 @@ public struct ClaudeUsageSnapshot: Sendable {
         accountID: String? = nil)
     {
         self.primary = primary
-        self.primaryWindowKind = primaryWindowKind
         self.secondary = secondary
         self.opus = opus
         self.extraRateWindows = extraRateWindows
@@ -755,7 +748,7 @@ extension ClaudeUsageFetcher {
             let email = snap.accountEmail ?? "nil"
             let org = snap.accountOrganization ?? "nil"
             let weekly = snap.secondary?.remainingPercent ?? -1
-            let primary = snap.primary.remainingPercent
+            let primary = snap.primary?.remainingPercent ?? -1
             return """
             session_left=\(primary) weekly_left=\(weekly)
             opus_left=\(opus) email \(email) org \(org)
@@ -979,33 +972,34 @@ extension ClaudeUsageFetcher {
         let loginMethod = ClaudePlan.oauthLoginMethod(
             subscriptionType: credentials.subscriptionType,
             rateLimitTier: credentials.rateLimitTier)
-        let primary = makeWindow(usage.fiveHour, windowMinutes: 5 * 60)
-            ?? makeWindow(usage.sevenDay, windowMinutes: 7 * 24 * 60)
+        let session = makeWindow(usage.fiveHour, windowMinutes: 5 * 60)
+        let weekly = makeWindow(usage.sevenDay, windowMinutes: 7 * 24 * 60)
             ?? makeWindow(usage.sevenDayOAuthApps, windowMinutes: 7 * 24 * 60)
-            ?? makeWindow(usage.sevenDaySonnet, windowMinutes: 7 * 24 * 60)
-            ?? makeWindow(usage.sevenDayOpus, windowMinutes: 7 * 24 * 60)
-        let treatAsSpendLimit = primary == nil && usage.extraUsage?.isEnabled == true
+        let modelSpecific = makeWindow(
+            usage.sevenDaySonnet ?? usage.sevenDayOpus,
+            windowMinutes: 7 * 24 * 60)
+        let extraRateWindows = Self.oauthExtraRateWindows(from: usage)
+        let treatAsSpendLimit = session == nil && weekly == nil && modelSpecific == nil
+            && usage.extraUsage?.isEnabled == true
         let providerCost = Self.oauthExtraUsageCost(
             usage.extraUsage,
             loginMethod: loginMethod,
             treatAsSpendLimit: treatAsSpendLimit,
             now: now)
 
-        guard let primary = primary ?? Self.oauthSpendLimitWindow(from: providerCost, extraUsage: usage.extraUsage)
+        guard Self.hasUsableUsage(
+            session: session,
+            weekly: weekly,
+            modelSpecific: modelSpecific,
+            extraRateWindows: extraRateWindows,
+            providerCost: providerCost)
         else {
-            throw ClaudeUsageError.parseFailed("missing session data")
+            throw ClaudeUsageError.parseFailed("missing usage data")
         }
-
-        let weekly = makeWindow(usage.sevenDay, windowMinutes: 7 * 24 * 60)
-        let modelSpecific = makeWindow(
-            usage.sevenDaySonnet ?? usage.sevenDayOpus,
-            windowMinutes: 7 * 24 * 60)
-        let extraRateWindows = Self.oauthExtraRateWindows(from: usage)
 
         let updatedAt = now
         return ClaudeUsageSnapshot(
-            primary: primary,
-            primaryWindowKind: treatAsSpendLimit ? .spendLimit : .usage,
+            primary: session,
             secondary: weekly,
             opus: modelSpecific,
             extraRateWindows: extraRateWindows,
@@ -1048,21 +1042,20 @@ extension ClaudeUsageFetcher {
             updatedAt: now)
     }
 
-    private static func oauthSpendLimitWindow(
-        from providerCost: ProviderCostSnapshot?,
-        extraUsage: OAuthExtraUsage?) -> RateWindow?
+    /// Whether a source reported anything to show. The Session slot holds only a real 5-hour window, so a
+    /// weekly-only, scoped-only, or spend-only payload is usable without one.
+    private static func hasUsableUsage(
+        session: RateWindow?,
+        weekly: RateWindow?,
+        modelSpecific: RateWindow?,
+        extraRateWindows: [NamedRateWindow],
+        providerCost: ProviderCostSnapshot?) -> Bool
     {
-        guard let providerCost,
-              providerCost.limit > 0
-        else { return nil }
-        let usedPercent = extraUsage?.utilization ?? (providerCost.used / providerCost.limit) * 100
-        let used = UsageFormatter.currencyString(providerCost.used, currencyCode: providerCost.currencyCode)
-        let limit = UsageFormatter.currencyString(providerCost.limit, currencyCode: providerCost.currencyCode)
-        return RateWindow(
-            usedPercent: min(100, max(0, usedPercent)),
-            windowMinutes: providerCost.windowMinutes,
-            resetsAt: providerCost.resetsAt,
-            resetDescription: "\(providerCost.period ?? "Spend limit"): \(used) / \(limit)")
+        session != nil
+            || weekly != nil
+            || modelSpecific != nil
+            || ClaudeScopedWeeklyLimitMapper.containsScopedWindow(extraRateWindows)
+            || providerCost?.spendLimitWindow != nil
     }
 
     private static func oauthExtraRateWindows(from usage: OAuthUsageResponse) -> [NamedRateWindow] {
@@ -1130,8 +1123,8 @@ extension ClaudeUsageFetcher {
         return try Self.mapWebUsage(webData, includeAccountIdentity: self.includeAccountIdentity)
     }
 
-    /// Maps a web payload the way `mapOAuthUsage` maps an OAuth one: the session window when reported, then the
-    /// weekly fallbacks, then the monthly spend cap. A payload with none of them has no usage to show.
+    /// Maps a web payload the way `mapOAuthUsage` maps an OAuth one: Session is the 5-hour window only, so a
+    /// weekly-only, scoped-only, or spend-only payload carries no session.
     static func mapWebUsage(
         _ webData: ClaudeWebAPIFetcher.WebUsageData,
         includeAccountIdentity: Bool,
@@ -1161,17 +1154,18 @@ extension ClaudeUsageFetcher {
                 resetDescription: webData.weeklyResetsAt.map { Self.formatResetDate($0) })
         }
 
-        let usagePrimary = session ?? secondary ?? opus
-        let spendWindow = usagePrimary == nil
-            ? Self.oauthSpendLimitWindow(from: webData.extraUsageCost, extraUsage: nil)
-            : nil
-        guard let primary = usagePrimary ?? spendWindow else {
-            throw ClaudeUsageError.parseFailed("missing session data")
+        guard Self.hasUsableUsage(
+            session: session,
+            weekly: secondary,
+            modelSpecific: opus,
+            extraRateWindows: webData.extraRateWindows,
+            providerCost: webData.extraUsageCost)
+        else {
+            throw ClaudeUsageError.parseFailed("missing usage data")
         }
 
         return ClaudeUsageSnapshot(
-            primary: primary,
-            primaryWindowKind: spendWindow == nil ? .usage : .spendLimit,
+            primary: session,
             secondary: secondary,
             opus: opus,
             extraRateWindows: webData.extraRateWindows,

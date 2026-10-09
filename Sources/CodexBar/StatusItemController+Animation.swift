@@ -1229,10 +1229,9 @@ extension StatusItemController {
     }
 
     /// The combined metric's session (5h) lane. Codex resolves it through the consumer projection; other
-    /// providers classify by window cadence. A 5-hour lane the provider only synthesized to stand in for an
-    /// absent session — Claude web's null `five_hour` placeholder, flagged at the boundary — is dropped so a
-    /// weekly-only account falls back to its weekly lane instead of rendering a phantom `5h 0%`/`5h 100%`
-    /// session. A genuine session (even one freshly reset to 0%) is not flagged, so it is kept.
+    /// providers classify by window cadence. A flagged 5-hour placeholder (cached by an older Claude build for
+    /// `five_hour: null`) is dropped so a weekly-only account falls back to its weekly lane instead of rendering
+    /// a phantom `5h 0%`/`5h 100%` session. A genuine session (even one freshly reset to 0%) is kept.
     private static func combinedSessionLane(
         snapshot: UsageSnapshot?,
         projection: CodexConsumerProjection?) -> RateWindow?

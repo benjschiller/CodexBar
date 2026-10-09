@@ -94,8 +94,8 @@ public struct RateWindow: Codable, Equatable, Sendable {
             resetsAt: cachedReset,
             resetDescription: self.resetDescription ?? cached?.resetDescription,
             nextRegenPercent: self.nextRegenPercent,
-            // Preserve the placeholder marker: backfilling a stale reset onto Claude web's null-session
-            // placeholder must not let it masquerade as a real session lane.
+            // Preserve the placeholder marker: backfilling a stale reset onto a placeholder that an older
+            // Claude build cached must not let it masquerade as a real session lane.
             isSyntheticPlaceholder: self.isSyntheticPlaceholder)
     }
 }
