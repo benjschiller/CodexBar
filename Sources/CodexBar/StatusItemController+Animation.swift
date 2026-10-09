@@ -379,6 +379,7 @@ extension StatusItemController {
                 tint: providerTint,
                 for: button)
         } else {
+            let layoutPolicy = IconRemainingResolver.quotaLayoutPolicy(provider: primaryProvider, snapshot: snapshot)
             let signature = [
                 "mode=icon",
                 "provider=\(primaryProvider.rawValue)",
@@ -386,6 +387,7 @@ extension StatusItemController {
                 "primary=\(Self.iconSignatureValue(primary))",
                 "weekly=\(Self.iconSignatureValue(weekly))",
                 "credits=\(Self.iconSignatureValue(credits))",
+                "layout=\(Self.iconLayoutSignatureValue(layoutPolicy))",
                 "stale=\(stale ? "1" : "0")",
                 "status=\(statusIndicator.rawValue)",
                 "blink=\(Self.iconSignatureValue(Double(blink)))",
@@ -412,9 +414,7 @@ extension StatusItemController {
                 tilt: tilt,
                 statusIndicator: statusIndicator,
                 hideCritters: self.settings.menuBarHidesCritters,
-                quotaLayoutPolicy: IconRemainingResolver.quotaLayoutPolicy(
-                    provider: primaryProvider,
-                    snapshot: snapshot))
+                quotaLayoutPolicy: layoutPolicy)
             self.setButtonContent(
                 image: warningFlash ? Self.quotaWarningFlashImage(base: image) : image,
                 title: nil,
@@ -486,6 +486,7 @@ extension StatusItemController {
     }
 
     @discardableResult
+    // swiftlint:disable:next function_body_length
     func applyIcon(for provider: UsageProvider, phase: Double?) -> Bool {
         guard let button = self.statusItems[provider.instanceID]?.button else { return false }
         let providerTint = self.providerTintColor(for: provider, button: button)
@@ -606,6 +607,7 @@ extension StatusItemController {
                 tint: providerTint,
                 for: button)
         } else {
+            let layoutPolicy = IconRemainingResolver.quotaLayoutPolicy(provider: provider, snapshot: snapshot)
             let signature = [
                 "mode=icon",
                 "provider=\(provider.rawValue)",
@@ -613,6 +615,7 @@ extension StatusItemController {
                 "primary=\(Self.iconSignatureValue(primary))",
                 "weekly=\(Self.iconSignatureValue(weekly))",
                 "credits=\(Self.iconSignatureValue(credits))",
+                "layout=\(Self.iconLayoutSignatureValue(layoutPolicy))",
                 "stale=\(stale ? "1" : "0")",
                 "status=\(statusIndicator.rawValue)",
                 "blink=\(Self.iconSignatureValue(Double(blink)))",
@@ -639,7 +642,7 @@ extension StatusItemController {
                 tilt: tilt,
                 statusIndicator: statusIndicator,
                 hideCritters: self.settings.menuBarHidesCritters,
-                quotaLayoutPolicy: IconRemainingResolver.quotaLayoutPolicy(provider: provider, snapshot: snapshot))
+                quotaLayoutPolicy: layoutPolicy)
             self.setButtonContent(
                 image: warningFlash ? Self.quotaWarningFlashImage(base: image) : image,
                 title: nil,
@@ -659,6 +662,10 @@ extension StatusItemController {
     static func iconSignatureValue(_ value: Double?) -> String {
         guard let value else { return "nil" }
         return String(format: "%.3f", value)
+    }
+
+    static func iconLayoutSignatureValue(_ policy: IconRenderer.QuotaLayoutPolicy) -> String {
+        "\(policy.reservesMissingSecondaryLane ? "1" : "0")\(policy.treatsExhaustedSecondaryAsMissing ? "1" : "0")"
     }
 
     func resolvedMenuBarIconPercents(
