@@ -96,6 +96,32 @@ struct MenuBarLayoutEditorTests {
     }
 
     @Test
+    func `cost window token is named after the history window`() {
+        for provider in [nil, UsageProvider.codex] {
+            #expect(MenuBarLayoutToken.costWindow.editorLabel(provider: provider) == "Cost (History window)")
+            #expect(MenuBarLayoutToken.costWindow.editorAccessibilityLabel(provider: provider)
+                == "Cost (History window)")
+        }
+        #expect(MenuBarLayoutToken.costToday.editorLabel(provider: nil) == "Cost today")
+    }
+
+    @Test
+    func `cost window conditional metric is named after the history window`() {
+        #expect(MenuBarConditionalMetric.costWindow.editorLabel(provider: nil) == "Cost (History window)")
+        let conditional = MenuBarLayoutConditional(
+            clauses: [MenuBarConditionalClause(
+                combinator: nil,
+                predicate: MenuBarConditionalPredicate(
+                    metric: .costWindow,
+                    comparison: .greaterThanOrEqual,
+                    threshold: 5))],
+            thenToken: .costWindow,
+            elseToken: .hidden)
+        #expect(conditional.editorSummary(provider: nil)
+            == "If Cost (History window) >= 5 USD then Cost (History window) else Hide")
+    }
+
+    @Test
     func `Cursor exposes Grok Bot after its named window is available`() {
         let grokBot = NamedRateWindow(
             id: "cursor-grok-bot",
