@@ -85,6 +85,7 @@ public enum ClaudeProviderDescriptor {
             }
         })
 
+    // swiftlint:disable:next function_body_length
     static func makeDescriptor() -> ProviderDescriptor {
         ProviderDescriptor(
             id: .claude,
@@ -202,6 +203,7 @@ public enum ClaudeProviderDescriptor {
                         balances: balances,
                         menuCardStyle: .claude)
                 },
+                iconWindowResolver: self.iconWindows,
                 iconDecorations: [.notches],
                 reservesMissingSecondaryIconLane: true,
                 menuBarBalanceUsesPrepaidCost: true,
@@ -246,6 +248,15 @@ public enum ClaudeProviderDescriptor {
         if ClaudeOAuthFetchError.isCancellation(current) { return current }
         if let previous, case ClaudeOAuthCredentialsError.credentialsChanged = previous { return previous }
         return current
+    }
+
+    private static func iconWindows(context: ProviderIconWindowContext) -> ProviderUsageWindowPair {
+        if let spendWindow = context.snapshot.claudeSpendOnlyWindow {
+            return ProviderUsageWindowPair(primary: spendWindow, secondary: nil, lanesAreSpendCaps: true)
+        }
+        return ProviderUsageWindowPair(
+            primary: context.snapshot.primary?.measured,
+            secondary: context.snapshot.secondary)
     }
 
     private static func menuBarWindow(

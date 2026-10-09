@@ -141,10 +141,13 @@ public struct ProviderSemanticWindows: Sendable, Equatable {
 public struct ProviderUsageWindowPair: Sendable, Equatable {
     public let primary: RateWindow?
     public let secondary: RateWindow?
+    /// The lanes project spend budgets rather than quota windows, so quota-plan lane reservations do not apply.
+    public let lanesAreSpendCaps: Bool
 
-    public init(primary: RateWindow?, secondary: RateWindow?) {
+    public init(primary: RateWindow?, secondary: RateWindow?, lanesAreSpendCaps: Bool = false) {
         self.primary = primary
         self.secondary = secondary
+        self.lanesAreSpendCaps = lanesAreSpendCaps
     }
 }
 

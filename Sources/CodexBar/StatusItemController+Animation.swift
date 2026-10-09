@@ -412,7 +412,9 @@ extension StatusItemController {
                 tilt: tilt,
                 statusIndicator: statusIndicator,
                 hideCritters: self.settings.menuBarHidesCritters,
-                quotaLayoutPolicy: .provider(primaryProvider))
+                quotaLayoutPolicy: IconRemainingResolver.quotaLayoutPolicy(
+                    provider: primaryProvider,
+                    snapshot: snapshot))
             self.setButtonContent(
                 image: warningFlash ? Self.quotaWarningFlashImage(base: image) : image,
                 title: nil,
@@ -637,7 +639,7 @@ extension StatusItemController {
                 tilt: tilt,
                 statusIndicator: statusIndicator,
                 hideCritters: self.settings.menuBarHidesCritters,
-                quotaLayoutPolicy: .provider(provider))
+                quotaLayoutPolicy: IconRemainingResolver.quotaLayoutPolicy(provider: provider, snapshot: snapshot))
             self.setButtonContent(
                 image: warningFlash ? Self.quotaWarningFlashImage(base: image) : image,
                 title: nil,
