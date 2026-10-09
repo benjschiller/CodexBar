@@ -1898,6 +1898,83 @@ struct MenuBarLayoutRendererTests {
         }
     }
 
+    /// The default spend window is 46% used, resets in 12 days (288h), and runs +6 points ahead of pace,
+    /// while the weekly window resets in 72h at +11: every threshold below separates the two.
+    @Test
+    func `spend predicates read used and remaining percent`() {
+        let usedAbove = { (threshold: Double, direction: MenuBarConditionalDirection) in
+            self.branchText(self.clause(
+                metric: .spend,
+                comparison: .greaterThan,
+                threshold: threshold,
+                direction: direction))
+        }
+        #expect(usedAbove(40, .used) == "5h 25%")
+        #expect(usedAbove(50, .used) == "in 2h")
+        #expect(usedAbove(50, .remaining) == "5h 25%")
+        #expect(usedAbove(60, .remaining) == "in 2h")
+    }
+
+    @Test
+    func `spend resets in and pace predicates read their own datum`() {
+        #expect(self.branchText(self.clause(
+            metric: .spendResetsIn, comparison: .greaterThan, threshold: 200)) == "5h 25%")
+        // The weekly window resets in 72h; borrowing it would make this branch true.
+        #expect(self.branchText(self.clause(
+            metric: .spendResetsIn, comparison: .lessThan, threshold: 100)) == "in 2h")
+        #expect(self.branchText(self.clause(
+            metric: .spendPace, comparison: .greaterThan, threshold: 5)) == "5h 25%")
+        // Weekly pace is +11; borrowing it would make this branch true.
+        #expect(self.branchText(self.clause(
+            metric: .spendPace, comparison: .greaterThan, threshold: 8)) == "in 2h")
+    }
+
+    @Test
+    func `spend amount predicate compares USD used and remaining`() {
+        #expect(self.branchText(self.clause(
+            metric: .spendAmount, comparison: .greaterThan, threshold: 450)) == "5h 25%")
+        #expect(self.branchText(self.clause(
+            metric: .spendAmount, comparison: .greaterThan, threshold: 500, direction: .remaining)) == "5h 25%")
+        #expect(self.branchText(self.clause(
+            metric: .spendAmount, comparison: .greaterThan, threshold: 550, direction: .remaining)) == "in 2h")
+        // Balance and cost amounts never answer for the budget.
+        #expect(self.branchText(self.clause(
+            metric: .spendAmount, comparison: .lessThan, threshold: 10)) == "in 2h")
+    }
+
+    @Test
+    func `spend amount predicate is false without a USD rate`() {
+        let metrics = MenuBarLayoutRenderMetrics(
+            sessionPaceDelta: -8,
+            weeklyPaceDelta: 11,
+            automaticPaceDelta: 0,
+            runsOutMinutes: 2400,
+            balanceRemainingUSD: 12.34,
+            balanceUsedUSD: 7.66,
+            costTodayUSD: 1.25,
+            cost30dUSD: 20,
+            spendPaceDelta: 6)
+        var data = self.data(metrics: metrics)
+        data.spendAmount = "€390"
+        let conditional = MenuBarLayoutConditional(
+            clauses: [self.clause(metric: .spendAmount, comparison: .greaterThanOrEqual, threshold: 0)],
+            thenToken: .percent(window: .session),
+            elseToken: .resetCountdown)
+        let renderer = MenuBarLayoutRenderer()
+        let evaluated = renderer.render(
+            layout: MenuBarLayout(lines: [[.conditional(id: conditional.id)]]),
+            data: data,
+            icon: nil,
+            options: self.options(conditionals: [conditional]))
+        #expect(evaluated.attributedTitle.string == "in 2h")
+        // The money token itself still shows the provider-reported amount in its own currency.
+        #expect(renderer.render(
+            layout: MenuBarLayout(lines: [[.spendAmount]]),
+            data: data,
+            icon: nil,
+            options: self.options()).attributedTitle.string == "€390")
+    }
+
     @Test
     func `spend money tokens never substitute balance or local cost`() {
         var data = self.data()
@@ -2039,7 +2116,9 @@ struct MenuBarLayoutRendererTests {
                 balanceUsedUSD: 7.66,
                 costTodayUSD: 1.25,
                 cost30dUSD: 20,
-                spendPaceDelta: 6),
+                spendPaceDelta: 6,
+                spendUsedUSD: 460,
+                spendRemainingUSD: 540),
             spend: MenuBarLayoutRenderWindow(RateWindow(
                 usedPercent: 46,
                 windowMinutes: 30 * 24 * 60,

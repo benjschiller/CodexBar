@@ -77,6 +77,65 @@ struct StatusItemSpendSignatureTests {
         #expect(behind != ahead)
     }
 
+    @Test
+    func `spend percent predicate moves the signature with the budget`() {
+        let harness = Self.makeHarness(metric: .spend, comparison: .greaterThan, threshold: 50)
+        defer { harness.controller.releaseStatusItemsForTesting() }
+
+        let below = harness.signature(used: 420)
+        let above = harness.signature(used: 550)
+
+        #expect(below.contains("layoutCondWindows=spend="))
+        #expect(below.contains("layoutSpend=used="))
+        #expect(below != above)
+    }
+
+    @Test
+    func `spend reset predicate follows a moved period boundary`() {
+        let harness = Self.makeHarness(metric: .spendResetsIn, comparison: .lessThan, threshold: 48)
+        defer { harness.controller.releaseStatusItemsForTesting() }
+
+        let early = harness.signature(used: 420, resetsInDays: 1)
+        let late = harness.signature(used: 420, resetsInDays: 20)
+
+        #expect(early.contains("layoutCondWindows=spendResetsIn="))
+        #expect(early != late)
+    }
+
+    @Test
+    func `spend pace predicate signs the spend pace`() {
+        let harness = Self.makeHarness(metric: .spendPace, comparison: .greaterThan, threshold: 5)
+        defer { harness.controller.releaseStatusItemsForTesting() }
+
+        let behind = harness.signature(used: 200)
+        let ahead = harness.signature(used: 800)
+
+        #expect(behind.contains("layoutPace=spend="))
+        #expect(behind != ahead)
+    }
+
+    @Test
+    func `spend amount predicate signs the unrounded USD figures`() {
+        let harness = Self.makeHarness(metric: .spendAmount, comparison: .greaterThan, threshold: 420.005)
+        defer { harness.controller.releaseStatusItemsForTesting() }
+
+        // Both amounts display as "$420", so only the exact USD figure can tell them apart.
+        let below = harness.signature(used: 420.00, limit: 100_000)
+        let above = harness.signature(used: 420.01, limit: 100_000)
+
+        #expect(below.contains("usedUSD="))
+        #expect(!below.contains("usedUSD=unused"))
+        #expect(below != above)
+    }
+
+    @Test
+    func `a percent predicate leaves the USD figures unsigned`() {
+        let harness = Self.makeHarness(metric: .spend, comparison: .greaterThan, threshold: 50)
+        defer { harness.controller.releaseStatusItemsForTesting() }
+
+        #expect(harness.signature(used: 420).contains("usedUSD=unused"))
+    }
+
     @MainActor
     private struct Harness {
         let store: UsageStore
@@ -104,11 +163,35 @@ struct StatusItemSpendSignatureTests {
         }
     }
 
-    private static func makeHarness(lines: [[MenuBarLayoutToken]]) -> Harness {
+    /// A layout whose only link to the budget is a conditional predicate: no spend token is placed.
+    private static func makeHarness(
+        metric: MenuBarConditionalMetric,
+        comparison: MenuBarConditionalComparison,
+        threshold: Double)
+        -> Harness
+    {
+        let conditional = MenuBarLayoutConditional(
+            name: "gate",
+            clauses: [MenuBarConditionalClause(
+                combinator: nil,
+                predicate: MenuBarConditionalPredicate(metric: metric, comparison: comparison, threshold: threshold))],
+            thenToken: .providerName,
+            elseToken: .hidden)
+        return self.makeHarness(
+            lines: [[.icon, .conditional(id: conditional.id)]],
+            conditionals: [conditional])
+    }
+
+    private static func makeHarness(
+        lines: [[MenuBarLayoutToken]],
+        conditionals: [MenuBarLayoutConditional] = [])
+        -> Harness
+    {
         let settings = testSettingsStore(suiteName: "StatusItemSpendSignatureTests")
         settings.statusChecksEnabled = false
         settings.refreshFrequency = .manual
         settings.menuBarShowsBrandIconWithPercent = true
+        settings.menuBarLayoutConditionals = conditionals
         settings.menuBarLayout = MenuBarLayout(lines: lines)
         if let claudeMeta = ProviderRegistry.shared.metadata[.claude] {
             settings.setProviderEnabled(provider: .claude, metadata: claudeMeta, enabled: true)

@@ -58,6 +58,7 @@ enum MenuBarConditionalMetric: String, CaseIterable, Codable, Hashable, Sendable
     case weekly
     case scopedWeekly
     case automatic
+    case spend
     case primaryLane
     case secondaryLane
     case tertiaryLane
@@ -65,36 +66,40 @@ enum MenuBarConditionalMetric: String, CaseIterable, Codable, Hashable, Sendable
     case weeklyResetsIn
     case scopedWeeklyResetsIn
     case automaticResetsIn
+    case spendResetsIn
     case sessionPace
     case weeklyPace
     case automaticPace
+    case spendPace
     case runsOutIn
     case balance
     case costToday
     /// The raw value is the persisted discriminator from before the rename; saved rules must keep decoding.
     case costWindow = "cost30d"
+    case spendAmount
 
     var kind: MenuBarConditionalMetricKind {
         switch self {
-        case .session, .weekly, .scopedWeekly, .automatic,
+        case .session, .weekly, .scopedWeekly, .automatic, .spend,
              .primaryLane, .secondaryLane, .tertiaryLane:
             .percent
-        case .sessionPace, .weeklyPace, .automaticPace:
+        case .sessionPace, .weeklyPace, .automaticPace, .spendPace:
             .signedPercent
-        case .sessionResetsIn, .weeklyResetsIn, .scopedWeeklyResetsIn, .automaticResetsIn, .runsOutIn:
+        case .sessionResetsIn, .weeklyResetsIn, .scopedWeeklyResetsIn, .automaticResetsIn, .spendResetsIn,
+             .runsOutIn:
             .hours
-        case .balance, .costToday, .costWindow:
+        case .balance, .costToday, .costWindow, .spendAmount:
             .currencyUSD
         }
     }
 
     /// Whether a used/remaining select applies. Percent windows and lanes expose both readings of the
-    /// same window; balance exposes spend against remaining credit. Pace is already signed, and a reset
-    /// countdown or a cost total has no complement.
+    /// same window; balance and the spend amount expose spend against what remains. Pace is already
+    /// signed, and a reset countdown or a cost total has no complement.
     var supportsDirection: Bool {
         switch self {
-        case .session, .weekly, .scopedWeekly, .automatic,
-             .primaryLane, .secondaryLane, .tertiaryLane, .balance:
+        case .session, .weekly, .scopedWeekly, .automatic, .spend,
+             .primaryLane, .secondaryLane, .tertiaryLane, .balance, .spendAmount:
             true
         default:
             false
@@ -105,9 +110,9 @@ enum MenuBarConditionalMetric: String, CaseIterable, Codable, Hashable, Sendable
     /// window's raw values. Pace, run-out and money metrics come from upstream-resolved numbers instead.
     var readsRateWindow: Bool {
         switch self {
-        case .session, .weekly, .scopedWeekly, .automatic,
+        case .session, .weekly, .scopedWeekly, .automatic, .spend,
              .primaryLane, .secondaryLane, .tertiaryLane,
-             .sessionResetsIn, .weeklyResetsIn, .scopedWeeklyResetsIn, .automaticResetsIn:
+             .sessionResetsIn, .weeklyResetsIn, .scopedWeeklyResetsIn, .automaticResetsIn, .spendResetsIn:
             true
         default:
             false
@@ -119,7 +124,7 @@ enum MenuBarConditionalMetric: String, CaseIterable, Codable, Hashable, Sendable
     /// estimate counts down; reset countdowns are handled by their own exact wake-up instead.
     var isClockDerivedRate: Bool {
         switch self {
-        case .sessionPace, .weeklyPace, .automaticPace, .runsOutIn: true
+        case .sessionPace, .weeklyPace, .automaticPace, .spendPace, .runsOutIn: true
         default: false
         }
     }

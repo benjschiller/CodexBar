@@ -43,6 +43,10 @@ struct MenuBarLayoutRenderMetrics: Hashable {
     let cost30dUSD: Double?
     /// Usage-ahead Spend pace delta in whole percentage points. Defaulted so providers without a budget omit it.
     var spendPaceDelta: Double?
+    /// Provider-reported spend and what remains of the budget, in USD under the same USD-only contract as
+    /// the cost amounts: nil for credit-denominated caps and for currencies with no exchange rate.
+    var spendUsedUSD: Double?
+    var spendRemainingUSD: Double?
 
     static let unavailable = MenuBarLayoutRenderMetrics(
         sessionPaceDelta: nil,
@@ -1177,6 +1181,7 @@ extension MenuBarLayoutConditional {
         return predicate.comparison.evaluate(value, predicate.threshold)
     }
 
+    // swiftlint:disable cyclomatic_complexity
     /// nil == the datum is unavailable, so the predicate evaluates false instead of comparing a
     /// fabricated zero. Percent and reset readings come from the render windows; pace, run-out, balance
     /// and cost come from `data.metrics`, whose display strings cannot be compared numerically.
@@ -1191,6 +1196,7 @@ extension MenuBarLayoutConditional {
         case .weekly: self.percent(data.weekly, predicate.direction)
         case .scopedWeekly: self.percent(data.scopedWeekly, predicate.direction)
         case .automatic: self.percent(data.automatic, predicate.direction)
+        case .spend: self.percent(data.spend, predicate.direction)
         case .primaryLane: self.percent(data.primary, predicate.direction)
         case .secondaryLane: self.percent(data.secondary, predicate.direction)
         case .tertiaryLane: self.percent(data.tertiary, predicate.direction)
@@ -1198,17 +1204,24 @@ extension MenuBarLayoutConditional {
         case .weeklyResetsIn: self.hoursUntilReset(data.weekly, now: now)
         case .scopedWeeklyResetsIn: self.hoursUntilReset(data.scopedWeekly, now: now)
         case .automaticResetsIn: self.hoursUntilReset(data.automatic, now: now)
+        case .spendResetsIn: self.hoursUntilReset(data.spend, now: now)
         case .sessionPace: data.metrics.sessionPaceDelta
         case .weeklyPace: data.metrics.weeklyPaceDelta
         case .automaticPace: data.metrics.automaticPaceDelta
+        case .spendPace: data.metrics.spendPaceDelta
         case .runsOutIn: data.metrics.runsOutMinutes.map { Double($0) / 60 }
         case .balance: predicate.direction == .used
             ? data.metrics.balanceUsedUSD
             : data.metrics.balanceRemainingUSD
         case .costToday: data.metrics.costTodayUSD
         case .costWindow: data.metrics.cost30dUSD
+        case .spendAmount: predicate.direction == .used
+            ? data.metrics.spendUsedUSD
+            : data.metrics.spendRemainingUSD
         }
     }
+
+    // swiftlint:enable cyclomatic_complexity
 
     private static func percent(
         _ window: MenuBarLayoutRenderWindow?,
