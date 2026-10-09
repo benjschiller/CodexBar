@@ -9,6 +9,7 @@
 - Providers: add FLORA workspace balances, member limits, and available month-to-date spending through a bundled billing plugin (#4439). Thanks @giuseppebisemi!
 
 - Codex CLI: add opt-in identified-request subtotals across local and SSH histories, deduplicating strong request identities and preserving partial results without estimating combined prices (#4447, refs #3036). Thanks @jkobject!
+- Menu bar: add Spend %, spend pace, spend reset, Spend, and Spend / budget layout items and conditional rules for providers that report a spend budget, such as Claude Enterprise (#TBD). Thanks @benjschiller!
 
 ### Changed
 
