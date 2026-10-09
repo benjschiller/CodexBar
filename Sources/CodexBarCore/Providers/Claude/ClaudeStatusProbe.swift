@@ -280,16 +280,27 @@ extension ClaudeStatusProbe {
         let opusModels = Set(opusLabels.compactMap(self.weeklyModelName).map(self.normalizedForLabelSearch))
         let hasOpusLabel = !weeklyModels.isDisjoint(with: opusModels)
 
-        if sessionPct == nil {
-            let ordered = self.allPercents(usagePanelText)
-            if sessionPct == nil, ordered.indices.contains(0) {
-                sessionPct = ordered[0]
-            }
+        // A weekly-only or per-model-only panel has no session row, so its first percent is not a session.
+        if sessionPct == nil, self.hasSessionLabel(in: labelContext) {
+            sessionPct = self.allPercents(usagePanelText).first
         }
 
         let identity = Self.extractIdentity(usageText: clean, statusText: statusClean)
 
-        guard let sessionPct else {
+        let sessionReset = self.extractReset(labelSubstring: "Current session", context: labelContext)
+        let weeklyReset = hasAllModelsWeeklyLabel
+            ? self.extractReset(labelSubstring: "Current week (all models)", context: labelContext)
+            : nil
+        let opusReset = hasOpusLabel
+            ? self.extractReset(labelSubstrings: opusLabels, context: labelContext)
+            : nil
+        let scopedWeeklyUsages = self.extractScopedWeeklyUsages(context: labelContext)
+        let extraRateWindows = self.extraRateWindows(
+            fromScopedWeeklyUsages: scopedWeeklyUsages,
+            fallbackResetDescription: weeklyReset)
+
+        guard sessionPct != nil || weeklyPct != nil || opusPct != nil || !extraRateWindows.isEmpty
+        else {
             Self.dumpIfNeeded(
                 enabled: shouldDump,
                 reason: "missing session label",
@@ -303,18 +314,6 @@ extension ClaudeStatusProbe {
             }
             throw ClaudeStatusProbeError.parseFailed("Missing Current session.")
         }
-
-        let sessionReset = self.extractReset(labelSubstring: "Current session", context: labelContext)
-        let weeklyReset = hasAllModelsWeeklyLabel
-            ? self.extractReset(labelSubstring: "Current week (all models)", context: labelContext)
-            : nil
-        let opusReset = hasOpusLabel
-            ? self.extractReset(labelSubstrings: opusLabels, context: labelContext)
-            : nil
-        let scopedWeeklyUsages = self.extractScopedWeeklyUsages(context: labelContext)
-        let extraRateWindows = self.extraRateWindows(
-            fromScopedWeeklyUsages: scopedWeeklyUsages,
-            fallbackResetDescription: weeklyReset)
 
         return ClaudeStatusSnapshot(
             sessionPercentLeft: sessionPct,
@@ -389,6 +388,19 @@ extension ClaudeStatusProbe {
         return self.isBinaryAvailable(resolved)
     }
 
+    /// Whether the panel has a Current session row. A garbled capture ("Curretsession") still counts, the way the
+    /// all-models weekly match tolerates one, so a mangled label keeps the order-based percent fallback.
+    private static func hasSessionLabel(in context: LabelSearchContext) -> Bool {
+        let label = "currentsession"
+        if context.contains(label) { return true }
+        return context.normalizedLines.contains { line in
+            guard line.hasPrefix("cur") else { return false }
+            return ((label.count - 2)...(label.count + 2)).contains { length in
+                line.count >= length && self.editDistance(String(line.prefix(length)), label) <= 2
+            }
+        }
+    }
+
     private static func extractPercent(labelSubstring: String, context: LabelSearchContext) -> Int? {
         // Prefer an exact label match; only fall back to a fuzzy (garbled-capture) match when no exact
         // copy yields a value, so a clean row always wins over a corrupted duplicate regardless of order.
@@ -433,7 +445,7 @@ extension ClaudeStatusProbe {
         return nil
     }
 
-    private static func usageOutputLooksRelevant(_ text: String) -> Bool {
+    static func usageOutputLooksRelevant(_ text: String) -> Bool {
         let normalized = Self.cleanCapture(text).lowercased().filter { !$0.isWhitespace }
         return normalized.contains("currentsession")
             || normalized.contains("currentweek")
@@ -442,7 +454,7 @@ extension ClaudeStatusProbe {
             || self.usageCaptureHasSubscriptionNotice(normalized)
     }
 
-    private static func validateUsageBeforeStatusProbe(_ text: String) throws {
+    static func validateUsageBeforeStatusProbe(_ text: String) throws {
         let clean = Self.cleanCapture(text)
         if let usageError = self.extractUsageError(text: clean) {
             throw self.usageProbeError(message: usageError)
@@ -746,7 +758,7 @@ extension ClaudeStatusProbe {
     private static func isUsageStillLoading(text: String) -> Bool {
         let normalized = Self.cleanCapture(text).lowercased().filter { !$0.isWhitespace }
         guard normalized.contains("loadingusage") else { return false }
-        return !self.usageCaptureHasSessionValue(normalized) && self.allPercents(text).isEmpty
+        return !self.usageCaptureHasQuotaValue(normalized) && self.allPercents(text).isEmpty
     }
 
     /// Returns true when the text contains only a subscription notice with no session/weekly quota data.
@@ -1488,10 +1500,7 @@ extension ClaudeStatusProbe {
         let idleTimeout: TimeInterval? = subcommand == "/usage" ? nil : 3.0
         let sendEnterEvery: TimeInterval? = subcommand == "/usage" ? 0.8 : nil
         let stopWhenNormalized: (@Sendable (String) -> Bool)? = subcommand == "/usage"
-            ? { @Sendable normalizedScan in
-                Self.usageCaptureHasSessionValue(normalizedScan)
-                    || Self.usageCaptureHasSubscriptionNotice(normalizedScan)
-            }
+            ? { @Sendable normalizedScan in Self.usageCaptureIsComplete(normalizedScan) }
             : nil
         do {
             return try await ClaudeCLISession.current.capture(
@@ -1519,13 +1528,24 @@ extension ClaudeStatusProbe {
         }
     }
 
-    private static func usageCaptureHasSessionValue(_ normalizedText: String) -> Bool {
+    /// Whether the normalized screen shows something the parser can use, so the capture can stop without waiting for
+    /// a session row that weekly-only, per-model-only, and spend-only accounts never render.
+    static func usageCaptureIsComplete(_ normalizedText: String) -> Bool {
+        self.usageCaptureHasQuotaValue(normalizedText)
+            || self.usageCaptureHasSubscriptionNotice(normalizedText)
+    }
+
+    /// A rendered quota percentage on any Current session / Current week row. Weekly-only and per-model-only
+    /// accounts render no session row, so the capture must not wait for one.
+    private static func usageCaptureHasQuotaValue(_ normalizedText: String) -> Bool {
         let insightsStart = normalizedText.range(of: "what'scontributingtoyourlimitsusage?")?.lowerBound
             ?? normalizedText.endIndex
         let quotaText = normalizedText[..<insightsStart]
-        guard let labelRange = quotaText.range(of: "currentsession") else { return false }
-        let tail = quotaText[labelRange.upperBound...]
-        return tail.range(of: #"[0-9]{1,3}(?:\.[0-9]+)?%"#, options: .regularExpression) != nil
+        return ["currentsession", "currentweek"].contains { label in
+            guard let labelRange = quotaText.range(of: label) else { return false }
+            let tail = quotaText[labelRange.upperBound...]
+            return tail.range(of: #"[0-9]{1,3}(?:\.[0-9]+)?%"#, options: .regularExpression) != nil
+        }
     }
 
     private static func usageCaptureHasSubscriptionNotice(_ normalizedText: String) -> Bool {
