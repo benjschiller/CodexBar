@@ -35,6 +35,25 @@ extension MenuBarSpendLimit {
         return "\(used) / \(self.displayText(self.limit, preferredCurrency: preferredCurrency))"
     }
 
+    /// Thresholds are USD. `convertedCost` hands back the source amount unchanged when no rate exists, so
+    /// the datum is kept only when the conversion actually landed in USD.
+    var usedUSD: Double? {
+        self.usdAmount(self.used)
+    }
+
+    var remainingUSD: Double? {
+        self.usdAmount(max(0, self.limit - self.used))
+    }
+
+    private func usdAmount(_ value: Double) -> Double? {
+        guard self.isMonetary else { return nil }
+        let converted = UsageFormatter.convertedCost(
+            value,
+            preferredCurrency: "USD",
+            providerCurrency: self.currencyCode)
+        return converted.currencyCode == "USD" ? converted.value : nil
+    }
+
     private func displayText(_ value: Double, preferredCurrency: String) -> String {
         let converted = UsageFormatter.convertedCost(
             value,
@@ -54,6 +73,8 @@ struct MenuBarLayoutSpend: Equatable {
     var amount: String?
     var budget: String?
     var currencySymbol: String
+    var usedUSD: Double?
+    var remainingUSD: Double?
 
     static let unavailable = MenuBarLayoutSpend(
         window: nil,
@@ -61,7 +82,9 @@ struct MenuBarLayoutSpend: Equatable {
         paceDelta: nil,
         amount: nil,
         budget: nil,
-        currencySymbol: "$")
+        currencySymbol: "$",
+        usedUSD: nil,
+        remainingUSD: nil)
 }
 
 extension UsageStore {
@@ -121,7 +144,9 @@ extension UsageStore {
             paceDelta: pace.map { $0.deltaPercent.rounded() },
             amount: limit.amountText(preferredCurrency: preferredCurrency),
             budget: limit.budgetText(preferredCurrency: preferredCurrency),
-            currencySymbol: limit.currencySymbol)
+            currencySymbol: limit.currencySymbol,
+            usedUSD: limit.usedUSD,
+            remainingUSD: limit.remainingUSD)
     }
 
     /// A plain linear read of the budget period with the weekly pace's eligibility floors. It never goes

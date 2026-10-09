@@ -470,12 +470,12 @@ struct MenuBarLayoutTests {
     /// label beside the threshold field is `thresholdUnit`.
     @Test
     func `metric drives the editor row controls and units`() {
-        #expect(MenuBarConditionalMetric.allCases.count == 18)
+        #expect(MenuBarConditionalMetric.allCases.count == 22)
 
         let withDirection = MenuBarConditionalMetric.allCases.filter(\.supportsDirection)
         #expect(withDirection == [
-            .session, .weekly, .scopedWeekly, .automatic,
-            .primaryLane, .secondaryLane, .tertiaryLane, .balance,
+            .session, .weekly, .scopedWeekly, .automatic, .spend,
+            .primaryLane, .secondaryLane, .tertiaryLane, .balance, .spendAmount,
         ])
 
         #expect(MenuBarConditionalMetric.session.thresholdUnit == "%")
@@ -492,6 +492,56 @@ struct MenuBarLayoutTests {
         for metric in MenuBarConditionalMetric.allCases {
             #expect(!metric.editorLabel(provider: nil).isEmpty, "\(metric.rawValue)")
         }
+    }
+
+    @Test
+    func `spend metrics declare kind direction and refresh dependencies`() {
+        let expectations: [(MenuBarConditionalMetric, MenuBarConditionalMetricKind, String)] = [
+            (.spend, .percent, "%"),
+            (.spendResetsIn, .hours, "h"),
+            (.spendPace, .signedPercent, "%"),
+            (.spendAmount, .currencyUSD, "USD"),
+        ]
+        for (metric, kind, unit) in expectations {
+            #expect(metric.kind == kind, "\(metric.rawValue)")
+            #expect(metric.thresholdUnit == unit, "\(metric.rawValue)")
+            // A 0.54-era decoder only knows the four percent windows, so none of these may reach it.
+            #expect(!metric.hasLegacyRepresentation, "\(metric.rawValue)")
+        }
+        #expect(MenuBarConditionalMetric.spend.supportsDirection)
+        #expect(MenuBarConditionalMetric.spendAmount.supportsDirection)
+        #expect(!MenuBarConditionalMetric.spendResetsIn.supportsDirection)
+        #expect(!MenuBarConditionalMetric.spendPace.supportsDirection)
+
+        // Refresh gates sign raw rate windows only for the percent and the reset countdown.
+        #expect(MenuBarConditionalMetric.spend.readsRateWindow)
+        #expect(MenuBarConditionalMetric.spendResetsIn.readsRateWindow)
+        #expect(!MenuBarConditionalMetric.spendPace.readsRateWindow)
+        #expect(!MenuBarConditionalMetric.spendAmount.readsRateWindow)
+
+        #expect(MenuBarConditionalMetric.spendPace.isClockDerivedRate)
+        #expect(!MenuBarConditionalMetric.spend.isClockDerivedRate)
+        #expect(!MenuBarConditionalMetric.spendResetsIn.isClockDerivedRate)
+        #expect(!MenuBarConditionalMetric.spendAmount.isClockDerivedRate)
+    }
+
+    @Test
+    func `spend metrics keep their persisted spelling and editor labels`() throws {
+        let spellings = ["spend", "spendResetsIn", "spendPace", "spendAmount"]
+        #expect(spellings.compactMap { MenuBarConditionalMetric(rawValue: $0) }.map(\.rawValue) == spellings)
+        let predicate = MenuBarConditionalPredicate(
+            metric: .spendAmount,
+            direction: .remaining,
+            comparison: .lessThan,
+            threshold: 250)
+        let decoded = try JSONDecoder().decode(MenuBarConditionalPredicate.self, from: JSONEncoder().encode(predicate))
+        #expect(decoded == predicate)
+
+        #expect(MenuBarConditionalMetric.spend.editorLabel(provider: .claude) == "Spend %")
+        #expect(MenuBarConditionalMetric.spendPace.editorLabel(provider: .claude) == "Spend pace")
+        #expect(MenuBarConditionalMetric.spendAmount.editorLabel(provider: .claude) == "Spend")
+        #expect(MenuBarConditionalMetric.spendResetsIn.editorLabel(provider: .claude)
+            == L("menu_bar_layout_conditional_metric_resets_in", L("menu_bar_layout_window_spend")))
     }
 
     @Test

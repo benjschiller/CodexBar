@@ -221,6 +221,9 @@ extension StatusItemController {
         if metrics.contains(.automaticPace) {
             paceWindows.insert(.automatic)
         }
+        if metrics.contains(.spendPace) {
+            paceWindows.insert(.spend)
+        }
         let tokens = resolution.layout.flattenedTokens(conditionals: self.settings.menuBarLayoutConditionals)
         let needsRunsOut = metrics.contains(.runsOutIn) || tokens.contains(.runsOut) || tokens.contains(.runsOutCompact)
         guard !paceWindows.isEmpty || needsRunsOut else { return nil }
@@ -326,6 +329,7 @@ extension StatusItemController {
                 case .weekly, .weeklyResetsIn: windows.weekly
                 case .scopedWeekly, .scopedWeeklyResetsIn: scopedWeekly
                 case .automatic, .automaticResetsIn: windows.automatic
+                case .spend, .spendResetsIn: windows.spend
                 case .primaryLane: windows.primary
                 case .secondaryLane: windows.secondary
                 case .tertiaryLane: windows.tertiary
@@ -345,7 +349,9 @@ extension StatusItemController {
         let resolution = self.renderedMenuBarLayoutResolution(for: provider)
         guard !resolution.usesLegacyRendering else { return nil }
         let tokens = resolution.layout.flattenedTokens(conditionals: self.settings.menuBarLayoutConditionals)
-        guard tokens.contains(where: Self.readsSpend) else { return nil }
+        let metrics = self.referencedConditionalMetrics(resolution: resolution)
+        guard tokens.contains(where: Self.readsSpendToken) || metrics.contains(where: Self.readsSpendMetric)
+        else { return nil }
 
         let spend = self.store.menuBarLayoutSpend(provider: provider, snapshot: snapshot, now: Date())
         return [
@@ -353,14 +359,24 @@ extension StatusItemController {
             "resetsAt=\(Self.exactSignatureValue(spend.window?.resetsAt?.timeIntervalSince1970))",
             "amount=\(spend.amount ?? "nil")",
             "budget=\(spend.budget ?? "nil")",
+            // A spend-amount predicate compares these unrounded USD figures, which the text above rounds away.
+            "usedUSD=\(metrics.contains(.spendAmount) ? Self.exactSignatureValue(spend.usedUSD) : "unused")",
+            "remainingUSD=\(metrics.contains(.spendAmount) ? Self.exactSignatureValue(spend.remainingUSD) : "unused")",
         ].joined(separator: ",")
     }
 
-    private static func readsSpend(_ token: MenuBarLayoutToken) -> Bool {
+    private static func readsSpendToken(_ token: MenuBarLayoutToken) -> Bool {
         switch token {
         case .spendAmount, .spendBudget: true
         case let .percent(window), let .pace(window): window == .spend
         default: token.resetWindow == .spend
+        }
+    }
+
+    private static func readsSpendMetric(_ metric: MenuBarConditionalMetric) -> Bool {
+        switch metric {
+        case .spend, .spendResetsIn, .spendPace, .spendAmount: true
+        default: false
         }
     }
 
