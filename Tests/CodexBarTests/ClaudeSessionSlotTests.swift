@@ -150,22 +150,30 @@ struct ClaudeSessionSlotTests {
     }
 
     @Test
-    func `OAuth routes seven day oauth apps to the weekly slot only when seven day is absent`() throws {
-        let appsOnly = try ClaudeUsageFetcher._mapOAuthUsageForTesting(
-            Data(#"{"five_hour": null, "seven_day_oauth_apps": {"utilization": 9}}"#.utf8),
-            now: Self.now)
-        #expect(appsOnly.primary == nil)
-        #expect(appsOnly.secondary?.usedPercent == 9)
-        #expect(appsOnly.secondary?.windowMinutes == 7 * 24 * 60)
+    func `OAuth never shows seven day oauth apps and rejects a payload that has only that window`() throws {
+        #expect(throws: ClaudeUsageError.self) {
+            try ClaudeUsageFetcher._mapOAuthUsageForTesting(
+                Data(#"{"five_hour": null, "seven_day_oauth_apps": {"utilization": 9}}"#.utf8),
+                now: Self.now)
+        }
 
-        let both = try ClaudeUsageFetcher._mapOAuthUsageForTesting(
+        let alongside = try ClaudeUsageFetcher._mapOAuthUsageForTesting(
+            Data(#"""
+            {"five_hour": {"utilization": 3}, "seven_day_oauth_apps": {"utilization": 9}}
+            """#.utf8),
+            now: Self.now)
+        #expect(alongside.primary?.usedPercent == 3)
+        #expect(alongside.secondary == nil)
+        #expect(alongside.opus == nil)
+
+        let withWeekly = try ClaudeUsageFetcher._mapOAuthUsageForTesting(
             Data(#"""
             {"five_hour": {"utilization": 3}, "seven_day": {"utilization": 42},
              "seven_day_oauth_apps": {"utilization": 9}}
             """#.utf8),
             now: Self.now)
-        #expect(both.primary?.usedPercent == 3)
-        #expect(both.secondary?.usedPercent == 42)
+        #expect(withWeekly.secondary?.usedPercent == 42)
+        #expect(withWeekly.extraRateWindows.isEmpty)
     }
 
     @Test

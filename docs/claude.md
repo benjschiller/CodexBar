@@ -187,7 +187,7 @@ the cookie import.
   - Reset inventory uses `claude-cli/<detected-version> (external, cli)`; eligibility remains server-controlled.
 - Mapping:
   - `five_hour` → session window. Session is only ever this real 5-hour window: when `five_hour` is absent, null, or has no utilization, the account has no session and the menu shows no Session row.
-  - `seven_day` → weekly window, shown as Weekly (never promoted into the session slot). `seven_day_oauth_apps` → the weekly window only when `seven_day` is absent.
+  - `seven_day` → weekly window, shown as Weekly (never promoted into the session slot). `seven_day_oauth_apps` is decoded but never shown; a response whose only window is `seven_day_oauth_apps` has nothing usable (`missing usage data`).
   - `seven_day_sonnet` / `seven_day_opus` → model-specific weekly window.
   - `limits[].weekly_scoped` → model-specific weekly windows; generic `All models` scopes stay in the main weekly row. An account that reports only scoped weekly limits (no session, weekly, or spend cap) loads; the response is rejected as `missing usage data` only when it carries no session, weekly, model-specific, scoped, or spend-cap data.
   - The menu localizes scoped titles as a model name plus weekly duration; canonical snapshot and CLI titles remain unchanged.

@@ -974,7 +974,6 @@ extension ClaudeUsageFetcher {
             rateLimitTier: credentials.rateLimitTier)
         let session = makeWindow(usage.fiveHour, windowMinutes: 5 * 60)
         let weekly = makeWindow(usage.sevenDay, windowMinutes: 7 * 24 * 60)
-            ?? makeWindow(usage.sevenDayOAuthApps, windowMinutes: 7 * 24 * 60)
         let modelSpecific = makeWindow(
             usage.sevenDaySonnet ?? usage.sevenDayOpus,
             windowMinutes: 7 * 24 * 60)
