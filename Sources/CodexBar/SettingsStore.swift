@@ -831,6 +831,7 @@ extension SettingsStore {
     private static func loadMenuBarLayout(userDefaults: UserDefaults) -> MenuBarLayout? {
         MenuBarLayoutPersistence.loadLayout(
             current: self.decodeMenuBarLayout(userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.layoutCurrent)),
+            v4: self.decodeMenuBarLayout(userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.layoutV4)),
             v3: self.decodeMenuBarLayout(userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.layoutV3)),
             released: self.decodeMenuBarLayout(
                 userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.layoutReleased)),
@@ -844,6 +845,8 @@ extension SettingsStore {
         MenuBarLayoutPersistence.loadLibrary(
             current: self.decodeMenuBarLayoutConditionals(
                 userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.conditionalsCurrent)),
+            v4: self.decodeMenuBarLayoutConditionals(
+                userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.conditionalsV4)),
             v3: self.decodeMenuBarLayoutConditionals(
                 userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.conditionalsV3)),
             released: self.decodeMenuBarLayoutConditionals(
@@ -866,6 +869,8 @@ extension SettingsStore {
         MenuBarLayoutPersistence.loadOverrides(
             current: self.decodeMenuBarLayoutOverrides(
                 userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.overridesCurrent)),
+            v4: self.decodeMenuBarLayoutOverrides(
+                userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.overridesV4)),
             v3: self.decodeMenuBarLayoutOverrides(
                 userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.overridesV3)),
             released: self.decodeMenuBarLayoutOverrides(

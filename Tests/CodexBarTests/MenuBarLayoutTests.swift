@@ -1287,6 +1287,48 @@ struct MenuBarLayoutTests {
 
     @Test
     @MainActor
+    func `a spend layout survives a settings reload through V5`() throws {
+        let settings = testSettingsStore(suiteName: "MenuBarLayoutTests-spend-v5-reload")
+        let global = MenuBarLayout(lines: [[.icon, .percent(window: .spend), .spendBudget]])
+        let override = MenuBarLayout(lines: [[.pace(window: .spend), .windowResetCountdown(window: .spend)]])
+        let rule = MenuBarLayoutConditional(
+            name: "Spend watch",
+            clauses: [MenuBarConditionalClause(
+                combinator: nil,
+                predicate: MenuBarConditionalPredicate(metric: .spend, comparison: .greaterThan, threshold: 80))],
+            thenToken: .percent(window: .spend),
+            elseToken: .hidden)
+
+        settings.menuBarLayoutConditionals = [rule]
+        settings.setMenuBarLayout(global, for: nil)
+        settings.setMenuBarLayout(override, for: .claude)
+
+        let reloaded = Self.reloadSettingsStore(settings)
+        #expect(reloaded.menuBarLayout == global)
+        #expect(reloaded.menuBarLayout(for: .claude) == override)
+        #expect(reloaded.menuBarLayoutConditionals == [rule])
+
+        // Every generation is written beside V5, and the V4 key holds only what 0.73.0 can read.
+        let defaults = settings.userDefaults
+        let decoder = JSONDecoder()
+        let projected = try #require(defaults.data(forKey: MenuBarLayoutUserDefaultsKey.layoutV4))
+        #expect(try decoder.decode(MenuBarLayout.self, from: projected) == MenuBarLayout(lines: [[.icon]]))
+        let projectedOverrides = try #require(defaults.data(forKey: MenuBarLayoutUserDefaultsKey.overridesV4))
+        #expect(try decoder.decode([String: MenuBarLayout].self, from: projectedOverrides)["claude"]
+            == .defaultLayout)
+        let projectedLibrary = try #require(defaults.data(forKey: MenuBarLayoutUserDefaultsKey.conditionalsV4))
+        #expect(try decoder.decode([MenuBarLayoutConditional].self, from: projectedLibrary).isEmpty)
+        for key in [
+            MenuBarLayoutUserDefaultsKey.layoutCurrent, MenuBarLayoutUserDefaultsKey.layoutV3,
+            MenuBarLayoutUserDefaultsKey.layoutReleased, MenuBarLayoutUserDefaultsKey.layout,
+            MenuBarLayoutUserDefaultsKey.overridesCurrent, MenuBarLayoutUserDefaultsKey.conditionalsCurrent,
+        ] {
+            #expect(defaults.data(forKey: key) != nil, "\(key)")
+        }
+    }
+
+    @Test
+    @MainActor
     func `lane layouts dual-write an older-readable fallback`() throws {
         let settings = testSettingsStore(suiteName: "MenuBarLayoutTests-lane-downgrade")
         let global = MenuBarLayout(lines: [[.icon, .lanePercent(lane: .primary)]])
