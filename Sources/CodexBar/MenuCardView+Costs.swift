@@ -72,6 +72,7 @@ struct ProviderCostContent: View {
                                 .lineLimit(1)
                                 .fixedSize(horizontal: true, vertical: false)
                                 .layoutPriority(1)
+                                .help(self.section.resetTooltip ?? "")
                         }
                     }
                 }
@@ -741,6 +742,9 @@ extension UsageMenuCardView.Model {
         else { return section }
         var result = section
         result.resetText = Self.resetText(for: window, style: input.resetTimeDisplayStyle, now: input.now)
+        if result.resetText != nil, cost.resetsAtIsInferred == true {
+            result.resetTooltip = L("cost_reset_inferred_tooltip", input.metadata.displayName)
+        }
         guard paceVisible,
               let pace = Self.displayableWeeklyPace(UsagePace.weekly(
                   window: window,

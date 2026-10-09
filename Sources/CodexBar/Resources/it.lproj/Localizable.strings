@@ -2511,3 +2511,5 @@
 "Pace sign" = "Segno del ritmo";
 "Ahead of pace is +" = "Oltre il ritmo è +";
 "Reserve is +" = "La riserva è +";
+
+"cost_reset_inferred_tooltip" = "Dedotto: %@ non comunica questa data. I limiti di spesa mensili si reimpostano alle 00:00 UTC del giorno 1.";

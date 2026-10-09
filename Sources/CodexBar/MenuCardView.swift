@@ -162,6 +162,7 @@ struct UsageMenuCardView: View {
             var showsInProviderDetails = true
             var percentStyle: PercentStyle = .used
             var resetText: String?
+            var resetTooltip: String?
             var pacePercent: Double?
             var paceOnTop = true
             var paceText: String?

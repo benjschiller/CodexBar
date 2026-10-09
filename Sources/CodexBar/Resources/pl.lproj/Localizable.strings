@@ -2510,3 +2510,5 @@
 "Pace sign" = "Znak tempa zużycia";
 "Ahead of pace is +" = "Powyżej tempa to +";
 "Reserve is +" = "Rezerwa to +";
+
+"cost_reset_inferred_tooltip" = "Szacowane: %@ nie podaje tej daty. Miesięczne limity wydatków są resetowane o 00:00 UTC pierwszego dnia miesiąca.";

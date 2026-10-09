@@ -2510,3 +2510,5 @@
 "Pace sign" = "Kullanım hızı işareti";
 "Ahead of pace is +" = "Hızın üzerinde kullanım +";
 "Reserve is +" = "Rezerv +";
+
+"cost_reset_inferred_tooltip" = "Çıkarım: %@ bu tarihi bildirmez. Aylık harcama limitleri her ayın 1'inde 00:00 UTC'de sıfırlanır.";

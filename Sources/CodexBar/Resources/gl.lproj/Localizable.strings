@@ -2506,3 +2506,5 @@
 "Pace sign" = "Signo do ritmo";
 "Ahead of pace is +" = "Por riba do ritmo é +";
 "Reserve is +" = "A reserva é +";
+
+"cost_reset_inferred_tooltip" = "Inferido: %@ non informa desta data. Os límites de gasto mensuais restablécense ás 00:00 UTC o día 1.";

@@ -1381,6 +1381,7 @@ private enum ClaudeWebExtraUsageCost {
             period: "Monthly cap",
             resetsAt: rollover?.resetsAt,
             windowMinutes: rollover?.windowMinutes,
+            resetsAtIsInferred: rollover == nil ? nil : true,
             updatedAt: now)
     }
 

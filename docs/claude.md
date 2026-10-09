@@ -330,8 +330,8 @@ browser-only billing details, and enable **Show credits and extra usage** to dis
 
 Claude reports Extra usage spend and cap but no reset. CodexBar treats every Claude monthly cap as rolling over at 00:00 UTC on the 1st, Anthropic's documented Enterprise spend-limit period (https://platform.claude.com/docs/en/manage-claude/spend-limits-api). Claude Code shows the same calendar-month boundary in local time, so labels can differ by the UTC offset. The rollover returns period spend to zero. It is not a redeemable reset: Limit Reset Credits are separate, and Enterprise seats report `cedar_ember` ineligible with reason `seat`. An admin changing the cap changes the percentage, not the rollover date.
 
-- The reset date and the real length of that calendar month (28 to 31 days) are stored on the cost snapshot and apply to both the `Spend limit` and `Monthly cap` labels. Older cached snapshots decode without them and show no reset until the next refresh.
-- The Extra usage card shows `Resets in …` (or the absolute time, per the reset display setting) and a pace marker with its forecast when pace is visible.
+- The rollover date is *inferred*: CodexBar computes it, and Claude does not report it. The cost snapshot stores the date, the real length of that calendar month (28 to 31 days), and an `resetsAtIsInferred` flag, and all of it applies to both the `Spend limit` and `Monthly cap` labels. Older cached snapshots decode without these fields and show no reset until the next refresh.
+- The Extra usage card shows the rollover as an ordinary reset in local time (`Resets in …`, or the absolute time per the reset display setting) with a pace marker and forecast when pace is visible. Because the boundary is 00:00 UTC, the local label depends on your time zone: in US Pacific time the rollover at 00:00 UTC on Nov 1 reads as Oct 31, 5 PM. Hovering the reset text shows a tooltip that marks the date as inferred.
 - A Claude seat with only an Extra usage cap (no measured session, weekly, or model-scoped window) shows that cap in the menu bar metric and draws one Meter bar from it.
 
 ## Cloud-session credits

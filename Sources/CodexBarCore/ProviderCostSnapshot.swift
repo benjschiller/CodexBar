@@ -22,6 +22,8 @@ public struct ProviderCostSnapshot: Equatable, Codable, Sendable {
     public let balanceIsWorkspace: Bool?
     /// Length of the budget period that `resetsAt` closes, when the provider's cadence is known.
     public let windowMinutes: Int?
+    /// True when CodexBar computed `resetsAt` itself because the provider reports no reset for this budget.
+    public let resetsAtIsInferred: Bool?
     public let updatedAt: Date
     /// Codex-only unavailable observation. Optional for compatibility with successful and legacy snapshots.
     var balanceIsUnavailable: Bool?
@@ -38,6 +40,7 @@ public struct ProviderCostSnapshot: Equatable, Codable, Sendable {
         balanceUpdatedAt: Date? = nil,
         balanceIsWorkspace: Bool? = nil,
         windowMinutes: Int? = nil,
+        resetsAtIsInferred: Bool? = nil,
         updatedAt: Date)
     {
         self.used = used
@@ -51,6 +54,7 @@ public struct ProviderCostSnapshot: Equatable, Codable, Sendable {
         self.balanceUpdatedAt = balanceUpdatedAt
         self.balanceIsWorkspace = balanceIsWorkspace
         self.windowMinutes = windowMinutes
+        self.resetsAtIsInferred = resetsAtIsInferred
         self.updatedAt = updatedAt
         self.balanceIsUnavailable = nil
     }
@@ -91,6 +95,7 @@ public struct ProviderCostSnapshot: Equatable, Codable, Sendable {
             balanceUpdatedAt: balanceUpdatedAt,
             balanceIsWorkspace: balanceIsWorkspace,
             windowMinutes: self.windowMinutes,
+            resetsAtIsInferred: self.resetsAtIsInferred,
             updatedAt: self.updatedAt)
         result.balanceIsUnavailable = balanceIsUnavailable
         return result

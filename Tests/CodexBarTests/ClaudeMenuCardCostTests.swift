@@ -164,12 +164,32 @@ struct ClaudeMenuCardCostTests {
     }
 
     @Test
+    func `inferred rollover carries a tooltip and a reported reset does not`() throws {
+        let inferredModel = try Self.makeModel(cost: Self.cadencedCost(used: 40), showUsed: true)
+        let inferred = try #require(inferredModel.providerCost)
+        #expect(inferred.resetText == "Resets in 10d")
+        #expect(inferred.resetTooltip ==
+            "Inferred: Claude doesn't report this date. Monthly spend caps roll over at 00:00 UTC on the 1st.")
+
+        let reported = Self.cost(
+            used: 40,
+            limit: 100,
+            resetsAt: Self.monthRollover,
+            windowMinutes: Self.juneMinutes)
+        let reportedModel = try Self.makeModel(cost: reported, showUsed: true)
+        let reportedSection = try #require(reportedModel.providerCost)
+        #expect(reportedSection.resetText == "Resets in 10d")
+        #expect(reportedSection.resetTooltip == nil)
+    }
+
+    @Test
     func `spend cap without a reported cadence shows no rollover cues`() throws {
         let resetOnly = Self.cost(used: 40, limit: 100, resetsAt: Self.monthRollover)
         let model = try Self.makeModel(cost: resetOnly, showUsed: true)
         let section = try #require(model.providerCost)
 
         #expect(section.resetText == nil)
+        #expect(section.resetTooltip == nil)
         #expect(section.paceText == nil)
         #expect(section.pacePercent == nil)
     }
@@ -196,7 +216,8 @@ struct ClaudeMenuCardCostTests {
         balance: Double? = nil,
         period: String = "Monthly cap",
         resetsAt: Date? = nil,
-        windowMinutes: Int? = nil) -> ProviderCostSnapshot
+        windowMinutes: Int? = nil,
+        resetsAtIsInferred: Bool? = nil) -> ProviderCostSnapshot
     {
         ProviderCostSnapshot(
             used: used,
@@ -206,11 +227,17 @@ struct ClaudeMenuCardCostTests {
             resetsAt: resetsAt,
             balance: balance,
             windowMinutes: windowMinutes,
+            resetsAtIsInferred: resetsAtIsInferred,
             updatedAt: self.now)
     }
 
     private static func cadencedCost(used: Double) -> ProviderCostSnapshot {
-        self.cost(used: used, limit: 100, resetsAt: self.monthRollover, windowMinutes: self.juneMinutes)
+        self.cost(
+            used: used,
+            limit: 100,
+            resetsAt: self.monthRollover,
+            windowMinutes: self.juneMinutes,
+            resetsAtIsInferred: true)
     }
 
     private static func makeModel(

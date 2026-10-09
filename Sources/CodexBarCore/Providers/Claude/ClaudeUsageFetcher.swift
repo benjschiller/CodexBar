@@ -1044,6 +1044,7 @@ extension ClaudeUsageFetcher {
             period: isSpendLimit ? "Spend limit" : "Monthly cap",
             resetsAt: rollover?.resetsAt,
             windowMinutes: rollover?.windowMinutes,
+            resetsAtIsInferred: rollover == nil ? nil : true,
             updatedAt: now)
     }
 

@@ -2510,3 +2510,5 @@
 "Pace sign" = "Tanda laju penggunaan";
 "Ahead of pace is +" = "Di atas laju adalah +";
 "Reserve is +" = "Cadangan adalah +";
+
+"cost_reset_inferred_tooltip" = "Diperkirakan: %@ tidak melaporkan tanggal ini. Batas pengeluaran bulanan direset pada pukul 00:00 UTC setiap tanggal 1.";

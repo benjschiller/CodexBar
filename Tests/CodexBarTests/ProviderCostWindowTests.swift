@@ -75,6 +75,40 @@ struct ProviderCostWindowTests {
         #expect(roundTripped.windowMinutes == 30 * 24 * 60)
     }
 
+    @Test
+    func `legacy cost snapshots decode without the inferred flag`() throws {
+        let json = """
+        {
+            "used": 12.5,
+            "limit": 100,
+            "currencyCode": "USD",
+            "period": "Monthly cap",
+            "resetsAt": 800000000,
+            "windowMinutes": 43200,
+            "updatedAt": 0
+        }
+        """
+        let legacy = try JSONDecoder().decode(ProviderCostSnapshot.self, from: Data(json.utf8))
+        #expect(legacy.resetsAtIsInferred == nil)
+
+        let encodedLegacy = try JSONEncoder().encode(legacy)
+        let object = try #require(JSONSerialization.jsonObject(with: encodedLegacy) as? [String: Any])
+        #expect(object["resetsAtIsInferred"] == nil)
+
+        let inferred = ProviderCostSnapshot(
+            used: 12.5,
+            limit: 100,
+            currencyCode: "USD",
+            resetsAt: Date(timeIntervalSince1970: 1_800_000_000),
+            windowMinutes: 30 * 24 * 60,
+            resetsAtIsInferred: true,
+            updatedAt: Date(timeIntervalSince1970: 0))
+        let roundTripped = try JSONDecoder().decode(ProviderCostSnapshot.self, from: JSONEncoder().encode(inferred))
+        #expect(roundTripped == inferred)
+        #expect(roundTripped.resetsAtIsInferred == true)
+        #expect(inferred.replacing(balance: 5).resetsAtIsInferred == true)
+    }
+
     @Test(arguments: [0.0, -1.0, Double.nan])
     func `balance only or invalid limits never become quota meters`(limit: Double) {
         let cost = ProviderCostSnapshot(used: 10, limit: limit, currencyCode: "USD", updatedAt: .now)
