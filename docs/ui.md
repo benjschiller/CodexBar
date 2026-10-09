@@ -66,11 +66,16 @@ read_when:
 - Time tokens offer Session and Weekly variants of Resets in and Reset at, including in conditional branches.
   The original unqualified reset tokens continue to follow the automatic window. A selected window that is
   unavailable displays a dash rather than substituting another window. Cursor also exposes **Grok Bot %**
-  while its named allowance is available; a saved token shows its label and a dash when unavailable. Saved layouts use V4 keys
-  alongside a V3 projection that drops named-extra tokens but keeps explicit reset selections, and a
+  while its named allowance is available; a saved token shows its label and a dash when unavailable. Saved layouts use V5 keys
+  alongside a V4 projection that drops Spend tokens and the conditional rules that use them but keeps named extras and
+  explicit reset selections, a V3 projection that also drops named-extra tokens, and a
   v0.56.8-readable V2 projection, which omits the new tokens and conditional rules that use them while preserving
-  existing conditional placements, direct lane selections, and other providers' overrides. Re-upgrading restores
+  existing conditional placements, direct lane selections, and other providers' overrides. A layout made only of Spend
+  tokens reads back as the default layout in an older release. Re-upgrading restores
   the full layout unless an older release changed its saved projection. The oldest-format projection is also retained.
+- Spend %, Spend pace, Spend resets in/at, Spend, and Spend / budget are new palette options that default off, and
+  existing layouts are not migrated. They appear in All providers and, for a single provider, once that provider
+  reports a spend budget; the conditional editor always lists them.
 - All providers previews the default layout and lists enabled providers with saved overrides, even when an override
   currently matches the default. Each “Use all-providers layout” action removes only that provider's override;
   global edits preserve overrides, and disabled providers are left untouched. Before a default is first saved,
@@ -88,8 +93,10 @@ read_when:
 | Usage | Session %, Weekly %, Scoped weekly %, Auto %, Usage bar | Window percentage or a compact three-glyph usage bar |
 | Usage | Named allowances (Cursor Grok Bot, Antigravity family weekly quotas) | Own label and percentage; a saved selection shows a dash when unavailable |
 | Usage | Session pace, Weekly pace, Auto pace | Signed pace delta for that window |
-| Time | Resets in, Reset at (automatic, Session, Weekly), Runs out | Selected-window relative reset, absolute reset, or pace estimate |
+| Usage | Spend %, Spend pace | Share of the provider-reported spend budget with the budget's currency symbol as a prefix (`$ 46%`), and its pace through the budget period |
+| Time | Resets in, Reset at (automatic, Session, Weekly, Spend), Runs out | Selected-window relative reset, absolute reset, or pace estimate |
 | Money | Balance, Cost today, Cost 30d | Provider balance or remaining credits, or local cost estimate for the selected period |
+| Money | Spend, Spend / budget | Provider-reported amount spent this period, and that amount against the budget (`$420 / $1,000`), in the display currency |
 | Structure | Separator dot, Space, Line break | Spacing and optional two-line composition |
 
 The pace tokens render the same delta the menu card shows as "in deficit"/"in reserve", in the compact signed form the
@@ -97,7 +104,20 @@ pre-0.45 **Both** display mode used: `+11%` means usage runs that far ahead of t
 behind it, `0%` on pace. Each pace token reads its own window, so `Weekly pace` never borrows the session delta — unlike
 `Runs out`, which always estimates from the weekly (or automatic) lane. A pace token renders an en dash while pace is
 unavailable, including the first 3% of a window. The weekly menu-bar pace token may appear after 1% of its weekly
-window has elapsed; session, automatic, and Runs out tokens keep the 3% threshold. See [Pace tracking](#pace-tracking).
+window has elapsed; session, automatic, and Runs out tokens keep the 3% threshold. `Spend pace` reads only the
+budget's own period (for Claude, the UTC calendar month) as an even-consumption line, applies the weekly token's 1%
+threshold, and never uses learned history. See [Pace tracking](#pace-tracking).
+
+Spend tokens read the provider's spend budget through the same source as the Extra usage menu bar metric: Claude's
+Extra usage or Enterprise monthly cap, Cursor's on-demand limit, and Codex's credit cap. Only providers that declare
+that metric can offer a budget, and the **Show credits and extra usage** setting hides it. A balance, credit pool, or
+local cost is never substituted: a missing budget renders `$ –` for Spend %, and an en dash for the other Spend tokens.
+Codex's credit cap is denominated in credits, so its Spend % renders unprefixed and Spend and Spend / budget show a
+dash. The percent prefix always names the budget's own currency; Spend and Spend / budget convert to the display
+currency and round to whole units. Spend % follows the used/remaining preference like the other percentages, and the
+per-provider **Menu bar metric** picker never selects, rewrites, or removes it. Conditional rules can test Spend %,
+Spend resets in, Spend pace, and Spend (USD, used or remaining); like cost rules, the amount has no value when the
+budget's currency has no USD rate.
 
 Choose **Pace sign** under **Menu Bar → Icon**, next to **Color Pace Indicator**:
 **Ahead of pace is +** (the default) shows deficits as positive and reserves as negative;
@@ -107,9 +127,9 @@ pace stays an en dash. The menu card's reserve/deficit wording and the numeric m
 do not change: positive pace thresholds still mean usage ahead of pace.
 
 Enable **Color Pace Indicator** under **Menu Bar → Icon** to show usage behind pace (reserve) in green and usage ahead
-of pace (risk of running out early) in red. The option defaults off, applies to all three pace tokens and the layout
+of pace (risk of running out early) in red. The option defaults off, applies to all four pace tokens and the layout
 preview, and keeps the signed percentages. Zero and unavailable pace stay neutral; stale pace colors are dimmed unless high-contrast rendering is active.
-It colors **Session pace**, **Weekly pace**, and **Auto pace** in the layout editor. Enabling it does not add tokens,
+It colors **Session pace**, **Weekly pace**, **Auto pace**, and **Spend pace** in the layout editor. Enabling it does not add tokens,
 rewrite stored layouts, or migrate legacy display modes. Existing installs stay monochrome until the option is enabled.
 These colors keep the same meaning with either pace sign: reserve is green and deficit is red.
 
@@ -205,8 +225,9 @@ When usage is in deficit, the right-hand label shows an estimated "Runs out in �
 
 Pace is calculated for any provider window with enough reset timing data and is hidden when less than 3% of the
 window has elapsed. The weekly menu-bar pace token is the one exception: it may appear after 1% of the weekly
-window has elapsed, including when Codex historical tracking predicts less than 1% usage. Session, automatic, and
-Runs out tokens remain hidden until 3% of their window has elapsed.
+window has elapsed, including when Codex historical tracking predicts less than 1% usage. The Spend pace token
+shares that 1% threshold for its budget period. Session, automatic, and Runs out tokens remain hidden until 3% of
+their window has elapsed.
 
 ## Preferences notes
 - Advanced: “Disable Keychain access” turns off browser cookie import; paste Cookie headers manually in Providers.
