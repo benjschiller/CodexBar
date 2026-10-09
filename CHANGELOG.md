@@ -91,7 +91,7 @@
 - Docs: correct Codex Auto source order and explain credential renewal, local cost coverage, and the distinct Pi, OpenCodex, OpenCode, Amp, and dots paths (#3635, #3273, #3556, #4300).
 - Linux: reduce idle `codexbar serve` memory by periodically returning freed glibc heap pages to the operating system (#4374). Thanks @MonkeyMed!
 - Codex costs: share repeated turn identifiers when reading cached usage to reduce retained memory (#3323). Thanks @CharlieLZ and @kristofferR!
-- Claude: monthly spend caps show their inferred rollover date and pace, and spend-only accounts draw one Meter bar instead of an empty or full one (#TBD). Thanks @benjschiller!
+- Claude: Session now shows only a real 5-hour window from OAuth, Web, and CLI, so weekly-only, model-only, and spend-only accounts no longer get a stand-in session; OAuth loads accounts that report only model-scoped weekly limits; the CLI reads the Usage credits spend cap; monthly spend caps show their inferred rollover date and pace, and spend-only accounts draw one Meter bar instead of an empty or full one (#TBD). Thanks @benjschiller!
 
 ## 0.73.0 — 2026-10-07
 
