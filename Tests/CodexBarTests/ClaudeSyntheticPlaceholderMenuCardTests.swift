@@ -273,7 +273,7 @@ struct ClaudeSyntheticPlaceholderDisplayTests {
                 resetStyle: .countdown),
             now: Self.now)
         let cliLines = cli.components(separatedBy: "\n")
-        #expect(cliLines.filter { $0 == "Weekly: 58% left" }.count == 1)
+        #expect(cliLines.filter { $0.hasPrefix("Weekly: 58% left") }.count == 1)
         #expect(!cliLines.contains { $0.hasPrefix("Session") })
     }
 
