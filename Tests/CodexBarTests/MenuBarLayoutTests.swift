@@ -3,6 +3,8 @@ import Testing
 @testable import CodexBar
 @testable import CodexBarCore
 
+// Token, conditional, and persistence coverage share one fixture vocabulary.
+// swiftlint:disable file_length
 // swiftlint:disable:next type_body_length
 struct MenuBarLayoutTests {
     private struct UnnormalizedLayout: Encodable {
@@ -54,6 +56,44 @@ struct MenuBarLayoutTests {
         #expect(String(bytes: labeled, encoding: .utf8) == #"{"runsOut":{}}"#)
         #expect(String(bytes: compact, encoding: .utf8) == #"{"runsOutCompact":{}}"#)
         #expect(try JSONDecoder().decode(MenuBarLayoutToken.self, from: labeled) == .runsOut)
+    }
+
+    @Test
+    func `spend token discriminators stay stable and round trip`() throws {
+        let fixtures: [(MenuBarLayoutToken, String)] = [
+            (.percent(window: .spend), #"{"percent":{"window":"spend"}}"#),
+            (.pace(window: .spend), #"{"pace":{"window":"spend"}}"#),
+            (.windowResetCountdown(window: .spend), #"{"windowResetCountdown":{"window":"spend"}}"#),
+            (.windowResetAbsolute(window: .spend), #"{"windowResetAbsolute":{"window":"spend"}}"#),
+            (.spendAmount, #"{"spendAmount":{}}"#),
+            (.spendBudget, #"{"spendBudget":{}}"#),
+        ]
+        for (token, json) in fixtures {
+            #expect(try String(bytes: JSONEncoder().encode(token), encoding: .utf8) == json)
+            #expect(try JSONDecoder().decode(MenuBarLayoutToken.self, from: Data(json.utf8)) == token)
+        }
+        #expect(MenuBarLayoutToken.windowResetCountdown(window: .spend).resetWindow == .spend)
+    }
+
+    @Test
+    func `legacy metric mapping never selects the spend window`() {
+        for metric in [
+            ProviderMenuBarMetric.automatic,
+            .primary,
+            .secondary,
+            .primaryAndSecondary,
+            .tertiary,
+            .extraUsage,
+            .average,
+            .monthlyPlan,
+        ] {
+            #expect(PercentWindow.forMetric(
+                metric,
+                primarySemanticWindow: .session,
+                secondarySemanticWindow: .weekly) != .spend)
+        }
+        #expect(PercentWindow.spend.providerLabel(provider: .claude) == nil)
+        #expect(PercentWindow.spend.providerLabel(provider: nil) == nil)
     }
 
     @Test

@@ -41,6 +41,8 @@ struct MenuBarLayoutRenderMetrics: Hashable {
     let balanceUsedUSD: Double?
     let costTodayUSD: Double?
     let cost30dUSD: Double?
+    /// Usage-ahead Spend pace delta in whole percentage points. Defaulted so providers without a budget omit it.
+    var spendPaceDelta: Double?
 
     static let unavailable = MenuBarLayoutRenderMetrics(
         sessionPaceDelta: nil,
@@ -88,6 +90,14 @@ struct MenuBarLayoutRenderData: Hashable {
     let cost30d: String?
     /// Numeric twins of the display strings above, for conditional predicates.
     let metrics: MenuBarLayoutRenderMetrics
+    /// The provider-reported spend budget. Defaulted so providers without one need no spend inputs.
+    var spend: MenuBarLayoutRenderWindow?
+    var spendPace: String?
+    /// Provider-reported money in the display currency; nil for credit-denominated caps.
+    var spendAmount: String?
+    var spendBudget: String?
+    /// The Spend percent's prefix. Empty for credit-denominated caps, which have no currency symbol.
+    var spendCurrencySymbol = "$"
 
     func extraTitle(_ id: String) -> String? {
         ProviderDescriptorRegistry.descriptor(for: self.provider).menuBarMetrics.namedExtras[id].map { title in
@@ -754,6 +764,13 @@ final class MenuBarLayoutRenderer {
                 data.cost30d,
                 unavailableLabel: L("30-day cost unavailable"),
                 attributes: style.attributes)
+        case .spendAmount, .spendBudget:
+            let label = item.editorLabel(provider: data.provider)
+            return self.optionalTextToken(
+                item == .spendBudget ? data.spendBudget : data.spendAmount,
+                unavailableLabel: L("%@ unavailable", label),
+                accessibilityPrefix: L("menu_bar_layout_window_spend"),
+                attributes: style.attributes)
         case .separatorDot:
             return self.textToken("·", accessibilityText: nil, attributes: style.attributes)
         case .space:
@@ -798,6 +815,8 @@ final class MenuBarLayoutRenderer {
             prefix = data.scopedWeeklyTitle.map { String($0.prefix(1)).uppercased() } ?? "F"
         case .automatic:
             prefix = ""
+        case .spend:
+            prefix = data.spendCurrencySymbol
         }
         let display = prefix.isEmpty ? resolvedValue.text : "\(prefix) \(resolvedValue.text)"
         let accessibility = resolvedValue.isAvailable
@@ -812,6 +831,7 @@ final class MenuBarLayoutRenderer {
         case .weekly: self.secondaryLabel(data: data) ?? L("Weekly")
         case .scopedWeekly: data.scopedWeeklyTitle ?? L("Scoped weekly")
         case .automatic: L("Usage")
+        case .spend: L("menu_bar_layout_window_spend")
         }
     }
 
@@ -1053,6 +1073,7 @@ final class MenuBarLayoutRenderer {
         case .weekly: data.weekly
         case .scopedWeekly: data.scopedWeekly
         case .automatic: data.automatic
+        case .spend: data.spend
         }
     }
 
@@ -1078,6 +1099,7 @@ final class MenuBarLayoutRenderer {
         case .weekly: data.weeklyPace
         case .scopedWeekly: nil
         case .automatic: data.automaticPace
+        case .spend: data.spendPace
         }
     }
 
@@ -1089,6 +1111,7 @@ final class MenuBarLayoutRenderer {
         case .session: data.metrics.sessionPaceDelta
         case .weekly: data.metrics.weeklyPaceDelta
         case .automatic: data.metrics.automaticPaceDelta
+        case .spend: data.metrics.spendPaceDelta
         case .scopedWeekly: nil
         }
     }

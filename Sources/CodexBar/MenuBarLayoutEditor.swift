@@ -44,19 +44,32 @@ struct MenuBarLayoutDragItem: Codable, Hashable, Transferable, Sendable {
 }
 
 enum MenuBarLayoutPaletteTokens {
-    static func usage(provider: UsageProvider?, snapshot: UsageSnapshot?) -> [MenuBarLayoutToken] {
-        [
+    /// Spend tokens follow the provider's budget: the all-providers layout offers them for any provider
+    /// that might report one, while a provider's own palette waits until that provider has a budget.
+    static func offersSpend(provider: UsageProvider?, spendLimit: MenuBarSpendLimit?) -> Bool {
+        provider == nil || spendLimit != nil
+    }
+
+    static func usage(
+        provider: UsageProvider?,
+        snapshot: UsageSnapshot?,
+        spendLimit: MenuBarSpendLimit? = nil)
+        -> [MenuBarLayoutToken]
+    {
+        let offersSpend = self.offersSpend(provider: provider, spendLimit: spendLimit)
+        return [
             .percent(window: .session),
             .percent(window: .weekly),
             .percent(window: .scopedWeekly),
-        ] + MenuBarLayoutLane.available(for: provider, snapshot: snapshot).map { .lanePercent(lane: $0) }
+        ] + (offersSpend ? [.percent(window: .spend)] : [])
+            + MenuBarLayoutLane.available(for: provider, snapshot: snapshot).map { .lanePercent(lane: $0) }
             + MenuBarLayoutNamedExtra.availableTokens(provider: provider, snapshot: snapshot) + [
                 .percent(window: .automatic),
                 .usageBar,
                 .pace(window: .session),
                 .pace(window: .weekly),
                 .pace(window: .automatic),
-            ]
+            ] + (offersSpend ? [.pace(window: .spend)] : [])
     }
 
     static let time: [MenuBarLayoutToken] = [
@@ -66,9 +79,19 @@ enum MenuBarLayoutPaletteTokens {
         .windowResetAbsolute(window: .session),
         .windowResetCountdown(window: .weekly),
         .windowResetAbsolute(window: .weekly),
+        .windowResetCountdown(window: .spend),
+        .windowResetAbsolute(window: .spend),
         .runsOut,
         .runsOutCompact,
     ]
+
+    static func time(offersSpend: Bool) -> [MenuBarLayoutToken] {
+        offersSpend ? self.time : self.time.filter { $0.resetWindow != .spend }
+    }
+
+    static func money(offersSpend: Bool) -> [MenuBarLayoutToken] {
+        [.balance, .costToday, .cost30d] + (offersSpend ? [.spendAmount, .spendBudget] : [])
+    }
 
     static let conditionalBranch: [MenuBarLayoutToken] = [
         .icon,
@@ -77,15 +100,19 @@ enum MenuBarLayoutPaletteTokens {
         .percent(window: .session),
         .percent(window: .weekly),
         .percent(window: .scopedWeekly),
+        .percent(window: .spend),
         .percent(window: .automatic),
         .usageBar,
         .pace(window: .session),
         .pace(window: .weekly),
         .pace(window: .automatic),
+        .pace(window: .spend),
     ] + Self.time + [
         .balance,
         .costToday,
         .cost30d,
+        .spendAmount,
+        .spendBudget,
         .separatorDot,
         .space,
         .hidden,
@@ -307,7 +334,13 @@ struct MenuBarLayoutEditor: View {
     }
 
     private var paletteGroups: [MenuBarLayoutPaletteGroup] {
-        [
+        let spendLimit = self.persistenceProvider.flatMap {
+            self.store.spendLimit(for: $0, snapshot: self.persistenceSnapshot)
+        }
+        let offersSpend = MenuBarLayoutPaletteTokens.offersSpend(
+            provider: self.persistenceProvider,
+            spendLimit: spendLimit)
+        return [
             MenuBarLayoutPaletteGroup(
                 id: "identity",
                 title: L("menu_bar_layout_group_identity"),
@@ -318,17 +351,18 @@ struct MenuBarLayoutEditor: View {
                 title: L("menu_bar_layout_group_usage"),
                 tokens: MenuBarLayoutPaletteTokens.usage(
                     provider: self.persistenceProvider,
-                    snapshot: self.persistenceSnapshot),
+                    snapshot: self.persistenceSnapshot,
+                    spendLimit: spendLimit),
                 includesLineBreak: false),
             MenuBarLayoutPaletteGroup(
                 id: "time",
                 title: L("menu_bar_layout_group_time"),
-                tokens: MenuBarLayoutPaletteTokens.time,
+                tokens: MenuBarLayoutPaletteTokens.time(offersSpend: offersSpend),
                 includesLineBreak: false),
             MenuBarLayoutPaletteGroup(
                 id: "money",
                 title: L("menu_bar_layout_group_money"),
-                tokens: [.balance, .costToday, .cost30d],
+                tokens: MenuBarLayoutPaletteTokens.money(offersSpend: offersSpend),
                 includesLineBreak: false),
             MenuBarLayoutPaletteGroup(
                 id: "structure",
@@ -974,6 +1008,14 @@ struct MenuBarLayoutPreview: View {
         let samplePaceDelta = { (window: RateWindow) -> Double? in
             UsagePace.weekly(window: window, now: now)?.deltaPercent.rounded()
         }
+        // Only providers that can report a budget preview the Spend palette tokens.
+        let spendSample: RateWindow? = self.store.supportsSpendLimit(for: provider)
+            ? RateWindow(
+                usedPercent: 46,
+                windowMinutes: 30 * 24 * 60,
+                resetsAt: now.addingTimeInterval(12 * 24 * 60 * 60),
+                resetDescription: nil)
+            : nil
         return MenuBarLayoutRenderData(
             provider: provider,
             iconKey: "\(provider.rawValue)-representative",
@@ -1007,7 +1049,12 @@ struct MenuBarLayoutPreview: View {
                 balanceRemainingUSD: provider == .openrouter ? 12.34 : nil,
                 balanceUsedUSD: provider == .openrouter ? 7.66 : nil,
                 costTodayUSD: 1.25,
-                cost30dUSD: 20))
+                cost30dUSD: 20,
+                spendPaceDelta: spendSample.flatMap(samplePaceDelta)),
+            spend: MenuBarLayoutRenderWindow(spendSample),
+            spendPace: spendSample.flatMap(samplePace),
+            spendAmount: spendSample.map { _ in "$460" },
+            spendBudget: spendSample.map { _ in "$460 / $1,000" })
     }
 }
 
@@ -1123,12 +1170,14 @@ extension MenuBarLayoutToken {
         case .percent(window: .weekly): L("menu_bar_layout_token_weekly")
         case .percent(window: .scopedWeekly): L("menu_bar_layout_token_scoped_weekly")
         case .percent(window: .automatic): L("menu_bar_layout_token_auto")
+        case .percent(window: .spend): L("menu_bar_layout_token_spend")
         case let .lanePercent(lane): L("%@ %@", lane.rawValue.capitalized, "%")
         case .extraPercent: L("%@ %@", L("Usage"), "%")
         case .pace(window: .session): L("menu_bar_layout_token_session_pace")
         case .pace(window: .weekly): L("menu_bar_layout_token_weekly_pace")
         case .pace(window: .scopedWeekly): L("menu_bar_layout_token_weekly_pace")
         case .pace(window: .automatic): L("menu_bar_layout_token_auto_pace")
+        case .pace(window: .spend): L("menu_bar_layout_token_spend_pace")
         case .usageBar: L("menu_bar_layout_token_bar")
         case .resetCountdown: L("menu_bar_layout_token_resets_in")
         case .resetAbsolute: L("menu_bar_layout_token_reset_at")
@@ -1141,6 +1190,8 @@ extension MenuBarLayoutToken {
         case .balance: L("Balance")
         case .costToday: L("menu_bar_layout_token_cost_today")
         case .cost30d: L("menu_bar_layout_token_cost_30d")
+        case .spendAmount: L("menu_bar_layout_token_spend_amount")
+        case .spendBudget: L("menu_bar_layout_token_spend_budget")
         case .separatorDot: "·"
         case .space: L("menu_bar_layout_token_space")
         case .conditional: L("menu_bar_layout_token_conditional")
@@ -1154,6 +1205,7 @@ extension MenuBarLayoutToken {
         case .weekly: L("Weekly")
         case .scopedWeekly: L("menu_bar_layout_conditional_metric_scoped_weekly")
         case .automatic: L("Automatic")
+        case .spend: L("menu_bar_layout_window_spend")
         }
     }
 
@@ -1187,7 +1239,7 @@ extension MenuBarLayoutToken {
         case .resetAbsolute, .windowResetAbsolute: "clock"
         case .runsOut, .runsOutCompact: "hourglass.bottomhalf.filled"
         case .balance: "creditcard"
-        case .costToday: "dollarsign.circle"
+        case .costToday, .spendAmount, .spendBudget: "dollarsign.circle"
         case .cost30d: "calendar.badge.clock"
         case .separatorDot: "smallcircle.filled.circle"
         case .space: "space"

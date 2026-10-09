@@ -1447,6 +1447,11 @@
 "menu_bar_layout_token_runs_out" = "Se agota";
 "menu_bar_layout_token_cost_today" = "Coste de hoy";
 "menu_bar_layout_token_cost_30d" = "Coste de 30 días";
+"menu_bar_layout_window_spend" = "Gasto";
+"menu_bar_layout_token_spend" = "Gasto %";
+"menu_bar_layout_token_spend_pace" = "Ritmo de gasto";
+"menu_bar_layout_token_spend_amount" = "Gasto";
+"menu_bar_layout_token_spend_budget" = "Gasto / presupuesto";
 "menu_bar_layout_token_space" = "Espacio";
 "menu_bar_layout_token_line_break" = "Salto de línea";
 "menu_bar_layout_token_separator_accessibility" = "Punto separador";
