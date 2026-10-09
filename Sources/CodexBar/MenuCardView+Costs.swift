@@ -41,7 +41,9 @@ struct ProviderCostContent: View {
                     UsageProgressBar(
                         percent: percent,
                         tint: self.progressColor,
-                        accessibilityLabel: self.section.progressAccessibilityLabel)
+                        accessibilityLabel: self.section.progressAccessibilityLabel,
+                        pacePercent: self.section.pacePercent,
+                        paceOnTop: self.section.paceOnTop)
                 }
                 HStack(alignment: .firstTextBaseline) {
                     Text(self.section.spendLine).font(.footnote).lineLimit(1)
@@ -51,6 +53,26 @@ struct ProviderCostContent: View {
                             .font(.footnote)
                             .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
                             .lineLimit(1)
+                    }
+                }
+                if self.section.paceText != nil || self.section.resetText != nil {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        if let paceText = self.section.paceText {
+                            Text(paceText)
+                                .font(.footnote)
+                                .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 8)
+                        if let resetText = self.section.resetText {
+                            Text(resetText)
+                                .font(.footnote)
+                                .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
+                                .layoutPriority(1)
+                        }
                     }
                 }
                 if let personalSpendLine = self.section.personalSpendLine {
@@ -704,6 +726,38 @@ extension UsageMenuCardView.Model {
 
     static func clamped(_ value: Double) -> Double {
         min(100, max(0, value))
+    }
+
+    /// Only a budget that reports its own period (reset date and length) can carry a reset line and a pace.
+    static func addingCapCadence(
+        to section: ProviderCostSection,
+        cost: ProviderCostSnapshot?,
+        input: Input,
+        paceVisible: Bool) -> ProviderCostSection
+    {
+        guard section.percentUsed != nil,
+              let cost, cost.limit > 0, cost.resetsAt != nil, cost.windowMinutes != nil,
+              let window = cost.spendLimitWindow
+        else { return section }
+        var result = section
+        result.resetText = Self.resetText(for: window, style: input.resetTimeDisplayStyle, now: input.now)
+        guard paceVisible,
+              let pace = Self.displayableWeeklyPace(UsagePace.weekly(
+                  window: window,
+                  now: input.now,
+                  defaultWindowMinutes: 10080,
+                  workDays: nil)),
+              let detail = Self.weeklyPaceDetail(
+                  provider: input.provider,
+                  window: window,
+                  now: input.now,
+                  pace: pace,
+                  showUsed: section.percentStyle == .used)
+        else { return result }
+        result.pacePercent = detail.pacePercent
+        result.paceOnTop = detail.paceOnTop
+        result.paceText = [detail.leftLabel, detail.rightLabel].compactMap(\.self).joined(separator: " · ")
+        return result
     }
 }
 

@@ -525,7 +525,9 @@ extension UsageMenuCardView.Model {
             current.title == candidate.title &&
                 (current.percentUsed == nil) == (candidate.percentUsed == nil) &&
                 (current.percentLine == nil) == (candidate.percentLine == nil) &&
-                (current.personalSpendLine == nil) == (candidate.personalSpendLine == nil)
+                (current.personalSpendLine == nil) == (candidate.personalSpendLine == nil) &&
+                (current.resetText == nil) == (candidate.resetText == nil) &&
+                (current.paceText == nil) == (candidate.paceText == nil)
         default:
             false
         }
@@ -853,7 +855,7 @@ extension UsageMenuCardView.Model {
             workDays: input.workDaysPerWeek))
     }
 
-    private static func displayableWeeklyPace(_ pace: UsagePace?) -> UsagePace? {
+    static func displayableWeeklyPace(_ pace: UsagePace?) -> UsagePace? {
         guard let pace else { return nil }
         return pace.expectedUsedPercent >= 3 || pace.etaSeconds == 0 ? pace : nil
     }

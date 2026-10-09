@@ -5,6 +5,9 @@ import Testing
 
 struct ClaudeMenuCardCostTests {
     private static let now = Date(timeIntervalSince1970: 1_782_000_000)
+    /// The next 00:00 UTC on the 1st after `now`, ten days into a thirty-day month.
+    private static let monthRollover = Date(timeIntervalSince1970: 1_782_864_000)
+    private static let juneMinutes = 30 * 24 * 60
 
     @Test(arguments: [
         (used: 0.0, percent: 0.0, spend: "$0.00"),
@@ -126,6 +129,51 @@ struct ClaudeMenuCardCostTests {
         #expect(section.showsInProviderDetails == false)
     }
 
+    @Test(arguments: [false, true])
+    func `claude spend cap shows rollover and pace`(showUsed: Bool) throws {
+        let reserveModel = try Self.makeModel(cost: Self.cadencedCost(used: 40), showUsed: showUsed)
+        let reserve = try #require(reserveModel.providerCost)
+
+        #expect(reserve.spendLine == "Monthly cap: $40.00 / $100.00")
+        #expect(reserve.resetText == "Resets in 10d")
+        #expect(reserve.paceText == "27% in reserve · Lasts until reset")
+        #expect(reserve.paceOnTop)
+        let reservePace = try #require(reserve.pacePercent)
+        #expect(abs(reservePace - (showUsed ? 200.0 / 3 : 100.0 / 3)) < 0.0001)
+
+        let deficitModel = try Self.makeModel(cost: Self.cadencedCost(used: 90), showUsed: showUsed)
+        let deficit = try #require(deficitModel.providerCost)
+
+        #expect(deficit.resetText == "Resets in 10d")
+        #expect(deficit.paceText == "23% in deficit · Runs out in 2d 5h")
+        #expect(deficit.paceOnTop == false)
+        let deficitPace = try #require(deficit.pacePercent)
+        #expect(abs(deficitPace - (showUsed ? 200.0 / 3 : 100.0 / 3)) < 0.0001)
+    }
+
+    @Test
+    func `pace hides when pace is not visible`() throws {
+        let model = try Self.makeModel(cost: Self.cadencedCost(used: 40), showUsed: true, paceVisible: false)
+        let section = try #require(model.providerCost)
+
+        #expect(section.resetText == "Resets in 10d")
+        #expect(section.paceText == nil)
+        #expect(section.pacePercent == nil)
+        #expect(section.paceOnTop)
+        #expect(section.spendLine == "Monthly cap: $40.00 / $100.00")
+    }
+
+    @Test
+    func `spend cap without a reported cadence shows no rollover cues`() throws {
+        let resetOnly = Self.cost(used: 40, limit: 100, resetsAt: Self.monthRollover)
+        let model = try Self.makeModel(cost: resetOnly, showUsed: true)
+        let section = try #require(model.providerCost)
+
+        #expect(section.resetText == nil)
+        #expect(section.paceText == nil)
+        #expect(section.pacePercent == nil)
+    }
+
     @Test(arguments: [ProviderCostMenuCardStyle.generic, .clawRouter], [false, true])
     func `other capped provider costs keep used fill`(style: ProviderCostMenuCardStyle, showUsed: Bool) throws {
         let section = try #require(UsageMenuCardView.Model.providerCostSection(
@@ -146,15 +194,23 @@ struct ClaudeMenuCardCostTests {
         used: Double,
         limit: Double,
         balance: Double? = nil,
-        period: String = "Monthly cap") -> ProviderCostSnapshot
+        period: String = "Monthly cap",
+        resetsAt: Date? = nil,
+        windowMinutes: Int? = nil) -> ProviderCostSnapshot
     {
         ProviderCostSnapshot(
             used: used,
             limit: limit,
             currencyCode: "USD",
             period: period,
+            resetsAt: resetsAt,
             balance: balance,
+            windowMinutes: windowMinutes,
             updatedAt: self.now)
+    }
+
+    private static func cadencedCost(used: Double) -> ProviderCostSnapshot {
+        self.cost(used: used, limit: 100, resetsAt: self.monthRollover, windowMinutes: self.juneMinutes)
     }
 
     private static func makeModel(
@@ -162,7 +218,8 @@ struct ClaudeMenuCardCostTests {
         showUsed: Bool,
         showOptional: Bool = true,
         isAdminAPI: Bool = false,
-        costSummaryInlineEnabled: Bool = true) throws -> UsageMenuCardView.Model
+        costSummaryInlineEnabled: Bool = true,
+        paceVisible: Bool = true) throws -> UsageMenuCardView.Model
     {
         let metadata = try #require(ProviderDefaults.metadata[.claude])
         let snapshot = UsageSnapshot(
@@ -193,6 +250,7 @@ struct ClaudeMenuCardCostTests {
             costSummaryInlineEnabled: costSummaryInlineEnabled,
             showOptionalCreditsAndExtraUsage: showOptional,
             hidePersonalInfo: true,
+            paceVisible: paceVisible,
             preferredCurrencyCode: "USD",
             now: self.now))
     }
