@@ -214,6 +214,26 @@ struct MenuBarLayoutV5PersistenceTests {
     }
 
     @Test
+    func `the shipped spend conditional stays out of every older generation`() throws {
+        let shipped = MenuBarLayoutConditional.shippedLibrary()
+        let spend = try #require(shipped.first { $0.thenToken == .percent(window: .spend) })
+        let others = shipped.filter { $0.id != spend.id }
+        let blobs = try MenuBarLayoutPersistence.encodedLibrary(shipped)
+        let decoder = JSONDecoder()
+
+        #expect(try decoder.decode([MenuBarLayoutConditional].self, from: blobs.current).count == shipped.count)
+        // The V4 projection decodes cleanly in a frozen 0.73.0 reader, holding every other shipped rule.
+        let projected = try decoder.decode([ReleasedV4Conditional].self, from: blobs.v4)
+        #expect(Set(projected.map(\.id)) == Set(others.map(\.id)))
+        #expect(try decoder.decode([MenuBarLayoutConditional].self, from: blobs.v3).map(\.id)
+            .contains(spend.id) == false)
+        #expect(try decoder.decode([MenuBarLayoutConditional].self, from: blobs.released).map(\.id)
+            .contains(spend.id) == false)
+        #expect(try decoder.decode([MenuBarLayoutConditional].self, from: blobs.legacy).map(\.id)
+            .contains(spend.id) == false)
+    }
+
+    @Test
     func `a spend only layout projects to the default layout`() throws {
         let spendOnly = MenuBarLayout(lines: [[.percent(window: .spend), .spendBudget]])
         let decoder = JSONDecoder()
