@@ -1028,13 +1028,29 @@ extension ClaudeUsageFetcher {
         else { return nil }
         let currency = extra.currency?.trimmingCharacters(in: .whitespacesAndNewlines)
         let code = (currency?.isEmpty ?? true) ? "USD" : currency!
-        let isSpendLimit = treatAsSpendLimit || ClaudePlan.fromCompatibilityLoginMethod(loginMethod) == .enterprise
         // OAuth extra usage is always in cents, including Enterprise spend-only responses.
-        let rollover = ClaudeSpendRollover(now: now)
-        return ProviderCostSnapshot(
+        return Self.monthlySpendCapCost(
             used: used / 100,
             limit: limit / 100,
             currencyCode: code,
+            isSpendLimit: treatAsSpendLimit || ClaudePlan.fromCompatibilityLoginMethod(loginMethod) == .enterprise,
+            now: now)
+    }
+
+    /// The spend cap as OAuth and the CLI both report it. Claude sends no reset for it; the rollover is the
+    /// documented 00:00 UTC month start (`ClaudeSpendRollover`).
+    private static func monthlySpendCapCost(
+        used: Double,
+        limit: Double,
+        currencyCode: String,
+        isSpendLimit: Bool,
+        now: Date) -> ProviderCostSnapshot
+    {
+        let rollover = ClaudeSpendRollover(now: now)
+        return ProviderCostSnapshot(
+            used: used,
+            limit: limit,
+            currencyCode: currencyCode,
             period: isSpendLimit ? "Spend limit" : "Monthly cap",
             resetsAt: rollover?.resetsAt,
             windowMinutes: rollover?.windowMinutes,
@@ -1264,12 +1280,22 @@ extension ClaudeUsageFetcher {
             pctLeft: snap.opusPercentLeft,
             reset: snap.opusResetDescription,
             windowMinutes: Self.weeklyWindowMinutes)
+        let providerCost = snap.spendCap.map { cap in
+            Self.monthlySpendCapCost(
+                used: cap.used,
+                limit: cap.limit,
+                currencyCode: cap.currencyCode,
+                isSpendLimit: (session == nil && weekly == nil && opus == nil)
+                    || ClaudePlan.fromCompatibilityLoginMethod(snap.loginMethod) == .enterprise,
+                now: now)
+        }
+
         guard Self.hasUsableUsage(
             session: session,
             weekly: weekly,
             modelSpecific: opus,
             extraRateWindows: snap.extraRateWindows,
-            providerCost: nil)
+            providerCost: providerCost)
         else {
             throw ClaudeUsageError.parseFailed("missing usage data")
         }
@@ -1279,7 +1305,7 @@ extension ClaudeUsageFetcher {
             secondary: weekly,
             opus: opus,
             extraRateWindows: snap.extraRateWindows,
-            providerCost: nil,
+            providerCost: providerCost,
             updatedAt: now,
             accountEmail: snap.accountEmail,
             accountOrganization: snap.accountOrganization,

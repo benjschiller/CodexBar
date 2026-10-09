@@ -5,6 +5,8 @@ public struct ClaudeStatusSnapshot: Sendable {
     public let weeklyPercentLeft: Int?
     public let opusPercentLeft: Int?
     public let extraRateWindows: [NamedRateWindow]
+    /// The spend cap from the panel's "Usage credits" block, when it rendered one.
+    public let spendCap: ClaudeCLISpendCap?
     public let accountEmail: String?
     public let accountOrganization: String?
     public let loginMethod: String?
@@ -24,12 +26,14 @@ public struct ClaudeStatusSnapshot: Sendable {
         secondaryResetDescription: String?,
         opusResetDescription: String?,
         rawText: String,
-        extraRateWindows: [NamedRateWindow] = [])
+        extraRateWindows: [NamedRateWindow] = [],
+        spendCap: ClaudeCLISpendCap? = nil)
     {
         self.sessionPercentLeft = sessionPercentLeft
         self.weeklyPercentLeft = weeklyPercentLeft
         self.opusPercentLeft = opusPercentLeft
         self.extraRateWindows = extraRateWindows
+        self.spendCap = spendCap
         self.accountEmail = accountEmail
         self.accountOrganization = accountOrganization
         self.loginMethod = loginMethod
@@ -205,9 +209,16 @@ public struct ClaudeStatusProbe: Sendable {
 extension ClaudeStatusProbe {
     // MARK: - Parsing helpers
 
+    private static func renderedCapture(_ text: String) -> String {
+        ClaudeCLIScreen.render(text, preservePlainReports: true)
+    }
+
     private static func cleanCapture(_ text: String) -> String {
-        // Keep the heading to classify insights-only reports, but exclude tool names and usage-share percentages.
-        let rendered = ClaudeCLIScreen.render(text, preservePlainReports: true)
+        self.truncatedAtInsights(self.renderedCapture(text))
+    }
+
+    /// Keep the heading to classify insights-only reports, but exclude tool names and usage-share percentages.
+    private static func truncatedAtInsights(_ rendered: String) -> String {
         guard let insights = rendered.range(of: self.usageInsightsMarker, options: .caseInsensitive)
         else { return rendered }
         return String(rendered[..<insights.upperBound])
@@ -231,7 +242,8 @@ extension ClaudeStatusProbe {
     }
 
     public static func parse(text: String, statusText: String? = nil) throws -> ClaudeStatusSnapshot {
-        let clean = Self.cleanCapture(text)
+        let rendered = Self.renderedCapture(text)
+        let clean = Self.truncatedAtInsights(rendered)
         let statusClean = statusText.map(Self.cleanCapture)
         guard !clean.isEmpty else { throw ClaudeStatusProbeError.timedOut }
 
@@ -246,8 +258,10 @@ extension ClaudeStatusProbe {
             throw self.usageProbeError(message: usageError)
         }
 
+        // The Usage credits block follows the insights section that `clean` stops at, so read it from `rendered`.
+        let spendCap = ClaudeCLISpendCapParser.parse(rendered)
         let latestUsagePanel = self.trimToLatestUsagePanel(clean)
-        if self.isUsageStillLoading(text: latestUsagePanel ?? clean) {
+        if self.isUsageStillLoading(text: latestUsagePanel ?? clean, hasSpendCap: spendCap != nil) {
             Self.dumpIfNeeded(
                 enabled: shouldDump,
                 reason: "usage still loading",
@@ -300,6 +314,7 @@ extension ClaudeStatusProbe {
             fallbackResetDescription: weeklyReset)
 
         guard sessionPct != nil || weeklyPct != nil || opusPct != nil || !extraRateWindows.isEmpty
+            || spendCap != nil
         else {
             Self.dumpIfNeeded(
                 enabled: shouldDump,
@@ -326,7 +341,8 @@ extension ClaudeStatusProbe {
             secondaryResetDescription: weeklyReset,
             opusResetDescription: opusReset,
             rawText: text + (statusText ?? ""),
-            extraRateWindows: extraRateWindows)
+            extraRateWindows: extraRateWindows,
+            spendCap: spendCap)
     }
 
     public static func parseIdentity(usageText: String?, statusText: String?) -> ClaudeAccountIdentity {
@@ -452,6 +468,7 @@ extension ClaudeStatusProbe {
             || normalized.contains("loadingusage")
             || normalized.contains("failedtoloadusagedata")
             || self.usageCaptureHasSubscriptionNotice(normalized)
+            || ClaudeCLISpendCapParser.parse(Self.renderedCapture(text)) != nil
     }
 
     static func validateUsageBeforeStatusProbe(_ text: String) throws {
@@ -461,7 +478,8 @@ extension ClaudeStatusProbe {
         }
 
         let latestUsagePanel = self.trimToLatestUsagePanel(clean)
-        if self.isUsageStillLoading(text: latestUsagePanel ?? clean) {
+        let hasSpendCap = ClaudeCLISpendCapParser.parse(Self.renderedCapture(text)) != nil
+        if self.isUsageStillLoading(text: latestUsagePanel ?? clean, hasSpendCap: hasSpendCap) {
             throw ClaudeStatusProbeError.parseFailed("Claude CLI /usage is still loading usage data.")
         }
     }
@@ -755,10 +773,10 @@ extension ClaudeStatusProbe {
         return .parseFailed(message)
     }
 
-    private static func isUsageStillLoading(text: String) -> Bool {
+    private static func isUsageStillLoading(text: String, hasSpendCap: Bool) -> Bool {
         let normalized = Self.cleanCapture(text).lowercased().filter { !$0.isWhitespace }
         guard normalized.contains("loadingusage") else { return false }
-        return !self.usageCaptureHasQuotaValue(normalized) && self.allPercents(text).isEmpty
+        return !self.usageCaptureHasQuotaValue(normalized) && !hasSpendCap && self.allPercents(text).isEmpty
     }
 
     /// Returns true when the text contains only a subscription notice with no session/weekly quota data.
@@ -1532,6 +1550,7 @@ extension ClaudeStatusProbe {
     /// a session row that weekly-only, per-model-only, and spend-only accounts never render.
     static func usageCaptureIsComplete(_ normalizedText: String) -> Bool {
         self.usageCaptureHasQuotaValue(normalizedText)
+            || self.usageCaptureHasSpendCap(normalizedText)
             || self.usageCaptureHasSubscriptionNotice(normalizedText)
     }
 
@@ -1546,6 +1565,13 @@ extension ClaudeStatusProbe {
             let tail = quotaText[labelRange.upperBound...]
             return tail.range(of: #"[0-9]{1,3}(?:\.[0-9]+)?%"#, options: .regularExpression) != nil
         }
+    }
+
+    /// The Usage credits block renders after the insights section, so the quota scan above never reaches it.
+    private static func usageCaptureHasSpendCap(_ normalizedText: String) -> Bool {
+        normalizedText.range(
+            of: #"usagecredits[^$]{0,120}\$[0-9][0-9,]*(?:\.[0-9]+)?/\$[0-9][0-9,]*(?:\.[0-9]+)?spent"#,
+            options: .regularExpression) != nil
     }
 
     private static func usageCaptureHasSubscriptionNotice(_ normalizedText: String) -> Bool {
