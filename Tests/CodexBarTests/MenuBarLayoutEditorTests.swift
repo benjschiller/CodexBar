@@ -160,6 +160,79 @@ struct MenuBarLayoutEditorTests {
     }
 
     @Test
+    func `spend tokens are offered with a budget and in the all providers scope only`() {
+        let budget = MenuBarSpendLimit(
+            window: RateWindow(usedPercent: 46, windowMinutes: nil, resetsAt: nil, resetDescription: nil),
+            used: 460,
+            limit: 1000,
+            currencyCode: "USD",
+            isMonetary: true)
+        #expect(MenuBarLayoutPaletteTokens.offersSpend(provider: nil, spendLimit: nil))
+        #expect(MenuBarLayoutPaletteTokens.offersSpend(provider: .claude, spendLimit: budget))
+        #expect(!MenuBarLayoutPaletteTokens.offersSpend(provider: .claude, spendLimit: nil))
+
+        let spendUsage: [MenuBarLayoutToken] = [.percent(window: .spend), .pace(window: .spend)]
+        let spendTime: [MenuBarLayoutToken] = [
+            .windowResetCountdown(window: .spend), .windowResetAbsolute(window: .spend),
+        ]
+        let spendMoney: [MenuBarLayoutToken] = [.spendAmount, .spendBudget]
+        let allProviders = MenuBarLayoutPaletteTokens.usage(provider: nil, snapshot: nil)
+        let withBudget = MenuBarLayoutPaletteTokens.usage(provider: .claude, snapshot: nil, spendLimit: budget)
+        let withoutBudget = MenuBarLayoutPaletteTokens.usage(provider: .claude, snapshot: nil)
+        for token in spendUsage {
+            #expect(allProviders.contains(token))
+            #expect(withBudget.contains(token))
+            #expect(!withoutBudget.contains(token))
+        }
+
+        let time = MenuBarLayoutPaletteTokens.time(offersSpend: true)
+        let hiddenTime = MenuBarLayoutPaletteTokens.time(offersSpend: false)
+        let money = MenuBarLayoutPaletteTokens.money(offersSpend: true)
+        let hiddenMoney = MenuBarLayoutPaletteTokens.money(offersSpend: false)
+        for token in spendTime {
+            #expect(time.contains(token))
+            #expect(!hiddenTime.contains(token))
+        }
+        for token in spendMoney {
+            #expect(money.contains(token))
+            #expect(!hiddenMoney.contains(token))
+        }
+        // Hiding Spend leaves the rest of each group exactly as it was.
+        #expect(hiddenTime == time.filter { !spendTime.contains($0) })
+        #expect(hiddenMoney == [.balance, .costToday, .costWindow])
+    }
+
+    @Test
+    func `the conditional branch menu offers spend tokens ungated`() {
+        let spendTokens: [MenuBarLayoutToken] = [
+            .percent(window: .spend),
+            .pace(window: .spend),
+            .windowResetCountdown(window: .spend),
+            .windowResetAbsolute(window: .spend),
+            .spendAmount,
+            .spendBudget,
+        ]
+        for token in spendTokens {
+            #expect(MenuBarLayoutPaletteTokens.conditionalBranch.contains(token))
+        }
+    }
+
+    @Test
+    func `spend editor labels read as one group of provider reported money`() {
+        let spend = L("menu_bar_layout_window_spend")
+        #expect(MenuBarLayoutToken.percent(window: .spend).editorLabel(provider: .claude) == "Spend %")
+        #expect(MenuBarLayoutToken.pace(window: .spend).editorLabel(provider: .claude) == "Spend pace")
+        #expect(MenuBarLayoutToken.spendAmount.editorLabel(provider: .claude) == "Spend")
+        #expect(MenuBarLayoutToken.spendBudget.editorLabel(provider: .claude) == "Spend / budget")
+        #expect(MenuBarLayoutToken.windowResetCountdown(window: .spend).editorLabel(provider: .claude)
+            == L("%@: %@", spend, L("menu_bar_layout_token_resets_in")))
+        #expect(MenuBarLayoutToken.windowResetAbsolute(window: .spend).editorAccessibilityLabel(provider: .claude)
+            == L("%@: %@", spend, L("menu_bar_layout_token_reset_at")))
+        #expect(MenuBarLayoutToken.spendAmount.editorSystemImage == "dollarsign.circle")
+        #expect(MenuBarLayoutToken.windowResetCountdown(window: .spend).editorSystemImage == "timer")
+    }
+
+    @Test
     func `reset window choices are available in layout and conditional palettes`() {
         let choices: [MenuBarLayoutToken] = [
             .resetCountdown,

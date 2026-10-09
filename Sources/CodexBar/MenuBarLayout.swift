@@ -6,6 +6,8 @@ enum PercentWindow: String, CaseIterable, Codable, Hashable, Sendable {
     case weekly
     case scopedWeekly
     case automatic
+    /// A provider-reported spend budget. `forMetric` deliberately never maps the legacy `.extraUsage` metric here.
+    case spend
 
     /// Shared by the simplified picker and legacy layout migration.
     static func forMetric(
@@ -33,7 +35,7 @@ enum PercentWindow: String, CaseIterable, Codable, Hashable, Sendable {
         return switch self {
         case .session: presentation.menuBarLayoutPrimaryLabel.map(L)
         case .weekly: presentation.menuBarLayoutSecondaryLabel.map(L)
-        case .scopedWeekly, .automatic: nil
+        case .scopedWeekly, .automatic, .spend: nil
         }
     }
 }
@@ -496,6 +498,10 @@ enum MenuBarLayoutToken: Codable, Hashable, Sendable {
     case balance
     case costToday
     case costWindow
+    /// Provider-reported amount spent this period, in the display currency. Never a balance or local cost.
+    case spendAmount
+    /// Amount spent against the provider-reported budget, e.g. `$420 / $1,000`.
+    case spendBudget
     case separatorDot
     case space
     /// Renders nothing; used as a conditional branch value to hide output for the other case.
@@ -511,6 +517,7 @@ enum MenuBarLayoutToken: Codable, Hashable, Sendable {
         case resetCountdown, resetAbsolute, windowResetCountdown, windowResetAbsolute
         case runsOut, runsOutCompact, balance, costToday
         case costWindow = "cost30d"
+        case spendAmount, spendBudget
         case separatorDot, space, hidden, conditional
     }
 
