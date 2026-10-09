@@ -1627,6 +1627,38 @@ struct MenuBarLayoutRendererTests {
         #expect(spent.attributedTitle.string == "in 2h")
     }
 
+    /// The shipped "Spend over 90% used" rule mirrors "Weekly over 90% used" for providers with a budget.
+    @Test
+    func `shipped spend conditional shows spend percent at ninety percent used`() throws {
+        let shipped = MenuBarLayoutConditional.shippedLibrary()
+        let spend = try #require(shipped.first { entry in
+            entry.clauses.contains { $0.predicate.metric == .spend }
+        })
+        #expect(spend.displayName == "Spend over 90% used")
+        #expect(spend.clauses == [self.clause(metric: .spend, comparison: .greaterThanOrEqual, threshold: 90)])
+        #expect(spend.thenToken == .percent(window: .spend))
+        #expect(spend.elseToken == .hidden)
+
+        let renderer = MenuBarLayoutRenderer()
+        let layout = MenuBarLayout(lines: [[.conditional(id: spend.id)]])
+        let render = { (usedPercent: Double) -> String in
+            var data = self.data()
+            data.spend = MenuBarLayoutRenderWindow(RateWindow(
+                usedPercent: usedPercent,
+                windowMinutes: 30 * 24 * 60,
+                resetsAt: self.now.addingTimeInterval(12 * 24 * 60 * 60),
+                resetDescription: nil))
+            return renderer.render(
+                layout: layout,
+                data: data,
+                icon: nil,
+                options: self.options(conditionals: [spend])).attributedTitle.string
+        }
+        #expect(render(89).isEmpty)
+        #expect(render(90) == "$ 90%")
+        #expect(render(97) == "$ 97%")
+    }
+
     private func clause(
         metric: MenuBarConditionalMetric,
         comparison: MenuBarConditionalComparison,
