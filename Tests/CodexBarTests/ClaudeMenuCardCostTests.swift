@@ -136,7 +136,7 @@ struct ClaudeMenuCardCostTests {
 
         #expect(reserve.spendLine == "Monthly cap: $40.00 / $100.00")
         #expect(reserve.resetText == "Resets in 10d")
-        #expect(reserve.paceText == "27% in reserve · Lasts until reset")
+        #expect(reserve.paceText == "Lasts until reset")
         #expect(reserve.paceOnTop)
         let reservePace = try #require(reserve.pacePercent)
         #expect(abs(reservePace - (showUsed ? 200.0 / 3 : 100.0 / 3)) < 0.0001)
@@ -145,10 +145,31 @@ struct ClaudeMenuCardCostTests {
         let deficit = try #require(deficitModel.providerCost)
 
         #expect(deficit.resetText == "Resets in 10d")
-        #expect(deficit.paceText == "23% in deficit · Runs out in 2d 5h")
+        #expect(deficit.paceText == "Runs out in 2d 5h")
         #expect(deficit.paceOnTop == false)
         let deficitPace = try #require(deficit.pacePercent)
         #expect(abs(deficitPace - (showUsed ? 200.0 / 3 : 100.0 / 3)) < 0.0001)
+    }
+
+    @Test(arguments: [40.0, 67.0, 90.0])
+    func `claude spend cap pace text omits the deficit and reserve wording`(used: Double) throws {
+        let model = try Self.makeModel(cost: Self.cadencedCost(used: used), showUsed: true)
+        let section = try #require(model.providerCost)
+        let paceText = try #require(section.paceText)
+
+        #expect(paceText.hasPrefix("Runs out in") || paceText == "Lasts until reset")
+        #expect(!paceText.contains("deficit"))
+        #expect(!paceText.contains("reserve"))
+        #expect(!paceText.contains("On pace"))
+    }
+
+    @Test
+    func `claude spend cap on pace keeps the runs out text without a marker`() throws {
+        let model = try Self.makeModel(cost: Self.cadencedCost(used: 67), showUsed: true)
+        let section = try #require(model.providerCost)
+
+        #expect(section.paceText == "Runs out in 9d 20h")
+        #expect(section.pacePercent == nil)
     }
 
     @Test

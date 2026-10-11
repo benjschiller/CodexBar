@@ -167,7 +167,8 @@ model-generic token label while the rendered menu-bar prefix and accessibility l
 - Codex credits can add a separate “Buy Credits…” menu action.
 - Claude capped Extra Usage follows the used/remaining fill preference; spending amounts and “% used” copy stay unchanged.
 - A spend cap that reports its period (a reset date and the period's length) shows its reset and, when pace is visible,
-  pace in the cost section. A date the provider computes instead of receiving is marked inferred in the reset tooltip.
+  a pace marker with “Runs out in …” or “Lasts until reset” in the cost section. A date the provider computes instead
+  of receiving is marked inferred in the reset tooltip.
 - Codex OpenAI web extras: code review remaining and usage breakdown render when dashboard data is attached.
 - Codex and Claude cost cards: a Recent windows list under the daily bars shows each quota window's
   range, cost, and tokens (Current window, Previous window, N windows ago), split at official and banked resets.

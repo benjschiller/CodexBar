@@ -760,7 +760,7 @@ extension UsageMenuCardView.Model {
         else { return result }
         result.pacePercent = detail.pacePercent
         result.paceOnTop = detail.paceOnTop
-        result.paceText = [detail.leftLabel, detail.rightLabel].compactMap(\.self).joined(separator: " · ")
+        result.paceText = detail.rightLabel
         return result
     }
 }
