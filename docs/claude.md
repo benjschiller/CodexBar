@@ -294,9 +294,8 @@ the cookie import.
   - `GET https://claude.ai/api/account` → email + plan hints.
 - Outputs:
   - Session + weekly + model-specific percent used.
-  - A missing session measurement does not render as 100% remaining. `five_hour: null` means no session, as with
-    OAuth; Web never synthesizes a 0% session window. Snapshots cached by older builds can still carry a flagged
-    placeholder; menus and plain CLI output report limits unavailable for those until the next refresh.
+  - A missing session measurement does not render as 100% remaining: `five_hour: null` means no session, as with
+    OAuth, and Web never synthesizes a 0% session window.
   - Daily Routines extra window when returned by the usage API.
   - Extra usage spend/limit (if enabled), with its rollover date and pace. Compact Overview keeps this section when no measured quota bars exist, including Enterprise accounts with unavailable limits.
   - Remaining Usage credits balance (if enabled). Custom menu bar layouts can show it with the **Balance** element
