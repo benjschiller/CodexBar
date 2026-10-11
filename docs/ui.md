@@ -142,7 +142,8 @@ model-generic token label while the rendered menu-bar prefix and accessibility l
 - 18×18 template image.
 - Bar windows are provider/style-specific primary and secondary windows.
 - Fill represents percent remaining by default; “Show usage as used” flips to percent used.
-- Spend-only accounts, such as Claude Enterprise with a spend cap and no session or weekly window, draw one tall Meter bar from the spend cap instead of an empty or dimmed second lane, from the OAuth, Web, and CLI sources. Accounts with real quota windows keep both lanes.
+- A provider that reports a spend cap but no session or weekly window (for example, a Claude Enterprise seat) draws
+  one tall Meter bar from the cap instead of an empty second lane. Providers with real quota windows keep both lanes.
 - Renderer/critter icons dim when last refresh failed and can render incident indicators; brand display mode uses provider branding plus title text.
 - Loading animation runs at a bounded frame rate and has a hard continuous-duration ceiling so provider hangs cannot keep
   the menu bar redrawing forever.
@@ -157,12 +158,16 @@ model-generic token label while the rendered menu-bar prefix and accessibility l
 - Two-column statistics headings wrap to keep the full localized label readable, including estimated current-window tokens.
 - Provider-specific rows with resets (countdown by default; optional absolute clock display). Primary, secondary,
   tertiary, and extra windows render when the provider snapshot has data for them.
+- Each row's label names the window in that row. When a provider has no window for a row (for example, an account
+  without a session window), the row is omitted rather than filled with a different window.
 - Manual refresh updates the open card subtitle and persistent Refresh-row spinner in place. Repeated clicks share the
   active request, and the existing row geometry remains fixed through success or failure.
 - Live pace and metric detail text use the full row width. Updates that exceed the space reserved when the menu opened
   show a trailing ellipsis; reopening the menu measures the updated text again.
 - Codex credits can add a separate “Buy Credits…” menu action.
 - Claude capped Extra Usage follows the used/remaining fill preference; spending amounts and “% used” copy stay unchanged.
+- A spend cap that reports its period (a reset date and the period's length) shows its reset and, when pace is visible,
+  pace in the cost section. A date the provider computes instead of receiving is marked inferred in the reset tooltip.
 - Codex OpenAI web extras: code review remaining and usage breakdown render when dashboard data is attached.
 - Codex and Claude cost cards: a Recent windows list under the daily bars shows each quota window's
   range, cost, and tokens (Current window, Previous window, N windows ago), split at official and banked resets.

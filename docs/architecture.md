@@ -93,6 +93,14 @@ read_when:
   and optional-data rules. Strategies with credential provenance, region selection, or fallback policies stay explicit.
 - `ProviderCostSnapshot.spendLimitWindow` owns spend-budget quota projection. Antigravity's shared family classifier
   owns ID-before-title precedence; visibility and compact widget selection retain their distinct unknown-family rules.
+- `ProviderCostSnapshot.resetsAt` and `windowMinutes` give a spend cap its period; `spendLimitWindow` carries both into
+  countdowns, the menu card's reset line, and pace. Providers set `resetsAtIsInferred` when they compute the date rather
+  than receive it, and leave both nil when the period is unknown.
+- An `iconWindowResolver` sets `ProviderUsageWindowPair.lanesAreSpendCaps` when its lanes project spend caps rather
+  than quota windows; `IconRemainingResolver.quotaLayoutPolicy` then draws a single cap as one tall Meter bar.
+- Primary, secondary, and tertiary windows are labeled by `ProviderMetadata` (`sessionLabel`, `weeklyLabel`) or a
+  `rateWindowLabeler`. A slot holds the window its label names; without one it stays nil rather than borrowing another
+  window. Shared session and weekly semantics (`semanticWindows`) classify windows by length.
 - `TestProcessSafety` owns test-runner recognition; callers retain explicit headless and fixture-path policies.
 - `CheckedSum` owns integer overflow handling. Callers still decide whether absent or empty counts mean zero,
   unavailable, or incomplete; persistent accumulators retain their own overflow state.
