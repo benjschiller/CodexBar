@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Menu bar: the Cost 30d layout item is now named Cost (History window), since it already shows the selected History window's total; saved layouts and conditional rules are unchanged (#TBD). Thanks @benjschiller!
+- Menu bar: the Cost 30d layout item is now named Cost (History window), since it already shows the selected History window's total; saved layouts and conditional rules are unchanged (#4448). Thanks @benjschiller!
 
 ## 0.74.1 — 2026-10-11
 
