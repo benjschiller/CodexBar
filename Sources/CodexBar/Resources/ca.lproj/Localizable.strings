@@ -244,6 +244,7 @@
 "None" = "Cap";
 "Notifications" = "Notificacions";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "Avisa quan la quota de sessió de 5 hores arriba al 0% i quan torna a estar ";
+"OAuth apps" = "Aplicacions OAuth";
 "OK" = "D'acord";
 "Obscure email addresses in the menu bar and menu UI." = "Amagueu les adreces de correu a la barra de menús i a la interfície del menú.";
 "Off" = "Desactivat";

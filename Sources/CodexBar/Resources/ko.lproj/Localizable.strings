@@ -257,6 +257,7 @@
 "None" = "없음";
 "Notifications" = "알림";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "5시간 세션 할당량이 0%에 도달하거나 다시 사용 가능해질 때 알립니다 ";
+"OAuth apps" = "OAuth 앱";
 "OK" = "확인";
 "Obscure email addresses in the menu bar and menu UI." = "메뉴 막대와 메뉴 UI에서 이메일 주소를 가립니다.";
 "Off" = "끔";

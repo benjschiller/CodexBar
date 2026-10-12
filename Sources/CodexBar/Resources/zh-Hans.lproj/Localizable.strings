@@ -264,6 +264,7 @@
 "None" = "无";
 "Notifications" = "通知";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "当 5 小时会话配额降至 0% 以及重新";
+"OAuth apps" = "OAuth 应用";
 "OK" = "确定";
 "Obscure email addresses in the menu bar and menu UI." = "在菜单栏和菜单界面中隐藏电子邮件地址。";
 "Off" = "关闭";

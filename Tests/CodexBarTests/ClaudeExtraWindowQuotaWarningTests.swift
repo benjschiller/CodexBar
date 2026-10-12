@@ -90,6 +90,44 @@ struct ClaudeExtraWindowQuotaWarningTests {
     }
 
     @Test
+    func `claude OAuth apps extra window never fires a weekly warning`() {
+        let settings = self.makeSettings(suiteName: "ClaudeExtraWindowQuotaWarningTests-oauth-apps")
+        settings.refreshFrequency = .manual
+        settings.statusChecksEnabled = false
+        settings.quotaWarningNotificationsEnabled = true
+        settings.quotaWarningThresholds = [50, 20]
+        settings.setQuotaWarningWindowEnabled(.weekly, enabled: true)
+
+        let notifier = SessionQuotaNotifierSpy()
+        let store = UsageStore(
+            fetcher: UsageFetcher(),
+            browserDetection: BrowserDetection(cacheTTL: 0),
+            settings: settings,
+            sessionQuotaNotifier: notifier)
+
+        func snapshot(used: Double) -> UsageSnapshot {
+            UsageSnapshot(
+                primary: nil,
+                secondary: nil,
+                extraRateWindows: [
+                    NamedRateWindow(
+                        id: "claude-weekly-oauth-apps",
+                        title: "OAuth apps",
+                        window: RateWindow(
+                            usedPercent: used,
+                            windowMinutes: 7 * 24 * 60,
+                            resetsAt: nil,
+                            resetDescription: nil)),
+                ],
+                updatedAt: Date())
+        }
+        store.handleQuotaWarningTransitions(provider: .claude, snapshot: snapshot(used: 40))
+        store.handleQuotaWarningTransitions(provider: .claude, snapshot: snapshot(used: 85))
+
+        #expect(notifier.quotaWarningPosts.isEmpty)
+    }
+
+    @Test
     func `antigravity summary extra windows do not trigger the claude extra-window lane`() {
         let settings = self.makeSettings(suiteName: "ClaudeExtraWindowQuotaWarningTests-antigravity-guard")
         settings.refreshFrequency = .manual

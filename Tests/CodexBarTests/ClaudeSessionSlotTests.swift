@@ -59,12 +59,18 @@ struct ClaudeSessionSlotTests {
      "iguana_necktie": {"limit_dollars": 100, "remaining_dollars": 75, "locked_reason": null}}
     """
 
+    private static let oauthAppsOnly = """
+    {"five_hour": null, "seven_day": null,
+     "seven_day_oauth_apps": {"utilization": 9, "resets_at": "2027-01-20T00:00:00Z"}}
+    """
+
     private static let nothingUsable = [
         #"{}"#,
         #"{"five_hour": null, "seven_day": null}"#,
         #"{"five_hour": {"resets_at": "2027-01-15T12:00:00Z"}, "seven_day": null}"#,
         #"{"five_hour": null, "extra_usage": {"is_enabled": true, "monthly_limit": 0, "used_credits": 0}}"#,
         #"{"five_hour": null, "seven_day_routines": {"resets_at": "2027-01-20T00:00:00Z"}}"#,
+        #"{"five_hour": null, "seven_day_oauth_apps": {"resets_at": "2027-01-20T00:00:00Z"}}"#,
         #"{"five_hour": null, "iguana_necktie": {"limit_dollars": 0, "remaining_dollars": 0}}"#,
     ]
 
@@ -223,30 +229,58 @@ struct ClaudeSessionSlotTests {
     }
 
     @Test
-    func `OAuth never shows seven day oauth apps and rejects a payload that has only that window`() throws {
-        #expect(throws: ClaudeUsageError.self) {
-            try ClaudeUsageFetcher._mapOAuthUsageForTesting(
-                Data(#"{"five_hour": null, "seven_day_oauth_apps": {"utilization": 9}}"#.utf8),
-                now: Self.now)
-        }
+    func `OAuth apps only payload loads with its own row and no session or weekly`() throws {
+        let usage = try Source.oauth.usage(Self.oauthAppsOnly)
 
-        let alongside = try ClaudeUsageFetcher._mapOAuthUsageForTesting(
-            Data(#"""
-            {"five_hour": {"utilization": 3}, "seven_day_oauth_apps": {"utilization": 9}}
-            """#.utf8),
-            now: Self.now)
-        #expect(alongside.primary?.usedPercent == 3)
-        #expect(alongside.secondary == nil)
-        #expect(alongside.opus == nil)
+        #expect(usage.primary == nil)
+        #expect(usage.secondary == nil)
+        #expect(usage.opus == nil)
+        #expect(usage.providerCost == nil)
+        #expect(usage.extraRateWindows.map(\.id) == ["claude-weekly-oauth-apps"])
+        let row = try #require(usage.extraRateWindows.first)
+        #expect(row.title == "OAuth apps")
+        #expect(row.window.usedPercent == 9)
+        #expect(row.window.windowMinutes == 7 * 24 * 60)
 
-        let withWeekly = try ClaudeUsageFetcher._mapOAuthUsageForTesting(
-            Data(#"""
-            {"five_hour": {"utilization": 3}, "seven_day": {"utilization": 42},
-             "seven_day_oauth_apps": {"utilization": 9}}
-            """#.utf8),
-            now: Self.now)
-        #expect(withWeekly.secondary?.usedPercent == 42)
-        #expect(withWeekly.extraRateWindows.isEmpty)
+        let snapshot = ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
+        #expect(snapshot.primary == nil)
+        #expect(snapshot.secondary == nil)
+        #expect(snapshot.extraRateWindows?.first?.window.usedPercent == 9)
+    }
+
+    @Test
+    func `OAuth apps stays an extra row beside a real session and weekly`() throws {
+        let usage = try Source.oauth.usage("""
+        {"five_hour": {"utilization": 3}, "seven_day": {"utilization": 42},
+         "seven_day_oauth_apps": {"utilization": 9}}
+        """)
+
+        #expect(usage.primary?.usedPercent == 3)
+        #expect(usage.secondary?.usedPercent == 42)
+        #expect(usage.opus == nil)
+        #expect(usage.extraRateWindows.map(\.id) == ["claude-weekly-oauth-apps"])
+        #expect(usage.extraRateWindows.first?.window.usedPercent == 9)
+    }
+
+    @Test
+    func `OAuth apps sits between scoped limits and Daily Routines and never drives the switcher weekly bar`() throws {
+        let usage = try Source.oauth.usage("""
+        {"five_hour": null, "seven_day": {"utilization": 42},
+         "seven_day_oauth_apps": {"utilization": 90},
+         "seven_day_routines": {"utilization": 25},
+         "limits": [
+           {"kind": "weekly_scoped", "group": "weekly", "percent": 6,
+            "scope": {"model": {"id": null, "display_name": "Fable"}, "surface": null}, "is_active": true}
+         ]}
+        """)
+
+        #expect(usage.extraRateWindows.map(\.id) == [
+            "claude-weekly-scoped-fable",
+            "claude-weekly-oauth-apps",
+            "claude-routines",
+        ])
+        let snapshot = ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
+        #expect(snapshot.switcherWeeklyWindow(for: .claude, showUsed: true)?.usedPercent == 42)
     }
 
     @Test

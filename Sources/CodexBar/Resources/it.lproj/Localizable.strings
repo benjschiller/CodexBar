@@ -240,6 +240,7 @@
 "None" = "Nessuno";
 "Notifications" = "Notifiche";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "Notifica quando la quota di sessione di 5 ore raggiunge lo 0% e quando torna ";
+"OAuth apps" = "App OAuth";
 "OK" = "Va bene";
 "Obscure email addresses in the menu bar and menu UI." = "Oscura gli indirizzi email nella barra menu e nell'interfaccia del menu.";
 "Off" = "Disattivato";

@@ -240,6 +240,7 @@
 "None" = "Tidak ada";
 "Notifications" = "Notifikasi";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "Memberi tahu saat kuota sesi 5 jam mencapai 0% dan saat menjadi ";
+"OAuth apps" = "Aplikasi OAuth";
 "OK" = "OK";
 "Obscure email addresses in the menu bar and menu UI." = "Samarkan alamat email di menu bar dan antarmuka menu.";
 "Off" = "Nonaktif";

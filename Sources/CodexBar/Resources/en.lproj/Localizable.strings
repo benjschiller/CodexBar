@@ -221,6 +221,7 @@
 "None" = "None";
 "Notifications" = "Notifications";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "Notifies when the 5-hour session quota hits 0% and when it becomes ";
+"OAuth apps" = "OAuth apps";
 "OK" = "OK";
 "Obscure email addresses in the menu bar and menu UI." = "Obscure email addresses in the menu bar and menu UI.";
 "Off" = "Off";

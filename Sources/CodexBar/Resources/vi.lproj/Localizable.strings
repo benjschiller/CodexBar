@@ -256,6 +256,7 @@
 "None" = "Không có";
 "Notifications" = "Thông báo";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "Thông báo khi phiên 5 giờ Hạn mức đạt 0% và khi nó trở thành";
+"OAuth apps" = "Ứng dụng OAuth";
 "OK" = "OK";
 "Obscure email addresses in the menu bar and menu UI." = "Ẩn địa chỉ email trong thanh menu và giao diện người dùng menu.";
 "Off" = "Tắt";

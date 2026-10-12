@@ -256,6 +256,7 @@
 "None" = "なし";
 "Notifications" = "通知";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "5時間セッションのクォータが 0% になったとき、および再び利用可能になったときに通知します ";
+"OAuth apps" = "OAuth アプリ";
 "OK" = "OK";
 "Obscure email addresses in the menu bar and menu UI." = "メニューバーとメニュー UI でメールアドレスを伏せ字にします。";
 "Off" = "オフ";

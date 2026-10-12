@@ -240,6 +240,7 @@
 "None" = "ไม่มี";
 "Notifications" = "การแจ้งเตือน";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "แจ้งเตือนเมื่อโควตาเซสชัน 5 ชั่วโมงเหลือ 0% และเมื่อกลับมา";
+"OAuth apps" = "แอป OAuth";
 "OK" = "ตกลง";
 "Obscure email addresses in the menu bar and menu UI." = "ปิดบังที่อยู่อีเมลในแถบเมนูและ UI เมนู";
 "Off" = "ปิด";

@@ -240,6 +240,7 @@
 "None" = "لا شيء";
 "Notifications" = "الإشعارات";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "يرسل إشعارًا عندما تصل حصة جلسة الخمس ساعات إلى 0% وعندما تصبح ";
+"OAuth apps" = "تطبيقات OAuth";
 "OK" = "حسنا";
 "Obscure email addresses in the menu bar and menu UI." = "عناوين بريد إلكتروني غامضة في شريط القائمة وواجهة القائمة.";
 "Off" = "انطلق";

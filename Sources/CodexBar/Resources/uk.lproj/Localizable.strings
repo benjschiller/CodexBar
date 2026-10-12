@@ -256,6 +256,7 @@
 "None" = "Жодного";
 "Notifications" = "Сповіщення";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "Повідомляє, коли 5-годинна квота сеансу досягає 0% і коли вона стає";
+"OAuth apps" = "Застосунки OAuth";
 "OK" = "OK";
 "Obscure email addresses in the menu bar and menu UI." = "Незрозумілі адреси електронної пошти на панелі меню та інтерфейсі меню.";
 "Off" = "Вимкнено";

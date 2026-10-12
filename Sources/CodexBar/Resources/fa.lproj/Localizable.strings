@@ -240,6 +240,7 @@
 "None" = "هیچ کدام";
 "Notifications" = "اعلان ها";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "هنگامی که سهمیه جلسه پنج‌ساعته به 0% می‌رسد و دوباره ";
+"OAuth apps" = "برنامه‌های OAuth";
 "OK" = "باشه";
 "Obscure email addresses in the menu bar and menu UI." = "آدرس های ایمیل مبهم در نوار منو و رابط کاربری منو.";
 "Off" = "خاموش";

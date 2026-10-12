@@ -48,6 +48,9 @@ extension ProviderUsageItemID {
             if metricID == "claude-routines" {
                 return L("Daily Routines")
             }
+            if metricID == "claude-weekly-oauth-apps" {
+                return L("OAuth apps")
+            }
 
             let providerPrefix = "\(provider.rawValue)-"
             let displayID = metricID.hasPrefix(providerPrefix)

@@ -257,6 +257,7 @@
 "None" = "Ingen";
 "Notifications" = "Aviseringar";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "Aviserar när femtimmarssessionens kvot når 0 % och när den blir ";
+"OAuth apps" = "OAuth-appar";
 "OK" = "OK";
 "Obscure email addresses in the menu bar and menu UI." = "Maskera e-postadresser i menyraden och menygränssnittet.";
 "Off" = "Av";

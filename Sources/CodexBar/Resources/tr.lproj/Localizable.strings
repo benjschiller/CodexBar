@@ -240,6 +240,7 @@
 "None" = "Hiçbiri";
 "Notifications" = "Bildirimler";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "5 saatlik oturum kotası %0'a ulaştığında ve tekrar ";
+"OAuth apps" = "OAuth uygulamaları";
 "OK" = "Tamam";
 "Obscure email addresses in the menu bar and menu UI." = "Menü çubuğu ve menü arayüzünde e-posta adreslerini gizle.";
 "Off" = "Kapalı";

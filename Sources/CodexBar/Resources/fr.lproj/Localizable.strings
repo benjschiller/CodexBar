@@ -256,6 +256,7 @@
 "None" = "Aucun";
 "Notifications" = "Notifications";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "Avertit lorsque le quota de session de 5 heures atteint 0 % et lorsqu'il devient";
+"OAuth apps" = "Applications OAuth";
 "OK" = "OK";
 "Obscure email addresses in the menu bar and menu UI." = "Adresses e-mail obscures dans la barre de menus et l'interface utilisateur du menu.";
 "Off" = "Désactivé";

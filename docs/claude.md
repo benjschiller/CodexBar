@@ -193,14 +193,16 @@ the cookie import.
   - `limits[].weekly_scoped` → model-specific weekly windows; generic `All models` scopes stay in the main weekly row.
   - The menu localizes scoped titles as a model name plus weekly duration; canonical snapshot and CLI titles remain unchanged.
   - Automatic and Session + Weekly menu bar metrics fall back to the most constrained known scoped weekly window when the regular quota windows are missing. Unknown scoped measurements remain unavailable; Extra usage stays a spend-only fallback.
+  - `seven_day_oauth_apps` → "OAuth apps" weekly row (OAuth only; Web does not read it). It is display-only: it never
+    fills Session or Weekly, and it does not feed the menu bar metrics, Overview switcher bar, widgets, or quota
+    warnings.
   - `seven_day_routines` / `seven_day_cowork` → Daily Routines extra window.
   - Claude Design/Omelette keys are ignored because Claude Design shares the main Claude usage limit.
   - `extra_usage` → Extra usage cost (monthly spend/limit). Claude sends no reset; see
     [Extra usage rollover](#extra-usage-rollover).
 - A response fails with `missing usage data`, and Auto tries the next source, only when it reports none of: a session,
-  weekly, model-specific, scoped, or other measured extra window (such as Daily Routines); a positive spend cap; a
-  prepaid Usage credits balance, with or without a cap; or cloud-session credits. `seven_day_oauth_apps` is not
-  shown and does not count.
+  weekly, model-specific, scoped, or other measured extra window (such as OAuth apps or Daily Routines); a positive
+  spend cap; a prepaid Usage credits balance, with or without a cap; or cloud-session credits.
 - Preferences → Providers → Claude → Visible usage items lets you hide the Daily Routines row in menus, the Settings
   preview, and Overview. The global optional credits and extra usage setting remains its master switch. Hiding this
   row does not change fetching, history, notifications, widgets, model-scoped weekly limits, hooks, or CLI output.

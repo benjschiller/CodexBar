@@ -32,7 +32,7 @@ extension UsageSnapshot {
     }
 
     private func mostConstrainedSwitcherWeeklyWindow(for provider: UsageProvider) -> RateWindow? {
-        // Claude's Sonnet/Opus tertiary and model-scoped extras (Fable, Daily Routines) belong on
+        // Claude's Sonnet/Opus tertiary and model-scoped extras (Fable, Daily Routines, OAuth apps) belong on
         // the detail card. The overview switcher should track account Weekly so an exhausted
         // carve-out does not empty the bar while Weekly still has quota left.
         let standardWindows: [RateWindow] = switch provider {
@@ -45,7 +45,9 @@ extension UsageSnapshot {
             .filter(\.usageKnown)
             .filter { named in
                 guard provider == .claude else { return true }
-                return !named.id.hasPrefix("claude-weekly-scoped-") && named.id != "claude-routines"
+                return !named.id.hasPrefix("claude-weekly-scoped-")
+                    && named.id != "claude-routines"
+                    && named.id != "claude-weekly-oauth-apps"
             }
             .map(\.window)
         return (standardWindows + namedWindows)

@@ -1079,12 +1079,13 @@ extension ClaudeUsageFetcher {
 
     private static func oauthExtraRateWindows(from usage: OAuthUsageResponse) -> [NamedRateWindow] {
         let definitions: [(id: String, title: String, window: OAuthUsageWindow?)] = [
+            (id: "claude-weekly-oauth-apps", title: "OAuth apps", window: usage.sevenDayOAuthApps),
             (id: "claude-routines", title: "Daily Routines", window: usage.sevenDayRoutines),
         ]
         if let routinesKey = usage.sevenDayRoutinesSourceKey {
             Self.log.debug("Claude OAuth extra usage key matched: routines=\(routinesKey)")
         }
-        let routineWindows: [NamedRateWindow] = definitions.compactMap { definition in
+        let namedWindows: [NamedRateWindow] = definitions.compactMap { definition in
             guard let window = definition.window, let utilization = window.utilization else { return nil }
             let resetDate = ISO8601DateParser.parse(window.resetsAt)
             let resetDescription = resetDate.map(Self.formatResetDate)
@@ -1098,8 +1099,8 @@ extension ClaudeUsageFetcher {
                     resetDescription: resetDescription))
         }
         // Keep the same row order as the Web path: model-scoped weekly limits first,
-        // Daily Routines last.
-        return Self.oauthScopedWeeklyLimitWindows(from: usage) + routineWindows
+        // Daily Routines last. OAuth apps is OAuth-only and sits between them.
+        return Self.oauthScopedWeeklyLimitWindows(from: usage) + namedWindows
     }
 
     private static func oauthScopedWeeklyLimitWindows(from usage: OAuthUsageResponse) -> [NamedRateWindow] {

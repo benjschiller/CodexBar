@@ -139,6 +139,15 @@ struct ProviderUsageItemVisibilityTests {
     }
 
     @Test
+    func `a hidden claude OAuth apps row keeps a readable title while unreported`() {
+        let model = Self.model(provider: .claude, metricIDs: ["secondary"])
+
+        let descriptors = model.usageItemDescriptors(includingHidden: [.metric("claude-weekly-oauth-apps")])
+
+        #expect(descriptors.last?.title == "OAuth apps (unavailable)")
+    }
+
+    @Test
     func `codex reset credits choice appears only when available or hidden`() {
         let model = Self.model(provider: .codex, metricIDs: ["secondary"])
 
