@@ -588,18 +588,18 @@ struct ClaudeUsageTests {
             let snap = try await fetcher.loadLatestUsage()
             let opusUsed = snap.opus?.usedPercent ?? -1
             let weeklyUsed = snap.secondary?.usedPercent ?? -1
-            let sessionUsed = snap.primary?.usedPercent ?? -1
+            let sessionUsed = snap.primary.map { "\($0.usedPercent)%" } ?? "none"
             let email = snap.accountEmail ?? "nil"
             let org = snap.accountOrganization ?? "nil"
             print(
                 """
                 Live Claude usage (PTY):
-                session used \(sessionUsed)%
+                session used \(sessionUsed)
                 week used \(weeklyUsed)% 
                 opus \(opusUsed)% 
                 email \(email) org \(org)
                 """)
-            #expect(sessionUsed >= 0)
+            Self.expectSessionOrOtherUsage(snap)
         } catch {
             // Dump raw CLI text captured via `script` to help debug.
             let raw = try Self.captureClaudeUsageRaw(timeout: 15)
@@ -648,16 +648,16 @@ struct ClaudeUsageTests {
         let snap = try await fetcher.loadLatestUsage()
         let weeklyUsed = snap.secondary?.usedPercent ?? -1
         let opusUsed = snap.opus?.usedPercent ?? -1
-        let sessionUsed = snap.primary?.usedPercent ?? -1
+        let sessionUsed = snap.primary.map { "\($0.usedPercent)%" } ?? "none"
         print(
             """
             Live Claude usage (Web API):
-            session used \(sessionUsed)%
+            session used \(sessionUsed)
             week used \(weeklyUsed)%
             opus \(opusUsed)%
             login method: \(snap.loginMethod ?? "nil")
             """)
-        #expect(sessionUsed >= 0)
+        Self.expectSessionOrOtherUsage(snap)
     }
 
     @Test
@@ -876,10 +876,32 @@ struct ClaudeUsageTests {
     }
 }
 
+extension ClaudeUsageSnapshot {
+    /// Usage a sessionless account can still report: a weekly or model-specific window, a measured extra window,
+    /// a spend cap, a prepaid balance, or cloud credits.
+    var hasUsageBeyondSession: Bool {
+        self.secondary != nil
+            || self.opus != nil
+            || self.extraRateWindows.contains(where: \.usageKnown)
+            || self.providerCost?.spendLimitWindow != nil
+            || self.providerCost?.balance != nil
+            || self.cloudCredits != nil
+    }
+}
+
 extension ClaudeUsageTests {
     private static func allowsLiveClaudeFetch(environment: [String: String]) -> Bool {
         environment["LIVE_CLAUDE_FETCH"] == "1"
             && environment[KeychainTestSafety.allowAccessEnvironmentKey] == "1"
+    }
+
+    /// Spend-only, weekly-only, extra-window-only, and credits-only accounts have no 5-hour Session.
+    private static func expectSessionOrOtherUsage(_ snapshot: ClaudeUsageSnapshot) {
+        if let session = snapshot.primary {
+            #expect(session.usedPercent >= 0)
+        } else {
+            #expect(snapshot.hasUsageBeyondSession)
+        }
     }
 
     @Test
