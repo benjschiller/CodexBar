@@ -65,6 +65,9 @@ struct MenuBarLayoutTests {
         #expect(try JSONDecoder().decode(MenuBarLayoutToken.self, from: Data(#"{"cost30d":{}}"#.utf8)) == .costWindow)
         #expect(MenuBarConditionalMetric.costWindow.rawValue == "cost30d")
         #expect(MenuBarConditionalMetric(rawValue: "cost30d") == .costWindow)
+        let metric = try JSONEncoder().encode(MenuBarConditionalMetric.costWindow)
+        #expect(String(bytes: metric, encoding: .utf8) == #""cost30d""#)
+        #expect(try JSONDecoder().decode(MenuBarConditionalMetric.self, from: metric) == .costWindow)
     }
 
     @Test

@@ -8,6 +8,17 @@ import UniformTypeIdentifiers
 
 struct MenuBarLayoutEditorTests {
     @Test
+    func `saved history cost item uses the history window label`() throws {
+        try CodexBarLocalizationOverride.$appLanguage.withValue("en") {
+            let token = try JSONDecoder().decode(MenuBarLayoutToken.self, from: Data(#"{"cost30d":{}}"#.utf8))
+            let metric = try JSONDecoder().decode(MenuBarConditionalMetric.self, from: Data(#""cost30d""#.utf8))
+            #expect(token.editorLabel(provider: nil) == "Cost (History window)")
+            #expect(token.editorAccessibilityLabel(provider: nil) == "Cost (History window)")
+            #expect(metric.editorLabel(provider: nil) == "Cost (History window)")
+        }
+    }
+
+    @Test
     @MainActor
     func `all scope discloses only enabled saved overrides in provider order including equal layouts`() throws {
         let settings = try Self.overrideSettings()

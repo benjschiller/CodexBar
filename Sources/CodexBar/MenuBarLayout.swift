@@ -321,15 +321,6 @@ struct MenuBarLayoutConditional: Codable, Hashable, Sendable {
         self.normalize()
     }
 
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.id, forKey: .id)
-        try container.encode(self.name, forKey: .name)
-        try container.encode(self.clauses, forKey: .clauses)
-        try container.encode(self.thenToken, forKey: .thenToken)
-        try container.encode(self.elseToken, forKey: .elseToken)
-    }
-
     static func makeDefault() -> MenuBarLayoutConditional {
         MenuBarLayoutConditional(
             clauses: [MenuBarConditionalClause(
@@ -752,11 +743,6 @@ struct MenuBarLayout: Codable, Hashable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         try self.init(lines: container.decode([[MenuBarLayoutToken]].self, forKey: .lines))
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.lines, forKey: .lines)
     }
 
     private static func normalizedLines(_ lines: [[MenuBarLayoutToken]]) -> [[MenuBarLayoutToken]] {
