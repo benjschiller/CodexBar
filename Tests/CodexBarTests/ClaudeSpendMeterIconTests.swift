@@ -66,7 +66,7 @@ struct ClaudeSpendMeterIconTests {
     }
 
     @Test
-    func `spend only claude draws one tall meter`() throws {
+    func `spend only claude draws a single meter`() throws {
         let snapshot = UsageSnapshot(
             primary: nil,
             secondary: nil,
