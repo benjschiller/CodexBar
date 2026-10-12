@@ -49,11 +49,23 @@ struct ClaudeSessionSlotTests {
      "extra_usage": {"is_enabled": true, "monthly_limit": 10000, "used_credits": 2500, "currency": "USD"}}
     """
 
+    private static let routinesOnly = """
+    {"five_hour": null, "seven_day": null,
+     "seven_day_routines": {"utilization": 25, "resets_at": "2027-01-20T00:00:00Z"}}
+    """
+
+    private static let cloudCreditsOnly = """
+    {"five_hour": null, "seven_day": null,
+     "iguana_necktie": {"limit_dollars": 100, "remaining_dollars": 75, "locked_reason": null}}
+    """
+
     private static let nothingUsable = [
         #"{}"#,
         #"{"five_hour": null, "seven_day": null}"#,
         #"{"five_hour": {"resets_at": "2027-01-15T12:00:00Z"}, "seven_day": null}"#,
         #"{"five_hour": null, "extra_usage": {"is_enabled": true, "monthly_limit": 0, "used_credits": 0}}"#,
+        #"{"five_hour": null, "seven_day_routines": {"resets_at": "2027-01-20T00:00:00Z"}}"#,
+        #"{"five_hour": null, "iguana_necktie": {"limit_dollars": 0, "remaining_dollars": 0}}"#,
     ]
 
     @Test(arguments: Source.allCases)
@@ -108,6 +120,67 @@ struct ClaudeSessionSlotTests {
         let snapshot = ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
         #expect(snapshot.primary == nil)
         #expect(snapshot.claudeSpendOnlyWindow?.usedPercent == 25)
+    }
+
+    @Test(arguments: Source.allCases)
+    func `Daily Routines only payload loads without a session weekly or spend cap`(source: Source) throws {
+        let usage = try source.usage(Self.routinesOnly)
+
+        #expect(usage.primary == nil)
+        #expect(usage.secondary == nil)
+        #expect(usage.opus == nil)
+        #expect(usage.providerCost == nil)
+        let routines = try #require(usage.extraRateWindows.first { $0.id == "claude-routines" })
+        #expect(routines.title == "Daily Routines")
+        #expect(routines.window.usedPercent == 25)
+
+        let snapshot = ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
+        #expect(snapshot.primary == nil)
+        #expect(snapshot.extraRateWindows?.first { $0.id == "claude-routines" }?.window.usedPercent == 25)
+    }
+
+    @Test(arguments: Source.allCases)
+    func `cloud credits only payload loads without a session weekly or spend cap`(source: Source) throws {
+        let usage = try source.usage(Self.cloudCreditsOnly)
+
+        #expect(usage.primary == nil)
+        #expect(usage.secondary == nil)
+        #expect(usage.opus == nil)
+        #expect(usage.providerCost == nil)
+        #expect(usage.extraRateWindows.isEmpty)
+        #expect(usage.cloudCredits?.remainingDollars == 75)
+
+        let snapshot = ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
+        #expect(snapshot.primary == nil)
+        #expect(snapshot.details.first?.title == "Cloud credits")
+    }
+
+    @Test
+    func `Web prepaid balance without a spend cap loads without a session`() throws {
+        let balance = try #require(ClaudeWebAPIFetcher._parsePrepaidCreditsForTesting(
+            Data(#"{"amount": 10000, "currency": "usd"}"#.utf8)))
+        let usage = try ClaudeUsageFetcher.mapWebUsage(Self.webData(cost: balance), includeAccountIdentity: false)
+
+        #expect(usage.primary == nil)
+        #expect(usage.secondary == nil)
+        #expect(usage.opus == nil)
+        #expect(usage.extraRateWindows.isEmpty)
+        #expect(usage.providerCost?.balance == 100)
+        #expect(usage.providerCost?.limit == 0)
+
+        let snapshot = ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
+        #expect(snapshot.primary == nil)
+        #expect(snapshot.providerCost?.balance == 100)
+    }
+
+    @Test
+    func `Web cost without a cap or a balance is not usable`() {
+        let empty = ProviderCostSnapshot(
+            used: 0, limit: 0, currencyCode: "USD", period: "Extra usage", updatedAt: Self.now)
+
+        #expect(throws: ClaudeUsageError.self) {
+            try ClaudeUsageFetcher.mapWebUsage(Self.webData(cost: empty), includeAccountIdentity: false)
+        }
     }
 
     @Test(arguments: Source.allCases, Self.nothingUsable)
@@ -190,7 +263,11 @@ struct ClaudeSessionSlotTests {
 
     @Test
     func `sources agree on the shape of every payload they can both read`() throws {
-        for payload in [Self.weeklyOnly, Self.modelOnly, Self.scopedOnly, Self.spendOnly] {
+        let payloads = [
+            Self.weeklyOnly, Self.modelOnly, Self.scopedOnly, Self.routinesOnly, Self.cloudCreditsOnly,
+            Self.spendOnly,
+        ]
+        for payload in payloads {
             let oauth = try Source.oauth.usage(payload)
             let web = try Source.web.usage(payload)
 
@@ -201,6 +278,21 @@ struct ClaudeSessionSlotTests {
             #expect(oauth.extraRateWindows.map(\.id) == web.extraRateWindows.map(\.id))
             #expect(oauth.providerCost?.used == web.providerCost?.used)
             #expect(oauth.providerCost?.limit == web.providerCost?.limit)
+            #expect(oauth.cloudCredits == web.cloudCredits)
         }
+    }
+
+    private static func webData(cost: ProviderCostSnapshot) -> ClaudeWebAPIFetcher.WebUsageData {
+        ClaudeWebAPIFetcher.WebUsageData(
+            sessionPercentUsed: nil,
+            sessionResetsAt: nil,
+            weeklyPercentUsed: nil,
+            weeklyResetsAt: nil,
+            opusPercentUsed: nil,
+            extraRateWindows: [],
+            extraUsageCost: cost,
+            accountOrganization: nil,
+            accountEmail: nil,
+            loginMethod: nil)
     }
 }

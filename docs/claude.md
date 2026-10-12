@@ -197,8 +197,10 @@ the cookie import.
   - Claude Design/Omelette keys are ignored because Claude Design shares the main Claude usage limit.
   - `extra_usage` → Extra usage cost (monthly spend/limit). Claude sends no reset; see
     [Extra usage rollover](#extra-usage-rollover).
-- A response without a session, weekly, model-specific, scoped, or spend-cap window fails with `missing usage data`,
-  and Auto tries the next source. `seven_day_oauth_apps` is not shown and does not count.
+- A response fails with `missing usage data`, and Auto tries the next source, only when it reports none of: a session,
+  weekly, model-specific, scoped, or other measured extra window (such as Daily Routines); a positive spend cap; a
+  prepaid Usage credits balance, with or without a cap; or cloud-session credits. `seven_day_oauth_apps` is not
+  shown and does not count.
 - Preferences → Providers → Claude → Visible usage items lets you hide the Daily Routines row in menus, the Settings
   preview, and Overview. The global optional credits and extra usage setting remains its master switch. Hiding this
   row does not change fetching, history, notifications, widgets, model-scoped weekly limits, hooks, or CLI output.

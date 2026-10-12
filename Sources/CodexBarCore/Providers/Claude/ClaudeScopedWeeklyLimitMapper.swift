@@ -13,10 +13,6 @@ enum ClaudeScopedWeeklyLimitMapper {
 
     static let windowIDPrefix = "claude-weekly-scoped-"
 
-    static func containsScopedWindow(_ windows: [NamedRateWindow]) -> Bool {
-        windows.contains { $0.id.hasPrefix(Self.windowIDPrefix) && $0.usageKnown }
-    }
-
     static func extraRateWindows(
         from limits: [Limit]?,
         resetDescription: ((Date) -> String)? = nil) -> [NamedRateWindow]

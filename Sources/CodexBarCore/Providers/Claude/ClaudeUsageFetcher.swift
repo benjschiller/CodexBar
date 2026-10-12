@@ -991,7 +991,8 @@ extension ClaudeUsageFetcher {
             weekly: weekly,
             modelSpecific: modelSpecific,
             extraRateWindows: extraRateWindows,
-            providerCost: providerCost)
+            providerCost: providerCost,
+            cloudCredits: usage.cloudCredits)
         else {
             throw ClaudeUsageError.parseFailed("missing usage data")
         }
@@ -1057,20 +1058,23 @@ extension ClaudeUsageFetcher {
             updatedAt: now)
     }
 
-    /// Whether a source reported anything to show. The Session slot holds only a real 5-hour window, so a
-    /// weekly-only, scoped-only, or spend-only payload is usable without one.
+    /// Whether a source reported anything to show. The Session slot holds only a real 5-hour window, so a payload
+    /// with any other measured window, a spend cap, or a prepaid or cloud credit balance is usable without one.
     private static func hasUsableUsage(
         session: RateWindow?,
         weekly: RateWindow?,
         modelSpecific: RateWindow?,
         extraRateWindows: [NamedRateWindow],
-        providerCost: ProviderCostSnapshot?) -> Bool
+        providerCost: ProviderCostSnapshot?,
+        cloudCredits: ClaudeCloudCreditsSnapshot? = nil) -> Bool
     {
         session != nil
             || weekly != nil
             || modelSpecific != nil
-            || ClaudeScopedWeeklyLimitMapper.containsScopedWindow(extraRateWindows)
+            || extraRateWindows.contains(where: \.usageKnown)
             || providerCost?.spendLimitWindow != nil
+            || providerCost?.balance != nil
+            || cloudCredits != nil
     }
 
     private static func oauthExtraRateWindows(from usage: OAuthUsageResponse) -> [NamedRateWindow] {
@@ -1174,7 +1178,8 @@ extension ClaudeUsageFetcher {
             weekly: secondary,
             modelSpecific: opus,
             extraRateWindows: webData.extraRateWindows,
-            providerCost: webData.extraUsageCost)
+            providerCost: webData.extraUsageCost,
+            cloudCredits: webData.cloudCredits)
         else {
             throw ClaudeUsageError.parseFailed("missing usage data")
         }
