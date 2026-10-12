@@ -523,10 +523,38 @@ enum CLIRenderer {
 
         let presentation = ProviderDescriptorRegistry.descriptor(for: provider).presentation.cost(snapshot: snapshot)
         guard presentation.showsGenericFallback, let cost = snapshot.providerCost else { return }
+        // Provider-specific by design: the CLI mirrors the wording of Claude's menu card spend cap.
+        if presentation.menuCardStyle == .claude, let window = cost.spendLimitWindow {
+            self.appendSpendCapLines(cost: cost, window: window, context: context, now: now, lines: &lines)
+            return
+        }
         // Fallback to cost/quota display if no primary rate window.
         let label = cost.currencyCode == "Quota" ? "Quota" : "Cost"
         let value = "\(String(format: "%.1f", cost.used)) / \(String(format: "%.1f", cost.limit))"
         lines.append(self.labelValueLine(label, value: value, useColor: context.useColor))
+    }
+
+    /// The spend cap worded like the menu card's Extra usage section: period and amounts, percent used, then the reset.
+    private static func appendSpendCapLines(
+        cost: ProviderCostSnapshot,
+        window: RateWindow,
+        context: RenderContext,
+        now: Date,
+        lines: inout [String])
+    {
+        let used = UsageFormatter.currencyString(cost.used, currencyCode: cost.currencyCode)
+        let limit = UsageFormatter.currencyString(cost.limit, currencyCode: cost.currencyCode)
+        let percent = UsageFormatter.usageLine(
+            remaining: window.remainingPercent,
+            used: window.usedPercent,
+            showUsed: true)
+        lines.append(self.labelValueLine(
+            cost.period ?? "This month",
+            value: "\(used) / \(limit) · \(percent)",
+            useColor: context.useColor))
+        if let reset = UsageFormatter.resetLine(for: window, style: context.resetStyle, now: now) {
+            lines.append(self.subtleLine(reset, useColor: context.useColor))
+        }
     }
 
     // swiftlint:disable:next function_parameter_count
