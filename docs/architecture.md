@@ -97,7 +97,7 @@ read_when:
   countdowns, the menu card's reset line, and pace. Providers set `resetsAtIsInferred` when they compute the date rather
   than receive it, and leave both nil when the period is unknown.
 - An `iconWindowResolver` sets `ProviderUsageWindowPair.lanesAreSpendCaps` when its lanes project spend caps rather
-  than quota windows; `IconRemainingResolver.quotaLayoutPolicy` then draws a single cap as one tall Meter bar.
+  than quota windows; `IconRemainingResolver.quotaLayoutPolicy` then draws a single cap as one Meter bar.
 - Primary, secondary, and tertiary windows are labeled by `ProviderMetadata` (`sessionLabel`, `weeklyLabel`) or a
   `rateWindowLabeler`. A slot holds the window its label names; without one it stays nil rather than borrowing another
   window. Shared session and weekly semantics (`semanticWindows`) classify windows by length.

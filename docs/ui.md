@@ -143,7 +143,8 @@ model-generic token label while the rendered menu-bar prefix and accessibility l
 - Bar windows are provider/style-specific primary and secondary windows.
 - Fill represents percent remaining by default; “Show usage as used” flips to percent used.
 - A provider that reports a spend cap but no session or weekly window (for example, a Claude Enterprise seat) draws
-  one tall Meter bar from the cap instead of an empty second lane. Providers with real quota windows keep both lanes.
+  the cap as a single Meter bar, the same one-meter icon used for single-quota providers, instead of leaving an empty
+  second lane. Providers with real quota windows keep both lanes.
 - Renderer/critter icons dim when last refresh failed and can render incident indicators; brand display mode uses provider branding plus title text.
 - Loading animation runs at a bounded frame rate and has a hard continuous-duration ceiling so provider hangs cannot keep
   the menu bar redrawing forever.
