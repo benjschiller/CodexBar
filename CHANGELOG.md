@@ -4,6 +4,7 @@
 
 ### Added
 
+- Settings: filter the provider list to enabled services, search CLI aliases, and restore the default order with Undo (#4440). Thanks @Yuxin-Qiao!
 - Kimi: discover the current China Desktop session from Local Storage for web usage and monthly membership enrichment, with session checks before each request (#4416, #3536). Thanks @OttoPrua!
 - Providers: add fal account credit balances through its billing API, with explicit guidance for missing billing permissions (#4438). Thanks @giuseppebisemi!
 - Providers: add FLORA workspace balances, member limits, and available month-to-date spending through a bundled billing plugin (#4439). Thanks @giuseppebisemi!
@@ -26,6 +27,7 @@
 - Menu bar: restore meters and critters immediately when switching back from Icon & percent, without waiting for usage to change (#4450). Thanks @benjschiller!
 - Browser cookie imports raise at most one Keychain prompt per manual refresh, respect a denied prompt for its cooldown, and never prompt from settings-triggered refreshes (#4443).
 - Browser cookie imports stop at the first browser with a working session instead of reading every browser (#4443).
+- Chromium cookie imports no longer ask for a browser's Safe Storage key when that browser has no cookies for the provider's site, avoiding needless Keychain prompts (SweetCookieKit 0.5.7, #4443).
 - Claude: Session now shows only a real 5-hour window from OAuth, Web, and CLI, so weekly-only, model-only, and spend-only accounts no longer get a stand-in session; OAuth loads accounts that report only model-scoped weekly limits, Daily Routines, or cloud credits; the OAuth apps weekly limit gets its own row; the CLI reads the Usage credits spend cap and prints it like the menu; monthly spend caps show their inferred rollover date and pace, and spend-only accounts draw one Meter bar instead of an empty or full one (#4480). Thanks @benjschiller!
 
 ## 0.74.1 — 2026-10-11
