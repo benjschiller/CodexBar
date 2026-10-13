@@ -1,18 +1,5 @@
 import Foundation
 
-/// The monthly spend cap read from the "Usage credits" block of the Claude CLI `/usage` panel, in whole currency units.
-public struct ClaudeCLISpendCap: Equatable, Sendable {
-    public let used: Double
-    public let limit: Double
-    public let currencyCode: String
-
-    public init(used: Double, limit: Double, currencyCode: String) {
-        self.used = used
-        self.limit = limit
-        self.currencyCode = currencyCode
-    }
-}
-
 /// Reads the spend cap from rendered `/usage` text. The panel layout is not a contract, so this never throws and
 /// returns nil on any mismatch; a nil result must leave the rest of the usage parse untouched.
 enum ClaudeCLISpendCapParser {
@@ -27,7 +14,7 @@ enum ClaudeCLISpendCapParser {
         pattern: #"(?<![\p{L}\p{N}\-+\x{2212}.,])\$\s*"# + amount + #"\s*/\s*\$\s*"# + amount + #"\s*spent\b"#,
         options: [.caseInsensitive])
 
-    static func parse(_ renderedText: String) -> ClaudeCLISpendCap? {
+    static func parse(_ renderedText: String) -> ProviderCostSnapshot? {
         let lines = renderedText.components(separatedBy: .newlines)
         // Plain captures can hold several frames; the last block is the newest. If it has no valid spend line, an
         // older block is stale data, so do not fall back to it.
@@ -41,7 +28,7 @@ enum ClaudeCLISpendCapParser {
         return key.hasPrefix(self.headerKey) && key.count <= self.maxHeaderLength
     }
 
-    private static func spendCap(in line: String) -> ClaudeCLISpendCap? {
+    private static func spendCap(in line: String) -> ProviderCostSnapshot? {
         guard let spendLine = self.spendLine else { return nil }
         let range = NSRange(line.startIndex..<line.endIndex, in: line)
         guard let match = spendLine.firstMatch(in: line, options: [], range: range),
@@ -52,7 +39,8 @@ enum ClaudeCLISpendCapParser {
               let limit = self.number(line[limitRange]),
               limit > 0
         else { return nil }
-        return ClaudeCLISpendCap(used: used, limit: limit, currencyCode: "USD")
+        return ProviderCostSnapshot(
+            used: used, limit: limit, currencyCode: "USD", period: "Monthly cap", resetsAt: nil, updatedAt: Date())
     }
 
     private static func number(_ text: Substring) -> Double? {

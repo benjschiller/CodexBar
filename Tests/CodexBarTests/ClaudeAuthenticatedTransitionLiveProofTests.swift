@@ -113,12 +113,7 @@ struct ClaudeAuthenticatedTransitionLiveProofTests {
         let recovered = try await ProviderInteractionContext.$current.withValue(.background) {
             try await strategy.fetch(context)
         }
-        let usage = recovered.usage.scoped(to: .claude)
-        #expect(
-            !usage.measuredRateWindows.isEmpty
-                || usage.providerCost?.spendLimitWindow != nil
-                || usage.providerCost?.balance != nil
-                || ClaudeCloudCreditsSnapshot.detailStatus(in: usage.details, now: Date()) != nil)
+        #expect(recovered.usage.scoped(to: .claude).primary != nil)
     }
 
     @MainActor

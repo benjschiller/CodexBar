@@ -5,8 +5,6 @@ public struct ClaudeStatusSnapshot: Sendable {
     public let weeklyPercentLeft: Int?
     public let opusPercentLeft: Int?
     public let extraRateWindows: [NamedRateWindow]
-    /// The spend cap from the panel's "Usage credits" block, when it rendered one.
-    public let spendCap: ClaudeCLISpendCap?
     public let accountEmail: String?
     public let accountOrganization: String?
     public let loginMethod: String?
@@ -26,14 +24,12 @@ public struct ClaudeStatusSnapshot: Sendable {
         secondaryResetDescription: String?,
         opusResetDescription: String?,
         rawText: String,
-        extraRateWindows: [NamedRateWindow] = [],
-        spendCap: ClaudeCLISpendCap? = nil)
+        extraRateWindows: [NamedRateWindow] = [])
     {
         self.sessionPercentLeft = sessionPercentLeft
         self.weeklyPercentLeft = weeklyPercentLeft
         self.opusPercentLeft = opusPercentLeft
         self.extraRateWindows = extraRateWindows
-        self.spendCap = spendCap
         self.accountEmail = accountEmail
         self.accountOrganization = accountOrganization
         self.loginMethod = loginMethod
@@ -209,16 +205,9 @@ public struct ClaudeStatusProbe: Sendable {
 extension ClaudeStatusProbe {
     // MARK: - Parsing helpers
 
-    private static func renderedCapture(_ text: String) -> String {
-        ClaudeCLIScreen.render(text, preservePlainReports: true)
-    }
-
     private static func cleanCapture(_ text: String) -> String {
-        self.truncatedAtInsights(self.renderedCapture(text))
-    }
-
-    /// Keep the heading to classify insights-only reports, but exclude tool names and usage-share percentages.
-    private static func truncatedAtInsights(_ rendered: String) -> String {
+        // Keep the heading to classify insights-only reports, but exclude tool names and usage-share percentages.
+        let rendered = ClaudeCLIScreen.render(text, preservePlainReports: true)
         guard let insights = rendered.range(of: self.usageInsightsMarker, options: .caseInsensitive)
         else { return rendered }
         return String(rendered[..<insights.upperBound])
@@ -242,8 +231,7 @@ extension ClaudeStatusProbe {
     }
 
     public static func parse(text: String, statusText: String? = nil) throws -> ClaudeStatusSnapshot {
-        let rendered = Self.renderedCapture(text)
-        let clean = Self.truncatedAtInsights(rendered)
+        let clean = Self.cleanCapture(text)
         let statusClean = statusText.map(Self.cleanCapture)
         guard !clean.isEmpty else { throw ClaudeStatusProbeError.timedOut }
 
@@ -258,10 +246,8 @@ extension ClaudeStatusProbe {
             throw self.usageProbeError(message: usageError)
         }
 
-        // The Usage credits block follows the insights section that `clean` stops at, so read it from `rendered`.
-        let spendCap = ClaudeCLISpendCapParser.parse(rendered)
         let latestUsagePanel = self.trimToLatestUsagePanel(clean)
-        if self.isUsageStillLoading(text: latestUsagePanel ?? clean, hasSpendCap: spendCap != nil) {
+        if self.isUsageStillLoading(text: latestUsagePanel ?? clean) {
             Self.dumpIfNeeded(
                 enabled: shouldDump,
                 reason: "usage still loading",
@@ -294,28 +280,16 @@ extension ClaudeStatusProbe {
         let opusModels = Set(opusLabels.compactMap(self.weeklyModelName).map(self.normalizedForLabelSearch))
         let hasOpusLabel = !weeklyModels.isDisjoint(with: opusModels)
 
-        // A weekly-only or per-model-only panel has no session row, so its first percent is not a session.
-        if sessionPct == nil, self.hasSessionLabel(in: labelContext) {
-            sessionPct = self.allPercents(usagePanelText).first
+        if sessionPct == nil {
+            let ordered = self.allPercents(usagePanelText)
+            if sessionPct == nil, ordered.indices.contains(0) {
+                sessionPct = ordered[0]
+            }
         }
 
         let identity = Self.extractIdentity(usageText: clean, statusText: statusClean)
 
-        let sessionReset = self.extractReset(labelSubstring: "Current session", context: labelContext)
-        let weeklyReset = hasAllModelsWeeklyLabel
-            ? self.extractReset(labelSubstring: "Current week (all models)", context: labelContext)
-            : nil
-        let opusReset = hasOpusLabel
-            ? self.extractReset(labelSubstrings: opusLabels, context: labelContext)
-            : nil
-        let scopedWeeklyUsages = self.extractScopedWeeklyUsages(context: labelContext)
-        let extraRateWindows = self.extraRateWindows(
-            fromScopedWeeklyUsages: scopedWeeklyUsages,
-            fallbackResetDescription: weeklyReset)
-
-        guard sessionPct != nil || weeklyPct != nil || opusPct != nil || !extraRateWindows.isEmpty
-            || spendCap != nil
-        else {
+        guard let sessionPct else {
             Self.dumpIfNeeded(
                 enabled: shouldDump,
                 reason: "missing session label",
@@ -330,6 +304,18 @@ extension ClaudeStatusProbe {
             throw ClaudeStatusProbeError.parseFailed("Missing Current session.")
         }
 
+        let sessionReset = self.extractReset(labelSubstring: "Current session", context: labelContext)
+        let weeklyReset = hasAllModelsWeeklyLabel
+            ? self.extractReset(labelSubstring: "Current week (all models)", context: labelContext)
+            : nil
+        let opusReset = hasOpusLabel
+            ? self.extractReset(labelSubstrings: opusLabels, context: labelContext)
+            : nil
+        let scopedWeeklyUsages = self.extractScopedWeeklyUsages(context: labelContext)
+        let extraRateWindows = self.extraRateWindows(
+            fromScopedWeeklyUsages: scopedWeeklyUsages,
+            fallbackResetDescription: weeklyReset)
+
         return ClaudeStatusSnapshot(
             sessionPercentLeft: sessionPct,
             weeklyPercentLeft: weeklyPct,
@@ -341,8 +327,7 @@ extension ClaudeStatusProbe {
             secondaryResetDescription: weeklyReset,
             opusResetDescription: opusReset,
             rawText: text + (statusText ?? ""),
-            extraRateWindows: extraRateWindows,
-            spendCap: spendCap)
+            extraRateWindows: extraRateWindows)
     }
 
     public static func parseIdentity(usageText: String?, statusText: String?) -> ClaudeAccountIdentity {
@@ -404,19 +389,6 @@ extension ClaudeStatusProbe {
         return self.isBinaryAvailable(resolved)
     }
 
-    /// Whether the panel has a Current session row. A garbled capture ("Curretsession") still counts, the way the
-    /// all-models weekly match tolerates one, so a mangled label keeps the order-based percent fallback.
-    private static func hasSessionLabel(in context: LabelSearchContext) -> Bool {
-        let label = "currentsession"
-        if context.contains(label) { return true }
-        return context.normalizedLines.contains { line in
-            guard line.hasPrefix("cur") else { return false }
-            return ((label.count - 2)...(label.count + 2)).contains { length in
-                line.count >= length && self.editDistance(String(line.prefix(length)), label) <= 2
-            }
-        }
-    }
-
     private static func extractPercent(labelSubstring: String, context: LabelSearchContext) -> Int? {
         // Prefer an exact label match; only fall back to a fuzzy (garbled-capture) match when no exact
         // copy yields a value, so a clean row always wins over a corrupted duplicate regardless of order.
@@ -461,25 +433,23 @@ extension ClaudeStatusProbe {
         return nil
     }
 
-    static func usageOutputLooksRelevant(_ text: String) -> Bool {
+    private static func usageOutputLooksRelevant(_ text: String) -> Bool {
         let normalized = Self.cleanCapture(text).lowercased().filter { !$0.isWhitespace }
         return normalized.contains("currentsession")
             || normalized.contains("currentweek")
             || normalized.contains("loadingusage")
             || normalized.contains("failedtoloadusagedata")
             || self.usageCaptureHasSubscriptionNotice(normalized)
-            || ClaudeCLISpendCapParser.parse(Self.renderedCapture(text)) != nil
     }
 
-    static func validateUsageBeforeStatusProbe(_ text: String) throws {
+    private static func validateUsageBeforeStatusProbe(_ text: String) throws {
         let clean = Self.cleanCapture(text)
         if let usageError = self.extractUsageError(text: clean) {
             throw self.usageProbeError(message: usageError)
         }
 
         let latestUsagePanel = self.trimToLatestUsagePanel(clean)
-        let hasSpendCap = ClaudeCLISpendCapParser.parse(Self.renderedCapture(text)) != nil
-        if self.isUsageStillLoading(text: latestUsagePanel ?? clean, hasSpendCap: hasSpendCap) {
+        if self.isUsageStillLoading(text: latestUsagePanel ?? clean) {
             throw ClaudeStatusProbeError.parseFailed("Claude CLI /usage is still loading usage data.")
         }
     }
@@ -773,10 +743,10 @@ extension ClaudeStatusProbe {
         return .parseFailed(message)
     }
 
-    private static func isUsageStillLoading(text: String, hasSpendCap: Bool) -> Bool {
+    private static func isUsageStillLoading(text: String) -> Bool {
         let normalized = Self.cleanCapture(text).lowercased().filter { !$0.isWhitespace }
         guard normalized.contains("loadingusage") else { return false }
-        return !self.usageCaptureHasQuotaValue(normalized) && !hasSpendCap && self.allPercents(text).isEmpty
+        return !self.usageCaptureHasSessionValue(normalized) && self.allPercents(text).isEmpty
     }
 
     /// Returns true when the text contains only a subscription notice with no session/weekly quota data.
@@ -1518,7 +1488,10 @@ extension ClaudeStatusProbe {
         let idleTimeout: TimeInterval? = subcommand == "/usage" ? nil : 3.0
         let sendEnterEvery: TimeInterval? = subcommand == "/usage" ? 0.8 : nil
         let stopWhenNormalized: (@Sendable (String) -> Bool)? = subcommand == "/usage"
-            ? { @Sendable normalizedScan in Self.usageCaptureIsComplete(normalizedScan) }
+            ? { @Sendable normalizedScan in
+                Self.usageCaptureHasSessionValue(normalizedScan)
+                    || Self.usageCaptureHasSubscriptionNotice(normalizedScan)
+            }
             : nil
         do {
             return try await ClaudeCLISession.current.capture(
@@ -1546,32 +1519,13 @@ extension ClaudeStatusProbe {
         }
     }
 
-    /// Whether the normalized screen shows something the parser can use, so the capture can stop without waiting for
-    /// a session row that weekly-only, per-model-only, and spend-only accounts never render.
-    static func usageCaptureIsComplete(_ normalizedText: String) -> Bool {
-        self.usageCaptureHasQuotaValue(normalizedText)
-            || self.usageCaptureHasSpendCap(normalizedText)
-            || self.usageCaptureHasSubscriptionNotice(normalizedText)
-    }
-
-    /// A rendered quota percentage on any Current session / Current week row. Weekly-only and per-model-only
-    /// accounts render no session row, so the capture must not wait for one.
-    private static func usageCaptureHasQuotaValue(_ normalizedText: String) -> Bool {
+    private static func usageCaptureHasSessionValue(_ normalizedText: String) -> Bool {
         let insightsStart = normalizedText.range(of: "what'scontributingtoyourlimitsusage?")?.lowerBound
             ?? normalizedText.endIndex
         let quotaText = normalizedText[..<insightsStart]
-        return ["currentsession", "currentweek"].contains { label in
-            guard let labelRange = quotaText.range(of: label) else { return false }
-            let tail = quotaText[labelRange.upperBound...]
-            return tail.range(of: #"[0-9]{1,3}(?:\.[0-9]+)?%"#, options: .regularExpression) != nil
-        }
-    }
-
-    /// The Usage credits block renders after the insights section, so the quota scan above never reaches it.
-    private static func usageCaptureHasSpendCap(_ normalizedText: String) -> Bool {
-        normalizedText.range(
-            of: #"usagecredits[^$]{0,120}\$[0-9][0-9,]*(?:\.[0-9]+)?/\$[0-9][0-9,]*(?:\.[0-9]+)?spent"#,
-            options: .regularExpression) != nil
+        guard let labelRange = quotaText.range(of: "currentsession") else { return false }
+        let tail = quotaText[labelRange.upperBound...]
+        return tail.range(of: #"[0-9]{1,3}(?:\.[0-9]+)?%"#, options: .regularExpression) != nil
     }
 
     private static func usageCaptureHasSubscriptionNotice(_ normalizedText: String) -> Bool {

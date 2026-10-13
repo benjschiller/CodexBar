@@ -588,18 +588,17 @@ struct ClaudeUsageTests {
             let snap = try await fetcher.loadLatestUsage()
             let opusUsed = snap.opus?.usedPercent ?? -1
             let weeklyUsed = snap.secondary?.usedPercent ?? -1
-            let sessionUsed = snap.primary.map { "\($0.usedPercent)%" } ?? "none"
             let email = snap.accountEmail ?? "nil"
             let org = snap.accountOrganization ?? "nil"
-            print(
+            try print(
                 """
                 Live Claude usage (PTY):
-                session used \(sessionUsed)
+                session used \(#require(snap.primary).usedPercent)%
                 week used \(weeklyUsed)% 
                 opus \(opusUsed)% 
                 email \(email) org \(org)
                 """)
-            Self.expectSessionOrOtherUsage(snap)
+            #expect(try #require(snap.primary).usedPercent >= 0)
         } catch {
             // Dump raw CLI text captured via `script` to help debug.
             let raw = try Self.captureClaudeUsageRaw(timeout: 15)
@@ -648,16 +647,15 @@ struct ClaudeUsageTests {
         let snap = try await fetcher.loadLatestUsage()
         let weeklyUsed = snap.secondary?.usedPercent ?? -1
         let opusUsed = snap.opus?.usedPercent ?? -1
-        let sessionUsed = snap.primary.map { "\($0.usedPercent)%" } ?? "none"
-        print(
+        try print(
             """
             Live Claude usage (Web API):
-            session used \(sessionUsed)
+            session used \(#require(snap.primary).usedPercent)%
             week used \(weeklyUsed)%
             opus \(opusUsed)%
             login method: \(snap.loginMethod ?? "nil")
             """)
-        Self.expectSessionOrOtherUsage(snap)
+        #expect(try #require(snap.primary).usedPercent >= 0)
     }
 
     @Test
@@ -876,32 +874,10 @@ struct ClaudeUsageTests {
     }
 }
 
-extension ClaudeUsageSnapshot {
-    /// Usage a sessionless account can still report: a weekly or model-specific window, a measured extra window,
-    /// a spend cap, a prepaid balance, or cloud credits.
-    var hasUsageBeyondSession: Bool {
-        self.secondary != nil
-            || self.opus != nil
-            || self.extraRateWindows.contains(where: \.usageKnown)
-            || self.providerCost?.spendLimitWindow != nil
-            || self.providerCost?.balance != nil
-            || self.cloudCredits != nil
-    }
-}
-
 extension ClaudeUsageTests {
     private static func allowsLiveClaudeFetch(environment: [String: String]) -> Bool {
         environment["LIVE_CLAUDE_FETCH"] == "1"
             && environment[KeychainTestSafety.allowAccessEnvironmentKey] == "1"
-    }
-
-    /// Spend-only, weekly-only, extra-window-only, and credits-only accounts have no 5-hour Session.
-    private static func expectSessionOrOtherUsage(_ snapshot: ClaudeUsageSnapshot) {
-        if let session = snapshot.primary {
-            #expect(session.usedPercent >= 0)
-        } else {
-            #expect(snapshot.hasUsageBeyondSession)
-        }
     }
 
     @Test
@@ -938,7 +914,7 @@ extension ClaudeUsageTests {
 
 struct ClaudeOAuthUsageMappingTests {
     @Test
-    func `oauth usage reports weekly without a session when five hour is absent`() throws {
+    func `oauth usage falls back to weekly window when five hour is absent`() throws {
         let json = """
         {
           "seven_day": { "utilization": 42, "resets_at": "2025-12-29T23:00:00.000Z" },
@@ -947,14 +923,14 @@ struct ClaudeOAuthUsageMappingTests {
         """
         let snapshot = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(json.utf8))
 
-        #expect(snapshot.primary == nil)
+        #expect(snapshot.primary?.usedPercent == 42)
+        #expect(snapshot.primary?.windowMinutes == 7 * 24 * 60)
         #expect(snapshot.secondary?.usedPercent == 42)
-        #expect(snapshot.secondary?.windowMinutes == 7 * 24 * 60)
         #expect(snapshot.opus?.usedPercent == 17)
     }
 
     @Test
-    func `oauth usage reports no session when five hour has no utilization`() throws {
+    func `oauth usage falls back when five hour has no utilization`() throws {
         let json = """
         {
           "five_hour": { "resets_at": "2025-12-23T16:00:00.000Z" },
@@ -963,9 +939,8 @@ struct ClaudeOAuthUsageMappingTests {
         """
         let snapshot = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(json.utf8))
 
-        #expect(snapshot.primary == nil)
-        #expect(snapshot.secondary?.usedPercent == 9)
-        #expect(snapshot.secondary?.windowMinutes == 7 * 24 * 60)
+        #expect(snapshot.primary?.usedPercent == 9)
+        #expect(snapshot.primary?.windowMinutes == 7 * 24 * 60)
     }
 
     @Test

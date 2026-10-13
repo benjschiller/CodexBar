@@ -85,7 +85,6 @@ public enum ClaudeProviderDescriptor {
             }
         })
 
-    // swiftlint:disable:next function_body_length
     static func makeDescriptor() -> ProviderDescriptor {
         ProviderDescriptor(
             id: .claude,
@@ -170,11 +169,7 @@ public enum ClaudeProviderDescriptor {
                 settingsStatusOrder: 0,
                 estimateDisclaimer: "Estimated from local Claude logs at API rates; token totals include cache " +
                     "read/write tokens and may differ from Claude Code /status."),
-            pace: ProviderPaceCapability(
-                primary: .session(maximumMinutes: 300),
-                secondary: .weekly,
-                tertiary: .weekly,
-                sessionPaceWindowRule: .custom { _, _ in true }),
+            pace: self.pace,
             history: .alwaysTracked,
             presentation: ProviderUsagePresentation(
                 identityPresenter: { provider, snapshot in
@@ -240,6 +235,22 @@ public enum ClaudeProviderDescriptor {
             nativeAppBundleIdentifiers: ["com.anthropic.claudefordesktop"])
     }
 
+    private static let pace = ProviderPaceCapability(
+        resetWindowPace: ProviderPaceCapability.calendarMonthResetWindow.resetWindowPace,
+        inferredMonthlyDuration: ProviderPaceCapability.calendarMonthResetWindow.inferredMonthlyDuration,
+        primary: .session(maximumMinutes: 300),
+        secondary: .weekly,
+        tertiary: .weekly,
+        sessionPaceWindowRule: .custom { _, _ in true })
+
+    private static func iconWindows(context: ProviderIconWindowContext) -> ProviderUsageWindowPair {
+        let resolution = self.menuBarWindow(context: .init(
+            metric: .automatic, snapshot: context.snapshot, supportsAverage: false,
+            prioritizesExhaustedQuotas: false, now: context.now))
+        if case let .resolved(window) = resolution { return .init(primary: window, secondary: nil) }
+        return .init(primary: context.snapshot.primary?.measured, secondary: context.snapshot.secondary)
+    }
+
     private static let pipeline = ProviderFetchPipeline(
         resolveStrategies: ClaudeProviderDescriptor.resolveStrategies,
         resolveFallbackError: ClaudeProviderDescriptor.resolveFallbackError)
@@ -250,26 +261,17 @@ public enum ClaudeProviderDescriptor {
         return current
     }
 
-    private static func iconWindows(context: ProviderIconWindowContext) -> ProviderUsageWindowPair {
-        if let spendWindow = context.snapshot.claudeSpendOnlyWindow {
-            return ProviderUsageWindowPair(primary: spendWindow, secondary: nil, lanesAreSpendCaps: true)
-        }
-        // Snapshots cached by older builds can still carry a flagged 0% session placeholder.
-        return ProviderUsageWindowPair(
-            primary: context.snapshot.primary?.measured,
-            secondary: context.snapshot.secondary)
-    }
-
     private static func menuBarWindow(
         context: ProviderMenuBarWindowContext) -> ProviderMenuBarWindowResolution
     {
+        if context.metric == .extraUsage { return .resolved(context.snapshot.claudeMonthlySpendWindow?.window) }
         guard context.metric == .automatic || context.metric == .primaryAndSecondary,
               context.snapshot.secondary == nil,
               context.snapshot.tertiary == nil,
               context.snapshot.primary == nil || context.snapshot.primary?.isSyntheticPlaceholder == true
         else { return .unhandled }
         let window = context.snapshot.claudeScopedWeeklyWindow?.window
-            ?? context.snapshot.providerCost.flatMap { $0.limit > 0 ? $0.spendLimitWindow : nil }
+            ?? context.snapshot.claudeMonthlySpendWindow?.window
         return .resolved(window)
     }
 

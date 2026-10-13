@@ -89,12 +89,8 @@ struct TTYIntegrationTests {
         var shouldAssert = true
         do {
             let snapshot = try await fetcher.loadLatestUsage()
-            // Weekly is absent for some enterprise accounts, and sessionless accounts report no 5-hour window.
-            if let session = snapshot.primary {
-                #expect(session.remainingPercent >= 0)
-            } else {
-                #expect(snapshot.hasUsageBeyondSession)
-            }
+            #expect(try #require(snapshot.primary).remainingPercent >= 0)
+            // Weekly is absent for some enterprise accounts.
         } catch ClaudeUsageError.parseFailed(_) {
             shouldAssert = false
         } catch ClaudeStatusProbeError.parseFailed(_) {

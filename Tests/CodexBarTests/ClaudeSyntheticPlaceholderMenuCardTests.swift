@@ -82,14 +82,13 @@ struct ClaudeSyntheticPlaceholderMenuCardTests {
     func `compact overview preserves enterprise spend without quota windows`(showOptional: Bool) throws {
         let model = Self.enterpriseModel(showOptional: showOptional)
         let row = OverviewMenuCardRowView(model: model, storageText: nil, width: 340, layout: .compact)
-        #expect(model.metrics.isEmpty)
-        #expect(model.placeholder == "Limits not available")
-        #expect(row.usesFullCard)
-        #expect((model.providerCost != nil) == showOptional)
+        #expect(model.metrics.count == (showOptional ? 1 : 0))
+        #expect(row.usesFullCard == !showOptional)
+        #expect(model.providerCost == nil)
         if showOptional {
-            let cost = try #require(model.providerCost)
-            #expect(cost.title == "Extra usage")
-            #expect(cost.spendLine == "Monthly cap: $9.95 / $150.00")
+            let metric = try #require(model.metrics.first)
+            #expect(metric.title == "Extra usage")
+            #expect(metric.detailText == "Monthly cap: $9.95 / $150.00")
         }
         #expect(!OverviewMenuCardRowView(model: model, storageText: nil, width: 340).usesFullCard)
     }
@@ -140,61 +139,6 @@ struct ClaudeSyntheticPlaceholderMenuCardTests {
         try png.write(to: URL(fileURLWithPath: directory).appendingPathComponent("quota.png"))
     }
 
-    @MainActor
-    @Test
-    func `web enterprise spend payload builds the same card as OAuth`() throws {
-        let payload = #"""
-        {"five_hour": null, "seven_day": null,
-         "extra_usage": {"is_enabled": true, "monthly_limit": 15000, "used_credits": 995}}
-        """#
-        let web = try Self.webSnapshot(payload)
-        let oauth = try Self.oauthSnapshot(payload)
-        let webModel = Self.model(snapshot: web)
-        let oauthModel = Self.model(snapshot: oauth)
-
-        #expect(web.primary == nil)
-        #expect(oauth.primary == nil)
-        #expect(UsageLimitsAvailability.resolve(provider: .claude, snapshot: web) == .available)
-        #expect(webModel.metrics.isEmpty)
-        #expect(webModel.placeholder == oauthModel.placeholder)
-        #expect(webModel.providerCost?.percentUsed == oauthModel.providerCost?.percentUsed)
-        #expect(webModel.providerCost?.title == "Extra usage")
-        #expect(OverviewMenuCardRowView(model: webModel, storageText: nil, width: 340, layout: .compact).usesFullCard)
-    }
-
-    @MainActor
-    @Test
-    func `web weekly only payload builds the same card as OAuth`() throws {
-        let payload = #"""
-        {"five_hour": null, "seven_day": {"utilization": 42, "resets_at": "2027-01-20T00:00:00Z"}}
-        """#
-        let web = try Self.webSnapshot(payload)
-        let oauth = try Self.oauthSnapshot(payload)
-        let webModel = Self.model(snapshot: web)
-        let oauthModel = Self.model(snapshot: oauth)
-
-        #expect(web.primary == nil)
-        #expect(oauth.primary == nil)
-        #expect(UsageLimitsAvailability.resolve(provider: .claude, snapshot: web) == .available)
-        #expect(webModel.placeholder == nil)
-        #expect(webModel.metrics.map(\.id) == oauthModel.metrics.map(\.id))
-        #expect(webModel.metrics.map(\.percent) == oauthModel.metrics.map(\.percent))
-        // Weekly shows once, with no session row beside it.
-        #expect(webModel.metrics.map(\.id) == ["secondary"])
-        #expect(!OverviewMenuCardRowView(model: webModel, storageText: nil, width: 340, layout: .compact).usesFullCard)
-    }
-
-    private static func webSnapshot(_ payload: String) throws -> UsageSnapshot {
-        let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(payload.utf8), now: self.now)
-        let usage = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false, now: self.now)
-        return ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
-    }
-
-    private static func oauthSnapshot(_ payload: String) throws -> UsageSnapshot {
-        let usage = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(payload.utf8), now: self.now)
-        return ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
-    }
-
     private static var syntheticSession: RateWindow {
         RateWindow(
             usedPercent: 0,
@@ -230,52 +174,6 @@ struct ClaudeSyntheticPlaceholderMenuCardTests {
 @MainActor
 struct ClaudeSyntheticPlaceholderDisplayTests {
     private static let now = Date(timeIntervalSince1970: 1_800_000_000)
-
-    @Test
-    func `weekly only snapshot shows Weekly once and no Session in the menu and plain CLI output`() throws {
-        let settings = testSettingsStore(suiteName: "ClaudeWeeklyOnlyDisplayTests")
-        settings.statusChecksEnabled = false
-        let store = UsageStore(
-            fetcher: UsageFetcher(environment: [:]),
-            browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings,
-            startupBehavior: .testing)
-        let payload = #"{"five_hour": null, "seven_day": {"utilization": 42}}"#
-        let usage = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(payload.utf8), now: Self.now)
-        let snapshot = ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
-        store._setSnapshotForTesting(snapshot, provider: .claude)
-
-        let descriptor = MenuDescriptor.build(
-            provider: .claude,
-            store: store,
-            settings: settings,
-            account: AccountInfo(email: nil, plan: nil),
-            updateReady: false,
-            includeContextualActions: false)
-        let menuLines = descriptor.sections
-            .flatMap(\.entries)
-            .compactMap { entry -> String? in
-                guard case let .text(text, _) = entry else { return nil }
-                return text
-            }
-        #expect(menuLines.filter { $0 == "Weekly: 58% left" }.count == 1)
-        #expect(!menuLines.contains { $0.hasPrefix("Session") })
-        #expect(!menuLines.contains("Limits not available"))
-
-        let cli = CLIRenderer.renderText(
-            provider: .claude,
-            snapshot: snapshot,
-            credits: nil,
-            context: RenderContext(
-                header: "Claude",
-                status: nil,
-                useColor: false,
-                resetStyle: .countdown),
-            now: Self.now)
-        let cliLines = cli.components(separatedBy: "\n")
-        #expect(cliLines.filter { $0.hasPrefix("Weekly: 58% left") }.count == 1)
-        #expect(!cliLines.contains { $0.hasPrefix("Session") })
-    }
 
     @Test(arguments: [false, true])
     func `synthetic session is absent from compact menu and plain CLI output`(withWeekly: Bool) {

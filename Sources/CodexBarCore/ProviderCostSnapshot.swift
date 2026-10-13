@@ -20,10 +20,6 @@ public struct ProviderCostSnapshot: Equatable, Codable, Sendable {
     public let balanceUpdatedAt: Date?
     /// Codex shared workspace provenance; nil for other providers and legacy balance observations.
     public let balanceIsWorkspace: Bool?
-    /// Length of the budget period that `resetsAt` closes, when the provider's cadence is known.
-    public let windowMinutes: Int?
-    /// True when CodexBar computed `resetsAt` itself because the provider reports no reset for this budget.
-    public let resetsAtIsInferred: Bool?
     public let updatedAt: Date
     /// Codex-only unavailable observation. Optional for compatibility with successful and legacy snapshots.
     var balanceIsUnavailable: Bool?
@@ -39,8 +35,6 @@ public struct ProviderCostSnapshot: Equatable, Codable, Sendable {
         balance: Double? = nil,
         balanceUpdatedAt: Date? = nil,
         balanceIsWorkspace: Bool? = nil,
-        windowMinutes: Int? = nil,
-        resetsAtIsInferred: Bool? = nil,
         updatedAt: Date)
     {
         self.used = used
@@ -53,18 +47,16 @@ public struct ProviderCostSnapshot: Equatable, Codable, Sendable {
         self.balance = balance
         self.balanceUpdatedAt = balanceUpdatedAt
         self.balanceIsWorkspace = balanceIsWorkspace
-        self.windowMinutes = windowMinutes
-        self.resetsAtIsInferred = resetsAtIsInferred
         self.updatedAt = updatedAt
         self.balanceIsUnavailable = nil
     }
 
-    /// Projects a positive spend budget into a quota meter, carrying the budget's own cadence when it has one.
+    /// Projects a positive spend budget into a quota meter without assigning it a time-window cadence.
     package var spendLimitWindow: RateWindow? {
         guard self.limit > 0 else { return nil }
         return RateWindow(
             usedPercent: max(0, min(100, (self.used / self.limit) * 100)),
-            windowMinutes: self.windowMinutes,
+            windowMinutes: nil,
             resetsAt: self.resetsAt,
             resetDescription: nil)
     }
@@ -94,8 +86,6 @@ public struct ProviderCostSnapshot: Equatable, Codable, Sendable {
             balance: balance,
             balanceUpdatedAt: balanceUpdatedAt,
             balanceIsWorkspace: balanceIsWorkspace,
-            windowMinutes: self.windowMinutes,
-            resetsAtIsInferred: self.resetsAtIsInferred,
             updatedAt: self.updatedAt)
         result.balanceIsUnavailable = balanceIsUnavailable
         return result

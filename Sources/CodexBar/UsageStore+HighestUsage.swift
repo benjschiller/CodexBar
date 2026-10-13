@@ -89,8 +89,8 @@ extension UsageStore {
             if provider == .claude, MenuBarMetricWindowResolver.claudeSpendLimitWindow(snapshot: snapshot) != nil {
                 return true
             }
-            // Ignore flagged placeholder lanes (e.g. a 0% session cached by an older Claude build) so a fully
-            // exhausted weekly-only account is excluded rather than kept eligible by a phantom 0%.
+            // Ignore synthesized placeholder lanes (e.g. Claude web's null `five_hour` 0% session) so a
+            // fully exhausted weekly-only account is excluded rather than kept eligible by a phantom 0%.
             let percents = [snapshot.primary, snapshot.secondary]
                 .compactMap(\.self)
                 .filter { !$0.isSyntheticPlaceholder }

@@ -2,9 +2,7 @@ import Foundation
 import Testing
 @testable import CodexBarCore
 
-/// Coverage for `RateWindow.isSyntheticPlaceholder`, the generic marker that lets lane classifiers distinguish a
-/// stand-in window from a real zero-usage session. Verifies the marker survives Codable (with backward
-/// compatibility) and the reset backfill, and that Claude web no longer produces one at the source.
+/// Older cached placeholders remain readable, while current Web responses preserve an absent session.
 struct RateWindowSyntheticPlaceholderTests {
     @Test
     func `synthetic placeholder flag round-trips through Codable`() throws {
@@ -69,7 +67,7 @@ struct RateWindowSyntheticPlaceholderTests {
     }
 
     @Test
-    func `web mapping reports no session for a null five-hour window like OAuth`() throws {
+    func `web mapping leaves the null five-hour session absent`() throws {
         let json = """
         {
           "five_hour": null,
@@ -77,18 +75,9 @@ struct RateWindowSyntheticPlaceholderTests {
         }
         """
         let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(json.utf8))
-        let usage = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false)
+        let primary = ClaudeUsageFetcher.webPrimaryWindow(from: webData)
 
-        #expect(webData.sessionPercentUsed == nil)
-        #expect(usage.primary == nil)
-        #expect(usage.secondary?.usedPercent == 42)
-        #expect(usage.secondary?.windowMinutes == 7 * 24 * 60)
-
-        let oauth = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(json.utf8))
-        #expect(oauth.primary == nil)
-        #expect(usage.secondary?.usedPercent == oauth.secondary?.usedPercent)
-        #expect(usage.secondary?.windowMinutes == oauth.secondary?.windowMinutes)
-        #expect(usage.secondary?.resetsAt == oauth.secondary?.resetsAt)
+        #expect(primary == nil)
     }
 
     @Test
@@ -100,12 +89,10 @@ struct RateWindowSyntheticPlaceholderTests {
         }
         """
         let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(json.utf8))
-        let primary = try #require(
-            ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false).primary)
+        let primary = ClaudeUsageFetcher.webPrimaryWindow(from: webData)
 
-        #expect(primary.isSyntheticPlaceholder == false)
-        #expect(primary.usedPercent == 11)
-        #expect(primary.windowMinutes == 300)
+        #expect(primary?.isSyntheticPlaceholder == false)
+        #expect(primary?.usedPercent == 11)
     }
 
     @Test
@@ -120,17 +107,17 @@ struct RateWindowSyntheticPlaceholderTests {
         #expect(webData.sessionPercentUsed == 45.5)
         #expect(webData.weeklyPercentUsed == 12.25)
 
-        let primary = try #require(
-            ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false).primary)
-        #expect(primary.isSyntheticPlaceholder == false)
-        #expect(primary.usedPercent == 45.5)
-        #expect(primary.remainingPercent == 54.5)
+        let primary = ClaudeUsageFetcher.webPrimaryWindow(from: webData)
+        #expect(primary?.isSyntheticPlaceholder == false)
+        #expect(primary?.usedPercent == 45.5)
+        #expect(primary?.remainingPercent == 54.5)
     }
 
     @Test
     func `web mapping keeps a real zero-usage session that omits a reset`() throws {
-        // A reported `five_hour` object at 0% with no `resets_at` is a real idle session, not an absent one,
-        // so it stays the session lane instead of falling through to the weekly window.
+        // A reported `five_hour` object at 0% with no `resets_at` is a real idle session, not the
+        // `five_hour: null` placeholder. The flag keys off object presence (not percent/reset), so this
+        // must stay unflagged — otherwise the combined metric would hide a genuine empty session.
         let json = """
         {
           "five_hour": { "utilization": 0 },
@@ -138,41 +125,10 @@ struct RateWindowSyntheticPlaceholderTests {
         }
         """
         let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(json.utf8))
-        let primary = try #require(
-            ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false).primary)
+        let primary = ClaudeUsageFetcher.webPrimaryWindow(from: webData)
 
-        #expect(primary.isSyntheticPlaceholder == false)
-        #expect(primary.usedPercent == 0)
-        #expect(primary.windowMinutes == 300)
-        #expect(primary.resetsAt == nil)
-    }
-
-    @Test
-    func `web mapping never emits a synthetic placeholder window`() throws {
-        let payloads = [
-            #"{"five_hour": null, "seven_day": {"utilization": 42}}"#,
-            #"{"five_hour": null, "seven_day": null, "seven_day_sonnet": {"utilization": 7}}"#,
-            #"{"five_hour": null, "extra_usage": {"monthly_limit": 20000, "used_credits": 1250}}"#,
-        ]
-        for payload in payloads {
-            let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(payload.utf8))
-            let usage = try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false)
-
-            #expect(usage.primary == nil)
-            #expect([usage.secondary, usage.opus].compactMap(\.self).allSatisfy { !$0.isSyntheticPlaceholder })
-        }
-    }
-
-    @Test
-    func `web payload without any usage window or spend cap has no usage to map`() throws {
-        let json = #"{"five_hour": null, "seven_day": null}"#
-        let webData = try ClaudeWebAPIFetcher._parseUsageResponseForTesting(Data(json.utf8))
-
-        #expect(throws: ClaudeUsageError.self) {
-            try ClaudeUsageFetcher.mapWebUsage(webData, includeAccountIdentity: false)
-        }
-        #expect(throws: ClaudeUsageError.self) {
-            try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(json.utf8))
-        }
+        #expect(primary?.isSyntheticPlaceholder == false)
+        #expect(primary?.usedPercent == 0)
+        #expect(primary?.resetsAt == nil)
     }
 }

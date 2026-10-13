@@ -7,7 +7,6 @@ public protocol ClaudeUsageFetching: Sendable {
 }
 
 public struct ClaudeUsageSnapshot: Sendable {
-    /// The real 5-hour session window; nil when the source reports none (weekly-only, scoped-only, spend-only).
     public let primary: RateWindow?
     public let secondary: RateWindow?
     public let opus: RateWindow?
@@ -950,8 +949,7 @@ extension ClaudeUsageFetcher {
         credentials: ClaudeOAuthCredentials,
         oauthHistoryOwnerIdentifier: String? = nil,
         oauthCredentialOwner: ClaudeOAuthCredentialOwner? = nil,
-        oauthKeychainCredentialUnavailable: Bool = false,
-        now: Date = Date()) throws -> ClaudeUsageSnapshot
+        oauthKeychainCredentialUnavailable: Bool = false) throws -> ClaudeUsageSnapshot
     {
         let oauthHistoryOwnerIdentifier = ClaudeOAuthCredentials.normalizedHistoryOwnerIdentifier(
             oauthHistoryOwnerIdentifier) ?? credentials.historyOwnerIdentifier
@@ -972,34 +970,31 @@ extension ClaudeUsageFetcher {
         let loginMethod = ClaudePlan.oauthLoginMethod(
             subscriptionType: credentials.subscriptionType,
             rateLimitTier: credentials.rateLimitTier)
-        let session = makeWindow(usage.fiveHour, windowMinutes: 5 * 60)
+        let primary = makeWindow(usage.fiveHour, windowMinutes: 5 * 60)
+            ?? makeWindow(usage.sevenDay, windowMinutes: 7 * 24 * 60)
+            ?? makeWindow(usage.sevenDayOAuthApps, windowMinutes: 7 * 24 * 60)
+            ?? makeWindow(usage.sevenDaySonnet, windowMinutes: 7 * 24 * 60)
+            ?? makeWindow(usage.sevenDayOpus, windowMinutes: 7 * 24 * 60)
+        let treatAsSpendLimit = primary == nil && usage.extraUsage?.isEnabled == true
+        let providerCost = Self.oauthExtraUsageCost(
+            usage.extraUsage,
+            loginMethod: loginMethod,
+            treatAsSpendLimit: treatAsSpendLimit)
+
+        guard primary != nil || providerCost?.spendLimitWindow != nil
+        else {
+            throw ClaudeUsageError.parseFailed("missing session data")
+        }
+
         let weekly = makeWindow(usage.sevenDay, windowMinutes: 7 * 24 * 60)
         let modelSpecific = makeWindow(
             usage.sevenDaySonnet ?? usage.sevenDayOpus,
             windowMinutes: 7 * 24 * 60)
         let extraRateWindows = Self.oauthExtraRateWindows(from: usage)
-        let treatAsSpendLimit = session == nil && weekly == nil && modelSpecific == nil
-            && usage.extraUsage?.isEnabled == true
-        let providerCost = Self.oauthExtraUsageCost(
-            usage.extraUsage,
-            loginMethod: loginMethod,
-            treatAsSpendLimit: treatAsSpendLimit,
-            now: now)
 
-        guard Self.hasUsableUsage(
-            session: session,
-            weekly: weekly,
-            modelSpecific: modelSpecific,
-            extraRateWindows: extraRateWindows,
-            providerCost: providerCost,
-            cloudCredits: usage.cloudCredits)
-        else {
-            throw ClaudeUsageError.parseFailed("missing usage data")
-        }
-
-        let updatedAt = now
+        let updatedAt = Date()
         return ClaudeUsageSnapshot(
-            primary: session,
+            primary: primary,
             secondary: weekly,
             opus: modelSpecific,
             extraRateWindows: extraRateWindows,
@@ -1019,8 +1014,7 @@ extension ClaudeUsageFetcher {
     private static func oauthExtraUsageCost(
         _ extra: OAuthExtraUsage?,
         loginMethod: String?,
-        treatAsSpendLimit: Bool = false,
-        now: Date = Date()) -> ProviderCostSnapshot?
+        treatAsSpendLimit: Bool = false) -> ProviderCostSnapshot?
     {
         guard let extra, extra.isEnabled == true else { return nil }
         guard let used = extra.usedCredits,
@@ -1028,64 +1022,25 @@ extension ClaudeUsageFetcher {
         else { return nil }
         let currency = extra.currency?.trimmingCharacters(in: .whitespacesAndNewlines)
         let code = (currency?.isEmpty ?? true) ? "USD" : currency!
+        let isSpendLimit = treatAsSpendLimit || ClaudePlan.fromCompatibilityLoginMethod(loginMethod) == .enterprise
         // OAuth extra usage is always in cents, including Enterprise spend-only responses.
-        return Self.monthlySpendCapCost(
+        return ProviderCostSnapshot(
             used: used / 100,
             limit: limit / 100,
             currencyCode: code,
-            isSpendLimit: treatAsSpendLimit || ClaudePlan.fromCompatibilityLoginMethod(loginMethod) == .enterprise,
-            now: now)
-    }
-
-    /// The spend cap as OAuth and the CLI both report it. Claude sends no reset for it; the rollover is the
-    /// documented 00:00 UTC month start (`ClaudeSpendRollover`).
-    private static func monthlySpendCapCost(
-        used: Double,
-        limit: Double,
-        currencyCode: String,
-        isSpendLimit: Bool,
-        now: Date) -> ProviderCostSnapshot
-    {
-        let rollover = ClaudeSpendRollover(now: now)
-        return ProviderCostSnapshot(
-            used: used,
-            limit: limit,
-            currencyCode: currencyCode,
             period: isSpendLimit ? "Spend limit" : "Monthly cap",
-            resetsAt: rollover?.resetsAt,
-            windowMinutes: rollover?.windowMinutes,
-            resetsAtIsInferred: rollover == nil ? nil : true,
-            updatedAt: now)
-    }
-
-    /// Whether a source reported anything to show. The Session slot holds only a real 5-hour window, so a payload
-    /// with any other measured window, a spend cap, or a prepaid or cloud credit balance is usable without one.
-    private static func hasUsableUsage(
-        session: RateWindow?,
-        weekly: RateWindow?,
-        modelSpecific: RateWindow?,
-        extraRateWindows: [NamedRateWindow],
-        providerCost: ProviderCostSnapshot?,
-        cloudCredits: ClaudeCloudCreditsSnapshot? = nil) -> Bool
-    {
-        session != nil
-            || weekly != nil
-            || modelSpecific != nil
-            || extraRateWindows.contains(where: \.usageKnown)
-            || providerCost?.spendLimitWindow != nil
-            || providerCost?.balance != nil
-            || cloudCredits != nil
+            resetsAt: nil,
+            updatedAt: Date())
     }
 
     private static func oauthExtraRateWindows(from usage: OAuthUsageResponse) -> [NamedRateWindow] {
         let definitions: [(id: String, title: String, window: OAuthUsageWindow?)] = [
-            (id: "claude-weekly-oauth-apps", title: "OAuth apps", window: usage.sevenDayOAuthApps),
             (id: "claude-routines", title: "Daily Routines", window: usage.sevenDayRoutines),
         ]
         if let routinesKey = usage.sevenDayRoutinesSourceKey {
             Self.log.debug("Claude OAuth extra usage key matched: routines=\(routinesKey)")
         }
-        let namedWindows: [NamedRateWindow] = definitions.compactMap { definition in
+        let routineWindows: [NamedRateWindow] = definitions.compactMap { definition in
             guard let window = definition.window, let utilization = window.utilization else { return nil }
             let resetDate = ISO8601DateParser.parse(window.resetsAt)
             let resetDescription = resetDate.map(Self.formatResetDate)
@@ -1099,8 +1054,8 @@ extension ClaudeUsageFetcher {
                     resetDescription: resetDescription))
         }
         // Keep the same row order as the Web path: model-scoped weekly limits first,
-        // Daily Routines last. OAuth apps is OAuth-only and sits between them.
-        return Self.oauthScopedWeeklyLimitWindows(from: usage) + namedWindows
+        // Daily Routines last.
+        return Self.oauthScopedWeeklyLimitWindows(from: usage) + routineWindows
     }
 
     private static func oauthScopedWeeklyLimitWindows(from usage: OAuthUsageResponse) -> [NamedRateWindow] {
@@ -1121,6 +1076,17 @@ extension ClaudeUsageFetcher {
 
     // MARK: - Web API path (uses browser cookies)
 
+    /// A missing Web session stays absent rather than becoming a synthetic 0% window.
+    static func webPrimaryWindow(from webData: ClaudeWebAPIFetcher.WebUsageData) -> RateWindow? {
+        webData.sessionPercentUsed.map {
+            RateWindow(
+                usedPercent: $0,
+                windowMinutes: 5 * 60,
+                resetsAt: webData.sessionResetsAt,
+                resetDescription: webData.sessionResetsAt.map { Self.formatResetDate($0) })
+        }
+    }
+
     private func loadViaWebAPI() async throws -> ClaudeUsageSnapshot {
         let webData: ClaudeWebAPIFetcher.WebUsageData =
             if let header = self.manualCookieHeader {
@@ -1140,23 +1106,8 @@ extension ClaudeUsageFetcher {
                     Self.log.debug(msg)
                 }
             }
-        return try Self.mapWebUsage(webData, includeAccountIdentity: self.includeAccountIdentity)
-    }
-
-    /// Maps a web payload the way `mapOAuthUsage` maps an OAuth one: Session is the 5-hour window only, so a
-    /// weekly-only, scoped-only, or spend-only payload carries no session.
-    static func mapWebUsage(
-        _ webData: ClaudeWebAPIFetcher.WebUsageData,
-        includeAccountIdentity: Bool,
-        now: Date = Date()) throws -> ClaudeUsageSnapshot
-    {
-        let session: RateWindow? = webData.sessionPercentUsed.map { pct in
-            RateWindow(
-                usedPercent: pct,
-                windowMinutes: 5 * 60,
-                resetsAt: webData.sessionResetsAt,
-                resetDescription: webData.sessionResetsAt.map { Self.formatResetDate($0) })
-        }
+        // Convert web API data to ClaudeUsageSnapshot format
+        let primary = Self.webPrimaryWindow(from: webData)
 
         let secondary: RateWindow? = webData.weeklyPercentUsed.map { pct in
             RateWindow(
@@ -1174,31 +1125,20 @@ extension ClaudeUsageFetcher {
                 resetDescription: webData.weeklyResetsAt.map { Self.formatResetDate($0) })
         }
 
-        guard Self.hasUsableUsage(
-            session: session,
-            weekly: secondary,
-            modelSpecific: opus,
-            extraRateWindows: webData.extraRateWindows,
-            providerCost: webData.extraUsageCost,
-            cloudCredits: webData.cloudCredits)
-        else {
-            throw ClaudeUsageError.parseFailed("missing usage data")
-        }
-
         return ClaudeUsageSnapshot(
-            primary: session,
+            primary: primary,
             secondary: secondary,
             opus: opus,
             extraRateWindows: webData.extraRateWindows,
             providerCost: webData.extraUsageCost,
             resetCredits: webData.resetCredits,
             cloudCredits: webData.cloudCredits,
-            updatedAt: now,
+            updatedAt: Date(),
             accountEmail: webData.accountEmail,
             accountOrganization: webData.accountOrganization,
             loginMethod: webData.loginMethod,
             rawText: nil,
-            accountID: includeAccountIdentity ? ClaudeVerifiedAccountOwner.ownerID(
+            accountID: self.includeAccountIdentity ? ClaudeVerifiedAccountOwner.ownerID(
                 accountUUID: nil,
                 email: webData.accountEmail,
                 organizationUUID: webData.accountOrganizationID) : nil)
@@ -1255,10 +1195,14 @@ extension ClaudeUsageFetcher {
         return try Self.makeSnapshot(from: snap)
     }
 
-    private static func makeSnapshot(
+    static func makeSnapshot(
         from snap: ClaudeStatusSnapshot,
         now: Date = .init()) throws -> ClaudeUsageSnapshot
     {
+        guard let sessionPctLeft = snap.sessionPercentLeft else {
+            throw ClaudeUsageError.parseFailed("missing session data")
+        }
+
         func makeWindow(pctLeft: Int?, reset: String?, windowMinutes: Int) -> RateWindow? {
             guard let left = pctLeft else { return nil }
             let used = max(0, min(100, 100 - Double(left)))
@@ -1273,10 +1217,10 @@ extension ClaudeUsageFetcher {
                 resetDescription: resetClean)
         }
 
-        let session = makeWindow(
-            pctLeft: snap.sessionPercentLeft,
+        let primary = makeWindow(
+            pctLeft: sessionPctLeft,
             reset: snap.primaryResetDescription,
-            windowMinutes: Self.sessionWindowMinutes)
+            windowMinutes: Self.sessionWindowMinutes)!
         let weekly = makeWindow(
             pctLeft: snap.weeklyPercentLeft,
             reset: snap.secondaryResetDescription,
@@ -1285,32 +1229,15 @@ extension ClaudeUsageFetcher {
             pctLeft: snap.opusPercentLeft,
             reset: snap.opusResetDescription,
             windowMinutes: Self.weeklyWindowMinutes)
-        let providerCost = snap.spendCap.map { cap in
-            Self.monthlySpendCapCost(
-                used: cap.used,
-                limit: cap.limit,
-                currencyCode: cap.currencyCode,
-                isSpendLimit: (session == nil && weekly == nil && opus == nil)
-                    || ClaudePlan.fromCompatibilityLoginMethod(snap.loginMethod) == .enterprise,
-                now: now)
-        }
-
-        guard Self.hasUsableUsage(
-            session: session,
-            weekly: weekly,
-            modelSpecific: opus,
-            extraRateWindows: snap.extraRateWindows,
-            providerCost: providerCost)
-        else {
-            throw ClaudeUsageError.parseFailed("missing usage data")
-        }
 
         return ClaudeUsageSnapshot(
-            primary: session,
+            primary: primary,
             secondary: weekly,
             opus: opus,
             extraRateWindows: snap.extraRateWindows,
-            providerCost: providerCost,
+            providerCost: ClaudeCLISpendCapParser.parse(ClaudeCLIScreen.render(
+                snap.rawText,
+                preservePlainReports: true)),
             updatedAt: now,
             accountEmail: snap.accountEmail,
             accountOrganization: snap.accountOrganization,
@@ -1527,8 +1454,7 @@ extension ClaudeUsageFetcher {
     public static func _mapOAuthUsageForTesting(
         _ data: Data,
         rateLimitTier: String? = nil,
-        subscriptionType: String? = nil,
-        now: Date = Date()) throws -> ClaudeUsageSnapshot
+        subscriptionType: String? = nil) throws -> ClaudeUsageSnapshot
     {
         let usage = try ClaudeOAuthUsageFetcher.decodeUsageResponse(data)
         let creds = ClaudeOAuthCredentials(
@@ -1538,7 +1464,7 @@ extension ClaudeUsageFetcher {
             scopes: [],
             rateLimitTier: rateLimitTier,
             subscriptionType: subscriptionType)
-        return try Self.mapOAuthUsage(usage, credentials: creds, now: now)
+        return try Self.mapOAuthUsage(usage, credentials: creds)
     }
 }
 #endif

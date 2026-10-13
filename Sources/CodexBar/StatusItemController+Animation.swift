@@ -379,15 +379,13 @@ extension StatusItemController {
                 tint: providerTint,
                 for: button)
         } else {
-            let layoutPolicy = IconRemainingResolver.quotaLayoutPolicy(provider: primaryProvider, snapshot: snapshot)
             let signature = [
-                "mode=icon",
+                "mode=icon;measured=\(snapshot?.primary?.measured != nil)",
                 "provider=\(primaryProvider.rawValue)",
                 "style=\(String(describing: style))",
                 "primary=\(Self.iconSignatureValue(primary))",
                 "weekly=\(Self.iconSignatureValue(weekly))",
                 "credits=\(Self.iconSignatureValue(credits))",
-                "layout=\(Self.iconLayoutSignatureValue(layoutPolicy))",
                 "stale=\(stale ? "1" : "0")",
                 "status=\(statusIndicator.rawValue)",
                 "blink=\(Self.iconSignatureValue(Double(blink)))",
@@ -414,7 +412,7 @@ extension StatusItemController {
                 tilt: tilt,
                 statusIndicator: statusIndicator,
                 hideCritters: self.settings.menuBarHidesCritters,
-                quotaLayoutPolicy: layoutPolicy)
+                quotaLayoutPolicy: .provider(primaryProvider, snapshot: snapshot))
             self.setButtonContent(
                 image: warningFlash ? Self.quotaWarningFlashImage(base: image) : image,
                 title: nil,
@@ -486,7 +484,6 @@ extension StatusItemController {
     }
 
     @discardableResult
-    // swiftlint:disable:next function_body_length
     func applyIcon(for provider: UsageProvider, phase: Double?) -> Bool {
         guard let button = self.statusItems[provider.instanceID]?.button else { return false }
         let providerTint = self.providerTintColor(for: provider, button: button)
@@ -607,15 +604,13 @@ extension StatusItemController {
                 tint: providerTint,
                 for: button)
         } else {
-            let layoutPolicy = IconRemainingResolver.quotaLayoutPolicy(provider: provider, snapshot: snapshot)
             let signature = [
-                "mode=icon",
+                "mode=icon;measured=\(snapshot?.primary?.measured != nil)",
                 "provider=\(provider.rawValue)",
                 "style=\(String(describing: style))",
                 "primary=\(Self.iconSignatureValue(primary))",
                 "weekly=\(Self.iconSignatureValue(weekly))",
                 "credits=\(Self.iconSignatureValue(credits))",
-                "layout=\(Self.iconLayoutSignatureValue(layoutPolicy))",
                 "stale=\(stale ? "1" : "0")",
                 "status=\(statusIndicator.rawValue)",
                 "blink=\(Self.iconSignatureValue(Double(blink)))",
@@ -642,7 +637,7 @@ extension StatusItemController {
                 tilt: tilt,
                 statusIndicator: statusIndicator,
                 hideCritters: self.settings.menuBarHidesCritters,
-                quotaLayoutPolicy: layoutPolicy)
+                quotaLayoutPolicy: .provider(provider, snapshot: snapshot))
             self.setButtonContent(
                 image: warningFlash ? Self.quotaWarningFlashImage(base: image) : image,
                 title: nil,
@@ -662,10 +657,6 @@ extension StatusItemController {
     static func iconSignatureValue(_ value: Double?) -> String {
         guard let value else { return "nil" }
         return String(format: "%.3f", value)
-    }
-
-    static func iconLayoutSignatureValue(_ policy: IconRenderer.QuotaLayoutPolicy) -> String {
-        "\(policy.reservesMissingSecondaryLane ? "1" : "0")\(policy.treatsExhaustedSecondaryAsMissing ? "1" : "0")"
     }
 
     func resolvedMenuBarIconPercents(
@@ -1229,9 +1220,10 @@ extension StatusItemController {
     }
 
     /// The combined metric's session (5h) lane. Codex resolves it through the consumer projection; other
-    /// providers classify by window cadence. A flagged 5-hour placeholder (cached by an older Claude build for
-    /// `five_hour: null`) is dropped so a weekly-only account falls back to its weekly lane instead of rendering
-    /// a phantom `5h 0%`/`5h 100%` session. A genuine session (even one freshly reset to 0%) is kept.
+    /// providers classify by window cadence. A 5-hour lane the provider only synthesized to stand in for an
+    /// absent session — Claude web's null `five_hour` placeholder, flagged at the boundary — is dropped so a
+    /// weekly-only account falls back to its weekly lane instead of rendering a phantom `5h 0%`/`5h 100%`
+    /// session. A genuine session (even one freshly reset to 0%) is not flagged, so it is kept.
     private static func combinedSessionLane(
         snapshot: UsageSnapshot?,
         projection: CodexConsumerProjection?) -> RateWindow?

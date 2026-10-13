@@ -186,23 +186,15 @@ the cookie import.
   - `anthropic-beta: oauth-2025-04-20`
   - Reset inventory uses `claude-cli/<detected-version> (external, cli)`; eligibility remains server-controlled.
 - Mapping:
-  - `five_hour` → session window; if absent, null, or without utilization, the account has no session and the menu
-    shows no Session row.
-  - `seven_day` → weekly window, shown as Weekly and never promoted into the session slot.
+  - `five_hour` → session window.
+  - `seven_day` → weekly window; also becomes the primary fallback when `five_hour` is absent or has no utilization.
   - `seven_day_sonnet` / `seven_day_opus` → model-specific weekly window.
   - `limits[].weekly_scoped` → model-specific weekly windows; generic `All models` scopes stay in the main weekly row.
   - The menu localizes scoped titles as a model name plus weekly duration; canonical snapshot and CLI titles remain unchanged.
   - Automatic and Session + Weekly menu bar metrics fall back to the most constrained known scoped weekly window when the regular quota windows are missing. Unknown scoped measurements remain unavailable; Extra usage stays a spend-only fallback.
-  - `seven_day_oauth_apps` → "OAuth apps" weekly row (OAuth only; Web does not read it). It is display-only: it never
-    fills Session or Weekly, and it does not feed the menu bar metrics, Overview switcher bar, widgets, or quota
-    warnings.
   - `seven_day_routines` / `seven_day_cowork` → Daily Routines extra window.
   - Claude Design/Omelette keys are ignored because Claude Design shares the main Claude usage limit.
-  - `extra_usage` → Extra usage cost (monthly spend/limit). Claude sends no reset; see
-    [Extra usage rollover](#extra-usage-rollover).
-- A response fails with `missing usage data`, and Auto tries the next source, only when it reports none of: a session,
-  weekly, model-specific, scoped, or other measured extra window (such as OAuth apps or Daily Routines); a positive
-  spend cap; a prepaid Usage credits balance, with or without a cap; or cloud-session credits.
+  - `extra_usage` → Extra usage cost (monthly spend/limit).
 - Preferences → Providers → Claude → Visible usage items lets you hide the Daily Routines row in menus, the Settings
   preview, and Overview. The global optional credits and extra usage setting remains its master switch. Hiding this
   row does not change fetching, history, notifications, widgets, model-scoped weekly limits, hooks, or CLI output.
@@ -255,9 +247,7 @@ the cookie import.
   The fixtures cover the reported subscription schema, including cancellation and absent dates; they do not
   establish that every plan or organization role can access this endpoint. Team/Enterprise billing access and
   live cancelled subscriptions remain unverified. Quota resets and Extra usage balances are independent.
-- Session quota warnings keep their history while the five-hour window is missing, and ignore a weekly quota that
-  older builds promoted into the primary field. Existing session warning history stays tied to its account, and
-  weekly warnings continue independently.
+- Session quota warnings ignore a weekly quota promoted into the primary field when the five-hour payload is missing. Existing session warning history stays tied to its account, and weekly warnings continue independently.
 - Preferences → Providers → Claude → Cookie source (Automatic or Manual).
 - Manual mode accepts a `Cookie:` header from a claude.ai request.
 - Multi-account manual tokens: add entries to `~/.codexbar/config.json` (`tokenAccounts`) and set Claude cookies to
@@ -292,16 +282,14 @@ the cookie import.
     grants in the `cedar_ember` block. Rejected requests, including ordinary 403 responses, retry once without
     `cedar_ember=1`, so unsupported reset queries keep the usage windows.
     Success, 401, 429, and recognized Cloudflare challenges retain their normal handling without a retry.
-  - `GET https://claude.ai/api/organizations/{orgId}/overage_spend_limit` → Extra usage spend/limit when the
-    usage response's `extra_usage` yields no cost.
+  - `GET https://claude.ai/api/organizations/{orgId}/overage_spend_limit` → Extra usage spend/limit.
   - `GET https://claude.ai/api/organizations/{orgId}/prepaid/credits` → remaining Usage credits balance.
   - `GET https://claude.ai/api/account` → email + plan hints.
 - Outputs:
   - Session + weekly + model-specific percent used.
-  - A missing session measurement does not render as 100% remaining: `five_hour: null` means no session, as with
-    OAuth, and Web never synthesizes a 0% session window.
+  - A missing Web session stays absent instead of becoming a synthetic 0% session; measured weekly and extra windows stay visible. Older cached placeholders remain readable.
   - Daily Routines extra window when returned by the usage API.
-  - Extra usage spend/limit (if enabled), with its rollover date and pace. Compact Overview keeps this section when no measured quota bars exist, including Enterprise accounts with unavailable limits.
+  - Extra usage spend/limit (if enabled). Compact Overview keeps this section when no measured quota bars exist, including Enterprise accounts with unavailable limits.
   - Remaining Usage credits balance (if enabled). Custom menu bar layouts can show it with the **Balance** element
     beside the quota windows; the default menu bar text keeps showing quota. Turning off **Show credits & extra
     usage** hides it from the menu card and the Balance element immediately. Otherwise a fresh snapshot without a
@@ -324,8 +312,9 @@ the cookie import.
   - Requires `eligible: true`. A grant with an unreadable `resets_left`, `resets_total`, `paused`, `starts_at`, or
     `ends_at` is dropped. More than 50 available resets or more than 200 grant records show nothing. The usage
     windows are unaffected either way.
-  - Menu: a live `Limit Reset Credits` section behind the global optional credits and extra usage setting. CLI and
-    `codexbar serve`: a `Limit Reset Credits` row in `usage.details` (`N available`, next expiry).
+  - Menu: a live `Limit Reset Credits` section with its own visibility choice. An upgrade preserves a previously
+    disabled global optional-usage preference by initially hiding this section; it can then be enabled independently.
+    CLI and `codexbar serve`: a `Limit Reset Credits` row in `usage.details` (`N available`, next expiry).
   - Live-only: grant IDs are never decoded, the usage request skips the URL cache, and cached or synced snapshots do
     not restore the inventory. A reset used on claude.ai disappears at the next successful refresh.
   - Source precedence stays unchanged: credits appear only from the source supplying the primary usage snapshot. CLI
@@ -339,14 +328,17 @@ browser-only billing details, and enable **Show credits and extra usage** to dis
 
 ## Extra usage rollover
 
-Claude reports Extra usage spend and cap but no reset. CodexBar treats every Claude monthly cap as rolling over at 00:00 UTC on the 1st, Anthropic's documented Enterprise spend-limit period (https://platform.claude.com/docs/en/manage-claude/spend-limits-api). Claude Code shows the same calendar-month boundary in local time, so labels can differ by the UTC offset. The rollover returns period spend to zero. It is not a redeemable reset: Limit Reset Credits are separate, and Enterprise seats report `cedar_ember` ineligible with reason `seat`. An admin changing the cap changes the percentage, not the rollover date.
+Positive Claude monthly caps use the shared usage-window presentation: spend-only accounts get one Meter bar,
+and Auto, Extra usage, and the card use the same cap percentage and reset. The card retains its spend/limit and
+prepaid-balance caption. Uncapped balances keep their compact Credits row; Admin API spend is unchanged.
+Extra usage still follows its existing visibility choice and the global optional-usage switch. Pace follows the
+existing pace setting, independently of redeemable Limit Reset Credits.
 
-- The date is *inferred*: CodexBar computes it because Claude doesn't report it. The cost snapshot stores the date,
-  that calendar month's real length (28–31 days), and `resetsAtIsInferred`, for both `Spend limit` and `Monthly cap`
-  labels. Older cached snapshots show no reset until the next refresh.
-- The Extra usage card shows the rollover as an ordinary local-time reset, with pace when pace is visible. Because
-  the boundary is 00:00 UTC, US Pacific time shows Nov 1's rollover as Oct 31, 5 PM; the reset tooltip marks the
-  date as inferred.
+Claude does not report the cap reset. CodexBar infers midnight UTC on the first of the next month from the cost
+observation, applying [Anthropic's documented spend-limit period](https://platform.claude.com/docs/en/manage-claude/spend-limits-api)
+to all Claude monthly caps. Reset text uses local time (November 1 UTC can appear as October 31 in the Americas);
+the metric tooltip identifies the inference. Shared calendar-month pace uses the actual 28–31-day month.
+Changing a cap changes the percentage, not its rollover. A stale observation does not advance into a new month.
 
 ## Cloud-session credits
 
@@ -503,23 +495,16 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
   4) Dismiss the open panel with Escape before reusing the session for `/status` identity or the next `/usage` refresh.
   5) Optionally send `/status` to extract identity fields.
 - Parsing (`ClaudeStatusProbe`):
-  - Session comes only from a `Current session` row; the order-based percent fallback runs only when that label
-    (possibly garbled) is present, so a weekly-only or per-model-only panel never reports a session.
   - Replays cursor-based `/usage` and `/status` captures onto a bounded screen with the same geometry as the PTY, then locates
     "Current session" + "Current week" headers. Cursor jumps preserve unchanged cells from earlier frames, keeping
     scoped weekly percentages, reset spacing, and account identity intact. Erased content is not reused as history.
   - Plain reports, including color-only ANSI output and legacy CR-delimited text, retain their existing parsing behavior.
-  - Capture completion uses the current rendered frame and waits for a quota value on any `Current session` or `Current week` row, or a spend cap in the Usage credits block, so panels without a session row finish promptly; percentages in the
+  - Capture completion uses the current rendered frame and waits for session quota values; percentages in the
     "What's contributing to your limits usage?" insights section cannot finish a loading quota probe. Once quota is
     complete, insight text cannot trigger another command-palette confirmation.
   - Extracts percent left/used and reset text near those headers.
   - When a reset date cannot be parsed, the menu preserves its description and normalizes leading `Reset` or `Resets` labels once, including scoped weekly limits.
   - Parses `Account:` and `Org:` lines when present.
-  - Reads the "Usage credits" block (`NN% used`, then `$A / $B spent · Resets …`) as the monthly spend cap in USD,
-    from the full capture because the block follows the insights section. Anything unexpected (a non-`$` currency,
-    garbled or negative amounts, a zero limit, a missing line) yields no cap and leaves the quota parse unchanged.
-    The reset comes from the [monthly rollover](#extra-usage-rollover). With Web extras enabled, the CLI cap stays
-    authoritative and Web adds only the prepaid balance.
   - Excludes the "What's contributing to your limits usage?" insights section from quota and identity parsing.
     User-defined tool names and usage-share percentages cannot become a plan badge or quota value.
   - A successful CLI quota read keeps the menu's Switch Account action even when optional identity fields are absent. Restored history and failed refreshes do not count as a successful sign-in.
@@ -587,3 +572,11 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
   `Sources/CodexBarCore/PiSessionCostScanner.swift`,
   `Sources/CodexBarCore/PiSessionCostCache.swift`,
   `Sources/CodexBarCore/Vendored/CostUsage/*`
+
+### Displaying resets and billing details
+
+Saved limit resets are independent of the global optional billing switch. Use **Visible usage items →
+Limit Reset Credits** to hide them. **Extra usage** and **Cloud credits** have individual checkboxes but
+also require the global optional billing switch. A prepaid balance without a monthly cap uses the same
+Extra usage choice, labeled **Credits** while that balance is reported. **Plan renewal / expiry** is independent and appears
+below Session/Weekly, before saved resets. These controls affect presentation only.

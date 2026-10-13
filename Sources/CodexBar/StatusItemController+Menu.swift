@@ -1415,7 +1415,6 @@ extension StatusItemController {
             : nil
         let stale = self.store.isStale(provider: provider)
         let indicator = self.store.statusIndicator(for: provider)
-        let layoutPolicy = IconRemainingResolver.quotaLayoutPolicy(provider: provider, snapshot: snapshot, now: now)
         let image = IconRenderer.makeIcon(
             primaryRemaining: primary,
             weeklyRemaining: weekly,
@@ -1427,7 +1426,7 @@ extension StatusItemController {
             tilt: 0,
             statusIndicator: indicator,
             hideCritters: self.settings.menuBarHidesCritters,
-            quotaLayoutPolicy: layoutPolicy)
+            quotaLayoutPolicy: .provider(provider, snapshot: snapshot))
         image.isTemplate = true
         return image
     }

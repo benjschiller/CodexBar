@@ -41,9 +41,7 @@ struct ProviderCostContent: View {
                     UsageProgressBar(
                         percent: percent,
                         tint: self.progressColor,
-                        accessibilityLabel: self.section.progressAccessibilityLabel,
-                        pacePercent: self.section.pacePercent,
-                        paceOnTop: self.section.paceOnTop)
+                        accessibilityLabel: self.section.progressAccessibilityLabel)
                 }
                 HStack(alignment: .firstTextBaseline) {
                     Text(self.section.spendLine).font(.footnote).lineLimit(1)
@@ -53,27 +51,6 @@ struct ProviderCostContent: View {
                             .font(.footnote)
                             .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
                             .lineLimit(1)
-                    }
-                }
-                if self.section.paceText != nil || self.section.resetText != nil {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        if let paceText = self.section.paceText {
-                            Text(paceText)
-                                .font(.footnote)
-                                .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
-                                .lineLimit(2)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        Spacer(minLength: 8)
-                        if let resetText = self.section.resetText {
-                            Text(resetText)
-                                .font(.footnote)
-                                .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
-                                .lineLimit(1)
-                                .fixedSize(horizontal: true, vertical: false)
-                                .layoutPriority(1)
-                                .help(self.section.resetTooltip ?? "")
-                        }
                     }
                 }
                 if let personalSpendLine = self.section.personalSpendLine {
@@ -496,7 +473,7 @@ extension UsageMenuCardView.Model {
         guard style != .hidden else { return nil }
         guard let cost else { return nil }
 
-        /// Formats a cost value using the user's currency preference.
+        // Formats a cost value using the user's currency preference.
         func formatCost(_ value: Double, providerCurrency: String? = nil) -> String {
             UsageFormatter.convertedCostString(
                 value,
@@ -565,17 +542,17 @@ extension UsageMenuCardView.Model {
             return Self.creditsUsageSection(cost: cost, percentStyle: percentStyle)
         }
 
-        if style == .claude {
-            if isClaudeAdminAPI {
-                let spend = formatCost(cost.used)
-                let periodLabel = Self.localizedPeriodLabel(cost.period ?? "Last 30 days")
-                return ProviderCostSection(
-                    title: L("API spend"),
-                    percentUsed: nil,
-                    spendLine: "\(periodLabel): \(spend)",
-                    percentLine: nil)
-            }
+        if style == .apiSpend || (style == .claude && isClaudeAdminAPI) {
+            let spend = formatCost(cost.used)
+            let periodLabel = Self.localizedPeriodLabel(cost.period ?? "Last 30 days")
+            return ProviderCostSection(
+                title: L("API spend"),
+                percentUsed: nil,
+                spendLine: "\(periodLabel): \(spend)",
+                percentLine: nil)
+        }
 
+        if style == .claude {
             if cost.limit <= 0 {
                 guard let balance = cost.balance else { return nil }
                 let value = formatCost(balance)
@@ -584,32 +561,6 @@ extension UsageMenuCardView.Model {
                     value: value,
                     showsInProviderDetails: false)
             }
-
-            let used = formatCost(cost.used)
-            let limit = formatCost(cost.limit)
-            let percentUsed = Self.clamped((cost.used / cost.limit) * 100)
-            let periodLabel = Self.localizedPeriodLabel(cost.period ?? "This month")
-            let balanceLine = cost.balance.map {
-                "\(L("Balance")): \(formatCost($0))"
-            }
-            return ProviderCostSection(
-                title: L("Extra usage"),
-                percentUsed: percentUsed,
-                spendLine: "\(periodLabel): \(used) / \(limit)",
-                percentLine: String(format: L("%.0f%% used"), min(100, max(0, percentUsed))),
-                balanceLine: balanceLine,
-                showsInProviderDetails: false,
-                percentStyle: percentStyle)
-        }
-
-        if style == .apiSpend {
-            let spend = formatCost(cost.used)
-            let periodLabel = Self.localizedPeriodLabel(cost.period ?? "Last 30 days")
-            return ProviderCostSection(
-                title: L("API spend"),
-                percentUsed: nil,
-                spendLine: "\(periodLabel): \(spend)",
-                percentLine: nil)
         }
 
         if style == .clawRouter, cost.limit <= 0 {
@@ -657,8 +608,10 @@ extension UsageMenuCardView.Model {
             percentUsed: percentUsed,
             spendLine: "\(periodLabel): \(used) / \(limit)",
             percentLine: String(format: L("%.0f%% used"), min(100, max(0, percentUsed))),
-            balanceLine: nil,
-            personalSpendLine: personalSpendLine)
+            balanceLine: style == .claude ? cost.balance.map { "\(L("Balance")): \(formatCost($0))" } : nil,
+            personalSpendLine: personalSpendLine,
+            showsInProviderDetails: style != .claude,
+            percentStyle: style == .claude ? percentStyle : .used)
     }
 
     /// Provider-specific by design: Claude cloud credits share the inline balance style of prepaid credits.
@@ -727,41 +680,6 @@ extension UsageMenuCardView.Model {
 
     static func clamped(_ value: Double) -> Double {
         min(100, max(0, value))
-    }
-
-    /// Only a budget that reports its own period (reset date and length) can carry a reset line and a pace.
-    static func addingCapCadence(
-        to section: ProviderCostSection,
-        cost: ProviderCostSnapshot?,
-        input: Input,
-        paceVisible: Bool) -> ProviderCostSection
-    {
-        guard section.percentUsed != nil,
-              let cost, cost.limit > 0, cost.resetsAt != nil, cost.windowMinutes != nil,
-              let window = cost.spendLimitWindow
-        else { return section }
-        var result = section
-        result.resetText = Self.resetText(for: window, style: input.resetTimeDisplayStyle, now: input.now)
-        if result.resetText != nil, cost.resetsAtIsInferred == true {
-            result.resetTooltip = L("cost_reset_inferred_tooltip", input.metadata.displayName)
-        }
-        guard paceVisible,
-              let pace = Self.displayableWeeklyPace(UsagePace.weekly(
-                  window: window,
-                  now: input.now,
-                  defaultWindowMinutes: 10080,
-                  workDays: nil)),
-              let detail = Self.weeklyPaceDetail(
-                  provider: input.provider,
-                  window: window,
-                  now: input.now,
-                  pace: pace,
-                  showUsed: section.percentStyle == .used)
-        else { return result }
-        result.pacePercent = detail.pacePercent
-        result.paceOnTop = detail.paceOnTop
-        result.paceText = detail.rightLabel
-        return result
     }
 }
 

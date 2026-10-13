@@ -24,23 +24,6 @@ enum IconRemainingResolver {
         return (primary: windows.primary, secondary: windows.secondary)
     }
 
-    /// The provider's quota layout, minus the empty reserved lane when the icon's lanes are spend caps: a spend
-    /// budget is one meter, not a session lane awaiting a weekly partner.
-    static func quotaLayoutPolicy(
-        provider: UsageProvider,
-        snapshot: UsageSnapshot?,
-        now: Date = Date()) -> IconRenderer.QuotaLayoutPolicy
-    {
-        let policy = IconRenderer.QuotaLayoutPolicy.provider(provider)
-        guard let snapshot else { return policy }
-        let windows = ProviderDescriptorRegistry.descriptor(for: provider).presentation.iconWindows(
-            context: ProviderIconWindowContext(snapshot: snapshot, secondaryOverrideWindowID: nil, now: now))
-        guard windows.lanesAreSpendCaps else { return policy }
-        return IconRenderer.QuotaLayoutPolicy(
-            reservesMissingSecondaryLane: false,
-            treatsExhaustedSecondaryAsMissing: policy.treatsExhaustedSecondaryAsMissing)
-    }
-
     static func resolvedPercents(
         snapshot: UsageSnapshot,
         style: IconStyle,

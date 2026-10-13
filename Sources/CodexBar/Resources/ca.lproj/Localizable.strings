@@ -244,7 +244,6 @@
 "None" = "Cap";
 "Notifications" = "Notificacions";
 "Notifies when the 5-hour session quota hits 0% and when it becomes " = "Avisa quan la quota de sessió de 5 hores arriba al 0% i quan torna a estar ";
-"OAuth apps" = "Aplicacions OAuth";
 "OK" = "D'acord";
 "Obscure email addresses in the menu bar and menu UI." = "Amagueu les adreces de correu a la barra de menús i a la interfície del menú.";
 "Off" = "Desactivat";
@@ -1418,6 +1417,7 @@
 "menu_bar_layout_preset_icon_only" = "Només icona";
 "menu_bar_layout_preset_percent_reset" = "Percentatge i reinici";
 "menu_bar_layout_preset_compact_stacked" = "Apilat compacte";
+"menu_bar_layout_preset_bars_stacked" = "Barres de progrés apilades";
 "menu_bar_layout_preset_custom" = "Personalitzat";
 "menu_bar_layout_live_preview" = "Previsualització en directe";
 "menu_bar_layout_default_preview" = "Previsualització de la disposició per defecte";
@@ -1557,6 +1557,7 @@
 "5-hour usage" = "Ús de 5 hores";
 "7-day usage" = "Ús de 7 dies";
 "Total usage" = "Ús total";
+"claude_oauth_keychain_access_disabled" = "L’accés al Keychain està desactivat, de manera que CodexBar no pot llegir les dades d’inici de sessió de Claude.";
 "claude_oauth_keychain_access_revoked" = "L'accés al clauer de Claude s'ha revocat per la rotació del token de Claude Code. Feu clic a Actualitza per tornar a concedir l'accés, o canvieu l'origen d'ús de Claude a CLI/Web.";
 "claude_showing_last_known_usage" = "Es mostra l'últim ús conegut capturat %@.";
 "claude_limited_usage_detail" = "Detalls d’ús limitats";
@@ -2513,7 +2514,6 @@
 "Reserve is +" = "La reserva és +";
 
 "cost_reset_inferred_tooltip" = "Inferit: %@ no informa d'aquesta data. Els límits de despesa mensuals es reinicien a les 00:00 UTC l'1 de cada mes.";
-
 /* fal provider credentials */
 "Key with billing read access (BILLING or READONLY preset). Or set FAL_KEY." = "Clau amb accés de lectura a la facturació (perfil BILLING o READONLY). O defineix FAL_KEY.";
 
@@ -2522,6 +2522,10 @@
 "Required. The ws_… ID of the workspace the key can bill. Or set FLORA_WORKSPACE_ID." = "Obligatori. L'ID ws_… de l'espai de treball que la clau pot facturar. O defineix FLORA_WORKSPACE_ID.";
 "ak_…" = "ak_…";
 "ws_…" = "ws_…";
+
+"Plan renewal / expiry" = "Renovació / venciment del pla";
+
+"Hidden by the global optional credits, spending & billing setting." = "Ocult per la configuració global de crèdits opcionals, despesa i facturació.";
 
 "Provider order updated" = "Ordre dels proveïdors actualitzat";
 "Undo" = "Desfer";

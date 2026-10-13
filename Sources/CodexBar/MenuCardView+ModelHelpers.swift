@@ -525,9 +525,7 @@ extension UsageMenuCardView.Model {
             current.title == candidate.title &&
                 (current.percentUsed == nil) == (candidate.percentUsed == nil) &&
                 (current.percentLine == nil) == (candidate.percentLine == nil) &&
-                (current.personalSpendLine == nil) == (candidate.personalSpendLine == nil) &&
-                (current.resetText == nil) == (candidate.resetText == nil) &&
-                (current.paceText == nil) == (candidate.paceText == nil)
+                (current.personalSpendLine == nil) == (candidate.personalSpendLine == nil)
         default:
             false
         }
@@ -855,7 +853,7 @@ extension UsageMenuCardView.Model {
             workDays: input.workDaysPerWeek))
     }
 
-    static func displayableWeeklyPace(_ pace: UsagePace?) -> UsagePace? {
+    private static func displayableWeeklyPace(_ pace: UsagePace?) -> UsagePace? {
         guard let pace else { return nil }
         return pace.expectedUsedPercent >= 3 || pace.etaSeconds == 0 ? pace : nil
     }
@@ -942,7 +940,12 @@ extension UsageMenuCardView.Model {
         input: Input,
         percentStyle: PercentStyle) -> [Metric]
     {
-        guard let extraRateWindows = snapshot.extraRateWindows else { return [] }
+        var extraRateWindows = snapshot.extraRateWindows ?? []
+        if input.provider == .claude, input.showOptionalCreditsAndExtraUsage,
+           let spend = snapshot.claudeMonthlySpendWindow
+        {
+            extraRateWindows.append(spend)
+        }
         let menuCard = ProviderDescriptorRegistry.descriptor(for: input.provider).presentation.menuCard
         // Codex additional limits (e.g. Codex Spark) are optional extra usage and follow the
         // "optional credits and extra usage" setting. Other providers' extra windows (Antigravity
@@ -976,7 +979,13 @@ extension UsageMenuCardView.Model {
             let resetText = usesResetDetail && namedWindow.window.resetsAt == nil
                 ? nil
                 : resolvedResetText
-            let detailText: String? = if usesResetDetail {
+            let detailText: String? = if namedWindow.id == "claude-extra-usage" {
+                Self.providerCostSection(
+                    cost: snapshot.providerCost, style: .claude,
+                    preferredCurrencyCode: input.preferredCurrencyCode).map {
+                    [$0.spendLine, $0.balanceLine].compactMap(\.self).joined(separator: " · ")
+                }
+            } else if usesResetDetail {
                 namedWindow.window.resetDescription
             } else {
                 nil
@@ -1007,7 +1016,7 @@ extension UsageMenuCardView.Model {
             } else {
                 nil
             }
-            return Metric(
+            var metric = Metric(
                 id: namedWindow.id,
                 title: title,
                 percent: Self.clamped(
@@ -1029,6 +1038,10 @@ extension UsageMenuCardView.Model {
                         weeklyWindow: namedWindow.window,
                         weeklyWindowID: namedWindow.id)
                     : nil)
+            if namedWindow.id == "claude-extra-usage", snapshot.providerCost?.resetsAt == nil {
+                metric.helpText = L("cost_reset_inferred_tooltip", "Claude")
+            }
+            return metric
         }
     }
 
@@ -1105,6 +1118,7 @@ extension UsageMenuCardView.Model {
         window: RateWindow,
         input: Input) -> PaceDetail?
     {
+        if let detail = resetWindowPaceDetail(window: window, input: input) { return detail }
         // Provider-specific by design: extra-window pacing covers Codex, Claude, Antigravity, and Cursor 7-day extras.
         if provider == .claude || provider == .cursor, window.windowMinutes != 10080 {
             return nil

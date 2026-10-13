@@ -4,10 +4,12 @@
 
 ### Added
 
+- Menu bar: add graphical progress-bar tokens for selected usage windows and a stacked-bars preset, with readable layouts when returning to older app versions (#4436). Thanks @happut!
 - Settings: filter the provider list to enabled services, search CLI aliases, and restore the default order with Undo (#4440). Thanks @Yuxin-Qiao!
 - Kimi: discover the current China Desktop session from Local Storage for web usage and monthly membership enrichment, with session checks before each request (#4416, #3536). Thanks @OttoPrua!
 - Providers: add fal account credit balances through its billing API, with explicit guidance for missing billing permissions (#4438). Thanks @giuseppebisemi!
 - Providers: add FLORA workspace balances, member limits, and available month-to-date spending through a bundled billing plugin (#4439). Thanks @giuseppebisemi!
+- Claude: independently select reset credits, Extra usage or prepaid Credits, and plan dates; preserve hidden resets when upgrading with optional usage disabled (#4484). Thanks @emanuelst!
 
 - Codex CLI: add opt-in identified-request subtotals across local and SSH histories, deduplicating strong request identities and preserving partial results without estimating combined prices (#4447, refs #3036). Thanks @jkobject!
 
@@ -19,6 +21,11 @@
 
 ### Fixed
 
+- Claude: show monthly spend caps with one meter, calendar-month pace and inferred UTC rollover, preserving Extra usage visibility (#4480). Fixes #4381. Thanks @benjschiller!
+
+- Menu bar: show a single leading provider icon at full size beside two text rows while preserving inline icons for merged providers and tinted layouts (#4454). Thanks @deinspanjer!
+- Menu cards: separate stale Claude usage notices from errors, render inline commands without backticks, align error copy controls, and clarify when Keychain access is disabled.
+
 - OpenCode Go: cache unchanged local history scans with bounded memory and discover permitted browser sessions in Auto before falling back to marked estimates (#4410, #4445). Thanks @JackHo12 and @djbclark!
 
 - Codex costs: price ChatGPT-created Auto-review requests from October 6 at $0 so they no longer make otherwise complete costs appear as a lower bound; keep their tokens in totals and honor explicit custom prices (#4452, #4453). Thanks @gabrielrojasc!
@@ -28,7 +35,6 @@
 - Browser cookie imports raise at most one Keychain prompt per manual refresh, respect a denied prompt for its cooldown, and never prompt from settings-triggered refreshes (#4443).
 - Browser cookie imports stop at the first browser with a working session instead of reading every browser (#4443).
 - Chromium cookie imports no longer ask for a browser's Safe Storage key when that browser has no cookies for the provider's site, avoiding needless Keychain prompts (SweetCookieKit 0.5.7, #4443).
-- Claude: Session now shows only a real 5-hour window from OAuth, Web, and CLI, so weekly-only, model-only, and spend-only accounts no longer get a stand-in session; OAuth loads accounts that report only model-scoped weekly limits, Daily Routines, or cloud credits; the OAuth apps weekly limit gets its own row; the CLI reads the Usage credits spend cap and prints it like the menu; monthly spend caps show their inferred rollover date and pace, and spend-only accounts draw one Meter bar instead of an empty or full one (#4480). Thanks @benjschiller!
 
 ## 0.74.1 — 2026-10-11
 

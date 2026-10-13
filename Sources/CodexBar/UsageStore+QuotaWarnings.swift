@@ -150,13 +150,12 @@ extension UsageStore {
             self.clearQuotaWarningState(provider: provider, window: window)
             return
         }
-        // Claude omits its 5-hour window between sessions, and older cached snapshots carry a weekly window there;
-        // neither rearms the session lane's fired thresholds.
-        guard provider != .claude || window != .session || rateWindow.map(Self.isSessionWindow) == true else { return }
         guard let rateWindow else {
             self.quotaWarningState.removeValue(forKey: key)
             return
         }
+        // Claude promotes weekly usage to primary when its session payload is missing.
+        guard provider != .claude || window != .session || Self.isSessionWindow(rateWindow) else { return }
         guard !rateWindow.isSyntheticPlaceholder else { return }
 
         let thresholds = self.settings.resolvedQuotaWarningThresholds(provider: provider, window: window)

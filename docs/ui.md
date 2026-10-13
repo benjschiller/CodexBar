@@ -151,9 +151,6 @@ model-generic token label while the rendered menu-bar prefix and accessibility l
 - 18×18 template image.
 - Bar windows are provider/style-specific primary and secondary windows.
 - Fill represents percent remaining by default; “Show usage as used” flips to percent used.
-- A provider that reports a spend cap but no session or weekly window (for example, a Claude Enterprise seat) draws
-  the cap as a single Meter bar, the same one-meter icon used for single-quota providers, instead of leaving an empty
-  second lane. Providers with real quota windows keep both lanes.
 - Renderer/critter icons dim when last refresh failed and can render incident indicators; brand display mode uses provider branding plus title text.
 - Loading animation runs at a bounded frame rate and has a hard continuous-duration ceiling so provider hangs cannot keep
   the menu bar redrawing forever.
@@ -168,17 +165,13 @@ model-generic token label while the rendered menu-bar prefix and accessibility l
 - Two-column statistics headings wrap to keep the full localized label readable, including estimated current-window tokens.
 - Provider-specific rows with resets (countdown by default; optional absolute clock display). Primary, secondary,
   tertiary, and extra windows render when the provider snapshot has data for them.
-- Each row's label names the window in that row. When a provider has no window for a row (for example, an account
-  without a session window), the row is omitted rather than filled with a different window.
 - Manual refresh updates the open card subtitle and persistent Refresh-row spinner in place. Repeated clicks share the
   active request, and the existing row geometry remains fixed through success or failure.
+- Provider errors use up to three red lines, with inline backtick-delimited commands rendered in monospace and the copy control aligned to the first line. Copy preserves the original error text. Stale Claude usage has a separate, single-line secondary notice; Settings error previews retain the notice with the error.
 - Live pace and metric detail text use the full row width. Updates that exceed the space reserved when the menu opened
   show a trailing ellipsis; reopening the menu measures the updated text again.
 - Codex credits can add a separate “Buy Credits…” menu action.
-- Claude capped Extra Usage follows the used/remaining fill preference; spending amounts and “% used” copy stay unchanged.
-- A spend cap that reports its period (a reset date and the period's length) shows its reset and, when pace is visible,
-  a pace marker with “Runs out in …” or “Lasts until reset” in the cost section. A date the provider computes instead
-  of receiving is marked inferred in the reset tooltip.
+- Claude capped Extra usage uses the shared metric row with the used/remaining preference, spend/limit caption, inferred monthly reset, and optional pace. Spend-only accounts use one Meter bar; the existing Extra usage visibility choice still applies.
 - Codex OpenAI web extras: code review remaining and usage breakdown render when dashboard data is attached.
 - Codex and Claude cost cards: a Recent windows list under the daily bars shows each quota window's
   range, cost, and tokens (Current window, Previous window, N windows ago), split at official and banked resets.
@@ -257,3 +250,18 @@ In each provider’s settings, **Visible usage items** selects which reported qu
 Usage-row visibility also filters compact account constraint details. Overall account headroom, severity, ordering, and recommendations continue to use all quotas.
 
 Visibility and accent-color changes preserve account cache identity and retained spend, including when the changes arrive through config reload or sync. Credential and endpoint changes still invalidate their previous usage ownership.
+
+### Optional billing visibility
+
+**Show optional credits, spending & billing details** is the global presentation switch. Per-provider
+**Visible usage items** choices still apply. When the global switch hides a supported item, its checkbox
+remains available with an explanation; checking it does not override the global setting.
+
+Codex and Claude have separate **Limit Reset Credits** and **Plan renewal / expiry** choices. These are
+independent of the global switch. Plan dates appear immediately after the quota rows, before reset credits.
+Compact Overview still omits plan dates when quota bars are present. On upgrade, a previously disabled
+global switch initializes Claude's reset-credit choice to hidden; users can then enable it independently.
+The one-time migration preserves other saved choices and travels with provider settings through sync.
+Claude also has an **Extra usage** checkbox; it does not hide Admin API spend. Cloud credits retain their
+existing independent checkbox and remain subject to the global switch. Menu cards, Settings previews, and
+Overview use the same visibility projection. Fetching, history, alerts, and CLI output are unchanged.

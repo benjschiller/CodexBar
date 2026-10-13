@@ -122,11 +122,12 @@ struct ClaudeOAuthResetCreditsTests {
     }
 
     @Test
-    func `spend only OAuth keeps inventory and has no session`() throws {
+    func `spend only OAuth keeps inventory and its primary window kind`() throws {
         let payload = Self.payload(block: Self.eligibleBlock)
             .replacingOccurrences(of: #""five_hour":{"utilization":12},"#, with: "")
         let usage = try ClaudeUsageFetcher._mapOAuthUsageForTesting(Data(payload.utf8))
         #expect(usage.primary == nil)
+        #expect(usage.providerCost?.spendLimitWindow?.usedPercent == 30)
         #expect(usage.secondary == nil)
         #expect(usage.opus == nil)
         #expect(usage.providerCost?.used == 3)

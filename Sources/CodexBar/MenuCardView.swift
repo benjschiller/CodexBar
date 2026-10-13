@@ -49,6 +49,7 @@ struct UsageMenuCardView: View {
             let workdayTickAppearance: WorkdayTickAppearance
             let cardStyle: Bool
             var sessionEquivalentDetail: UsagePaceText.SessionEquivalentDetail?
+            var helpText: String?
 
             init(
                 id: String,
@@ -161,11 +162,6 @@ struct UsageMenuCardView: View {
             var presentation: Presentation = .detail
             var showsInProviderDetails = true
             var percentStyle: PercentStyle = .used
-            var resetText: String?
-            var resetTooltip: String?
-            var pacePercent: Double?
-            var paceOnTop = true
-            var paceText: String?
         }
 
         let provider: UsageProvider
@@ -179,7 +175,7 @@ struct UsageMenuCardView: View {
         let planText: String?
         var planEmphasis: PlanEmphasis = .none
         var metrics: [Metric]
-        let usageNotes: [String]
+        var usageNotes: [String]
         var subscriptionNotes: [String] = []
         var providerDetails: [ProviderDetailSection] = []
         /// Provider-owned titles remain stable when the displayed sections are localized or redacted.
@@ -194,7 +190,7 @@ struct UsageMenuCardView: View {
         var creditsHintCopyText: String?
         var limitResetCredits: LimitResetCreditsPresentation?
         var cloudCredits: ProviderCostSection?
-        let providerCost: ProviderCostSection?
+        var providerCost: ProviderCostSection?
         let tokenUsage: TokenUsageSection?
         let placeholder: String?
         let progressColor: Color
@@ -343,31 +339,32 @@ private struct UsageMenuCardHeaderView: View {
                     .lineLimit(1).truncationMode(.middle)
             }
             let liveSubtitle = self.liveSubtitle
+            let displayed = liveSubtitle.displayed(reservesStaleRow: self.model.lastKnownUsageText != nil)
             // Keep the geometry AppKit measured for this hosted row. A new error stays one line
             // until the next rebuild; a recovered error keeps its reserved height until then.
             let usesErrorLayout = self.model.subtitleStyle == .error
             let subtitleAlignment: VerticalAlignment = usesErrorLayout ? .top : .firstTextBaseline
             HStack(alignment: subtitleAlignment, spacing: UsageMenuCardLayout.headerColumnSpacing) {
                 if usesErrorLayout {
-                    Text(self.model.subtitleText)
+                    Text(MenuInlineCodeText.attributed(self.model.subtitleText))
                         .font(.footnote)
-                        .lineLimit(4)
+                        .lineLimit(3)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.bottom, 4)
                         .hidden()
                         .overlay(alignment: .topLeading) {
-                            Text(liveSubtitle.text)
+                            Text(MenuInlineCodeText.attributed(displayed.subtitle))
                                 .font(.footnote)
                                 .foregroundStyle(self.subtitleColor(for: liveSubtitle.style))
-                                .lineLimit(4)
+                                .lineLimit(3)
                                 .multilineTextAlignment(.leading)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .clipped()
                         .layoutPriority(1)
                 } else {
-                    Text(liveSubtitle.text)
+                    Text(MenuInlineCodeText.attributed(displayed.subtitle))
                         .font(.footnote)
                         .foregroundStyle(self.subtitleColor(for: liveSubtitle.style))
                         .lineLimit(1)
@@ -382,9 +379,11 @@ private struct UsageMenuCardHeaderView: View {
                         copyText: liveSubtitle.text,
                         isHighlighted: self.isHighlighted,
                         isInteractive: showsCopyButton)
-                        .opacity(showsCopyButton ? 1 : 0)
-                        .allowsHitTesting(showsCopyButton)
-                        .accessibilityHidden(!showsCopyButton)
+                        // Center the padded icon on the first footnote line, independent of wrapping.
+                            .offset(y: -6)
+                            .opacity(showsCopyButton ? 1 : 0)
+                            .allowsHitTesting(showsCopyButton)
+                            .accessibilityHidden(!showsCopyButton)
                 }
                 if let plan = self.model.planText {
                     Group {
@@ -406,17 +405,24 @@ private struct UsageMenuCardHeaderView: View {
                     .layoutPriority(2)
                 }
             }
-            if let lastKnownUsageText = self.model.lastKnownUsageText {
-                Text(lastKnownUsageText)
+            // The reserved row keeps its measured height; a recovery hides it until the next rebuild.
+            if let reservedStaleText = self.model.lastKnownUsageText {
+                Text(displayed.staleRow ?? reservedStaleText)
+                    .opacity(displayed.staleRow == nil ? 0 : 1)
                     .font(.footnote)
                     .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
 
     private var liveSubtitle: MenuCardLiveSubtitle {
-        let fallback = MenuCardLiveSubtitle(text: self.model.subtitleText, style: self.model.subtitleStyle)
+        let fallback = MenuCardLiveSubtitle(
+            text: self.model.subtitleText,
+            style: self.model.subtitleStyle,
+            lastKnownUsageText: self.model.lastKnownUsageText)
         guard self.model.usesLiveSubtitle else { return fallback }
         return self.refreshMonitor?.subtitle(for: self.model.provider, fallback: fallback) ?? fallback
     }
@@ -643,6 +649,11 @@ private struct UsageMenuCardUsageContentView: View {
             } else {
                 self.metricRows(self.model.metrics)
             }
+            if !self.model.quotaSubscriptionNotes.isEmpty,
+               self.model.showsOverviewSupplementalContent(compact: self.compactMetrics)
+            {
+                UsageNotesContent(notes: self.model.quotaSubscriptionNotes)
+            }
             if let resetCredits = self.model.limitResetCredits {
                 if !self.model.metrics.isEmpty, self.showsSectionDividers {
                     Divider()
@@ -670,11 +681,11 @@ private struct UsageMenuCardUsageContentView: View {
     private var supplementalContent: some View {
         if let dashboard = self.model.inlineUsageDashboard {
             InlineUsageDashboardContent(model: dashboard)
-            if !self.model.subscriptionNotes.isEmpty {
+            if self.model.quotaSubscriptionNotes.isEmpty, !self.model.subscriptionNotes.isEmpty {
                 UsageNotesContent(notes: self.model.subscriptionNotes)
             }
-        } else if !self.model.usageNotes.isEmpty {
-            UsageNotesContent(notes: self.model.usageNotes)
+        } else if !self.model.supplementalUsageNotes.isEmpty {
+            UsageNotesContent(notes: self.model.supplementalUsageNotes)
         } else if let placeholder = self.model.placeholder, self.model.metrics.isEmpty,
                   self.model.limitResetCredits == nil, self.model.cloudCredits == nil
         {
@@ -888,6 +899,7 @@ extension UsageMenuCardView.Model {
             style: providerCostStyle,
             isClaudeAdminAPI: isClaudeAdminAPI) && !menuCard.providerCostIsRequiredUsage
         let providerCost: ProviderCostSection? = if !showsProviderCost ||
+            (input.provider == .claude && extraUsageSnapshot?.claudeMonthlySpendWindow != nil) ||
             (providerCostFollowsSummaryStyle && !input.costSummaryInlineEnabled)
         {
             nil
@@ -898,7 +910,6 @@ extension UsageMenuCardView.Model {
                 percentStyle: input.usageBarsShowUsed ? .used : .left,
                 isClaudeAdminAPI: isClaudeAdminAPI,
                 preferredCurrencyCode: input.preferredCurrencyCode)
-                .map { Self.addingCapCadence(to: $0, cost: extraUsageCost, input: input, paceVisible: paceVisible) }
         }
         let tokenUsageSnapshot = Self.tokenUsageSnapshot(input: input)
         let tokenUsage = Self.tokenUsageSection(
