@@ -22,6 +22,7 @@
 
 ### Fixed
 
+- Agent sessions: preserve macOS CLI sessions and their provider/source labels when prompts mention application paths (#4474). Thanks @Shenrui-Ma!
 - Claude: show monthly spend caps with one meter, calendar-month pace and inferred UTC rollover, preserving Extra usage visibility (#4480). Fixes #4381. Thanks @benjschiller!
 
 - Menu bar: show a single leading provider icon at full size beside two text rows while preserving inline icons for merged providers and tinted layouts (#4454). Thanks @deinspanjer!

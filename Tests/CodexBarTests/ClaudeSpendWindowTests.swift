@@ -15,10 +15,17 @@ struct ClaudeSpendWindowTests {
         let windows = IconRemainingResolver.resolvedWindows(snapshot: snapshot, style: .claude)
         #expect(windows.primary?.usedPercent == 25)
         let window = try #require(MenuBarMetricWindowResolver.claudeSpendLimitWindow(snapshot: snapshot))
-        #expect(UsagePace.weekly(window: window, now: usage.updatedAt, defaultWindowMinutes: 0) != nil)
         var utc = Calendar(identifier: .gregorian)
         utc.timeZone = try #require(TimeZone(secondsFromGMT: 0))
-        #expect(window.resetsAt == utc.dateInterval(of: .month, for: usage.updatedAt)?.end)
+        let observedAt = try #require(snapshot.providerCost?.updatedAt)
+        let month = try #require(utc.dateInterval(of: .month, for: observedAt))
+        let paceWindow = ProviderDescriptorRegistry.descriptor(for: .claude).pace
+            .resolvedResetWindowForPace(window)
+        #expect(UsagePace.weekly(
+            window: paceWindow,
+            now: month.start.addingTimeInterval(month.duration / 2),
+            defaultWindowMinutes: 0) != nil)
+        #expect(window.resetsAt == month.end)
         #expect(windows.primary == window)
         #expect(!IconRenderer.QuotaLayoutPolicy.provider(.claude, snapshot: snapshot).reservesMissingSecondaryLane)
         #expect(MenuBarMetricWindowResolver.rateWindow(
@@ -61,6 +68,11 @@ struct ClaudeSpendWindowTests {
         #expect(march.resetsAt == ISO8601DateParser.parse("2028-04-01T00:00:00Z"))
         #expect(capability.resolvedResetWindowForPace(february).windowMinutes == 29 * 1440)
         #expect(capability.resolvedResetWindowForPace(march).windowMinutes == 31 * 1440)
+        let firstHour = UsagePace.weekly(
+            window: capability.resolvedResetWindowForPace(march),
+            now: boundary.addingTimeInterval(3600),
+            defaultWindowMinutes: 0)
+        #expect(firstHour != nil)
     }
 
     @Test
