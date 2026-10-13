@@ -473,7 +473,7 @@ extension UsageMenuCardView.Model {
         guard style != .hidden else { return nil }
         guard let cost else { return nil }
 
-        // Formats a cost value using the user's currency preference.
+        /// Formats a cost value using the user's currency preference.
         func formatCost(_ value: Double, providerCurrency: String? = nil) -> String {
             UsageFormatter.convertedCostString(
                 value,

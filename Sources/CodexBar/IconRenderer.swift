@@ -637,7 +637,7 @@ enum IconRenderer {
                         let eyeW = Self.grid.pt(eyeWidthPx)
                         let eyeH = Self.grid.pt(eyeHeightPx)
 
-                        // Draw a tilted ellipse eye at the given center.
+                        /// Draw a tilted ellipse eye at the given center.
                         func drawTiltedEyeCutout(cx: CGFloat, cy: CGFloat, tiltAngle: CGFloat) {
                             guard let ctx else { return }
                             let eyeRect = CGRect(x: -eyeW / 2, y: -eyeH / 2, width: eyeW, height: eyeH)
