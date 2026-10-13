@@ -29,16 +29,11 @@ enum ClaudeCLISpendCapParser {
 
     static func parse(_ renderedText: String) -> ClaudeCLISpendCap? {
         let lines = renderedText.components(separatedBy: .newlines)
-        // Plain captures can hold several frames; the last block is the newest.
-        for headerIndex in lines.indices.reversed() where self.isHeader(lines[headerIndex]) {
-            let end = min(lines.endIndex, headerIndex + 1 + self.maxLinesAfterHeader)
-            for line in lines[headerIndex..<end] {
-                if let cap = self.spendCap(in: line) {
-                    return cap
-                }
-            }
-        }
-        return nil
+        // Plain captures can hold several frames; the last block is the newest. If it has no valid spend line, an
+        // older block is stale data, so do not fall back to it.
+        guard let headerIndex = lines.indices.last(where: { self.isHeader(lines[$0]) }) else { return nil }
+        let end = min(lines.endIndex, headerIndex + 1 + self.maxLinesAfterHeader)
+        return lines[headerIndex..<end].lazy.compactMap { self.spendCap(in: $0) }.first
     }
 
     private static func isHeader(_ line: String) -> Bool {

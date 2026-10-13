@@ -171,6 +171,39 @@ struct ClaudeCLISpendCapTests {
     }
 
     @Test
+    func `an invalid newest usage credits block does not fall back to an older one`() {
+        let text = """
+          Usage credits
+          $100 / $1,000 spent
+          Usage credits
+          $420 / €1,000 spent
+        """
+        #expect(ClaudeCLISpendCapParser.parse(text) == nil)
+    }
+
+    @Test
+    func `a newest usage credits block without a spend line does not fall back to an older one`() {
+        let text = """
+          Usage credits
+          $100 / $1,000 spent
+          Usage credits
+          █████████████████████   42% used
+        """
+        #expect(ClaudeCLISpendCapParser.parse(text) == nil)
+    }
+
+    @Test
+    func `a valid newest usage credits block wins over an older invalid one`() {
+        let text = """
+          Usage credits
+          $100 / €1,000 spent
+          Usage credits
+          $420 / $1,000 spent
+        """
+        #expect(ClaudeCLISpendCapParser.parse(text) == ClaudeCLISpendCap(used: 420, limit: 1000, currencyCode: "USD"))
+    }
+
+    @Test
     func `empty and binary input never produce a spend cap`() {
         #expect(ClaudeCLISpendCapParser.parse("") == nil)
         #expect(ClaudeCLISpendCapParser.parse("\u{0}\u{1b}[2J\u{7f}") == nil)
