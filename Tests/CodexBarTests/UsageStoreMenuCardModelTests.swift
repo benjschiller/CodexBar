@@ -107,11 +107,10 @@ struct UsageStoreMenuCardModelTests {
 
         store.settings.setUsageItemVisible(false, itemID: .claudeExtraUsage, for: .claude)
         store.settings.showOptionalCreditsAndExtraUsage = true
-        #expect(!store.menuCardModel(for: .claude).metrics.contains { $0.id == "claude-extra-usage" })
-        #expect(!store.menuCardModel(for: .claude, context: .settings).metrics
-            .contains { $0.id == "claude-extra-usage" })
+        #expect(store.menuCardModel(for: .claude).providerCost == nil)
+        #expect(store.menuCardModel(for: .claude, context: .settings).providerCost == nil)
         store.settings.setUsageItemVisible(true, itemID: .claudeExtraUsage, for: .claude)
-        #expect(store.menuCardModel(for: .claude).metrics.contains { $0.id == "claude-extra-usage" })
+        #expect(store.menuCardModel(for: .claude).providerCost != nil)
     }
 
     @Test

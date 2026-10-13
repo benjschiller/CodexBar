@@ -1755,13 +1755,6 @@ struct ProviderArchitectureGatekeeperTests {
             expectedReferenceFingerprint: ["claude@0"],
             reason: "The monthly cap metric reuses Claude's currency caption instead of duplicating cost formatting."),
         AllowedProviderConstruct(
-            path: "Sources/CodexBar/MenuCardView.swift",
-            anchor: "(input.provider == .claude && extraUsageSnapshot?.claudeMonthlySpendWindow != nil) ||",
-            expectedProviderIDs: ["claude"],
-            expectedReferenceCount: 1,
-            expectedReferenceFingerprint: ["claude@0"],
-            reason: "Claude's projected cap already has a metric row; retain the separate cost row only for balances or API spend."),
-        AllowedProviderConstruct(
             path: "Sources/CodexBar/CodexOwnershipContext.swift",
             anchor: "snapshot?.accountEmail(for: .codex) ??",
             expectedProviderIDs: ["codex"],
@@ -1935,7 +1928,7 @@ struct ProviderArchitectureGatekeeperTests {
             anchor: "if input.provider == .codex, !input.showOptionalCreditsAndExtraUsage {",
             expectedProviderIDs: ["claude", "codex", "copilot"],
             expectedReferenceCount: 5,
-            expectedReferenceFingerprint: ["claude@0", "codex@9", "copilot@12", "codex@15", "claude@20"],
+            expectedReferenceFingerprint: ["claude@0", "codex@10", "copilot@13", "codex@16", "claude@21"],
             reason: "This exact shared renderer maps provider-owned presentation data into the generic UI model."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/MenuCardView+ModelHelpers.swift",

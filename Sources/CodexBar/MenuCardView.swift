@@ -899,7 +899,7 @@ extension UsageMenuCardView.Model {
             style: providerCostStyle,
             isClaudeAdminAPI: isClaudeAdminAPI) && !menuCard.providerCostIsRequiredUsage
         let providerCost: ProviderCostSection? = if !showsProviderCost ||
-            (input.provider == .claude && extraUsageSnapshot?.claudeMonthlySpendWindow != nil) ||
+            metrics.contains(where: { $0.id == "claude-extra-usage" }) ||
             (providerCostFollowsSummaryStyle && !input.costSummaryInlineEnabled)
         {
             nil

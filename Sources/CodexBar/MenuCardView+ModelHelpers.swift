@@ -942,6 +942,7 @@ extension UsageMenuCardView.Model {
     {
         var extraRateWindows = snapshot.extraRateWindows ?? []
         if input.provider == .claude, input.showOptionalCreditsAndExtraUsage,
+           MenuBarMetricWindowResolver.claudeSpendLimitWindow(snapshot: snapshot) != nil,
            let spend = snapshot.claudeMonthlySpendWindow
         {
             extraRateWindows.append(spend)

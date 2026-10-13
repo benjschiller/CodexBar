@@ -328,9 +328,10 @@ browser-only billing details, and enable **Show credits and extra usage** to dis
 
 ## Extra usage rollover
 
-Positive Claude monthly caps use the shared usage-window presentation: spend-only accounts get one Meter bar,
-and Auto, Extra usage, and the card use the same cap percentage and reset. The card retains its spend/limit and
-prepaid-balance caption. Uncapped balances keep their compact Credits row; Admin API spend is unchanged.
+For Claude spend-only accounts, positive monthly caps use the shared usage-window presentation: one Meter bar,
+with Auto, Extra usage, and the card using the same cap percentage and reset. The card retains its spend/limit and
+prepaid-balance caption. Accounts with quota windows keep their separate Extra usage section, including in the
+menu-card-sections layout. Uncapped balances keep their compact Credits row; Admin API spend is unchanged.
 Extra usage still follows its existing visibility choice and the global optional-usage switch. Pace follows the
 existing pace setting, independently of redeemable Limit Reset Credits.
 
