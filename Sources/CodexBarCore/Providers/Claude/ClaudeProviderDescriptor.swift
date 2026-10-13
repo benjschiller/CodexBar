@@ -245,8 +245,11 @@ public enum ClaudeProviderDescriptor {
 
     private static func iconWindows(context: ProviderIconWindowContext) -> ProviderUsageWindowPair {
         let resolution = self.menuBarWindow(context: .init(
-            metric: .automatic, snapshot: context.snapshot, supportsAverage: false,
-            prioritizesExhaustedQuotas: false, now: context.now))
+            metric: .automatic,
+            snapshot: context.snapshot,
+            supportsAverage: false,
+            prioritizesExhaustedQuotas: false,
+            now: context.now))
         if case let .resolved(window) = resolution { return .init(primary: window, secondary: nil) }
         return .init(primary: context.snapshot.primary?.measured, secondary: context.snapshot.secondary)
     }

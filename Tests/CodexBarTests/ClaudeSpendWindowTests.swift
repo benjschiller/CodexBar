@@ -6,9 +6,10 @@ import Testing
 struct ClaudeSpendWindowTests {
     @Test
     func `spend only account has meter pace and first of month rollover`() throws {
-        let data = Data(
-            #"{"five_hour":null,"seven_day":null,"extra_usage":{"is_enabled":true,"monthly_limit":10000,"used_credits":2500}}"#
-                .utf8)
+        let data = Data(#"""
+        {"five_hour":null,"seven_day":null,
+         "extra_usage":{"is_enabled":true,"monthly_limit":10000,"used_credits":2500}}
+        """#.utf8)
         let usage = try ClaudeUsageFetcher._mapOAuthUsageForTesting(data)
         let snapshot = ClaudeOAuthFetchStrategy._snapshotForTesting(from: usage)
         let windows = IconRemainingResolver.resolvedWindows(snapshot: snapshot, style: .claude)
@@ -32,11 +33,20 @@ struct ClaudeSpendWindowTests {
         let snapshot = Self.snapshot(at: Date())
         let policy = IconRenderer.QuotaLayoutPolicy.provider(.claude, snapshot: snapshot)
         let actual = IconRenderer.makeIcon(
-            primaryRemaining: 75, weeklyRemaining: nil, creditsRemaining: nil,
-            stale: false, style: .claude, hideCritters: true, quotaLayoutPolicy: policy)
+            primaryRemaining: 75,
+            weeklyRemaining: nil,
+            creditsRemaining: nil,
+            stale: false,
+            style: .claude,
+            hideCritters: true,
+            quotaLayoutPolicy: policy)
         let expected = IconRenderer.makeIcon(
-            primaryRemaining: 75, weeklyRemaining: nil, creditsRemaining: nil,
-            stale: false, style: .codex, hideCritters: true)
+            primaryRemaining: 75,
+            weeklyRemaining: nil,
+            creditsRemaining: nil,
+            stale: false,
+            style: .codex,
+            hideCritters: true)
         #expect(try #require(actual.tiffRepresentation) == #require(expected.tiffRepresentation))
     }
 
@@ -57,8 +67,11 @@ struct ClaudeSpendWindowTests {
     func `real quota lanes keep their icon and spend cannot become another providers identity`() {
         let quota = RateWindow(usedPercent: 0, windowMinutes: 300, resetsAt: nil, resetDescription: nil)
         let snapshot = UsageSnapshot(
-            primary: quota, secondary: nil, providerCost: Self.snapshot(at: Date()).providerCost,
-            updatedAt: Date(), identity: ProviderIdentitySnapshot(
+            primary: quota,
+            secondary: nil,
+            providerCost: Self.snapshot(at: Date()).providerCost,
+            updatedAt: Date(),
+            identity: ProviderIdentitySnapshot(
                 providerID: .codex, accountEmail: "codex@example.test", accountOrganization: nil, loginMethod: "Pro"))
         #expect(IconRemainingResolver.resolvedWindows(snapshot: snapshot, style: .claude).primary == quota)
         #expect(IconRenderer.QuotaLayoutPolicy.provider(.claude, snapshot: snapshot).reservesMissingSecondaryLane)
@@ -67,7 +80,11 @@ struct ClaudeSpendWindowTests {
     }
 
     private static func snapshot(at date: Date) -> UsageSnapshot {
-        UsageSnapshot(primary: nil, secondary: nil, providerCost: ProviderCostSnapshot(
-            used: 25, limit: 100, currencyCode: "USD", period: "Monthly cap", updatedAt: date), updatedAt: date)
+        UsageSnapshot(
+            primary: nil,
+            secondary: nil,
+            providerCost: ProviderCostSnapshot(
+                used: 25, limit: 100, currencyCode: "USD", period: "Monthly cap", updatedAt: date),
+            updatedAt: date)
     }
 }

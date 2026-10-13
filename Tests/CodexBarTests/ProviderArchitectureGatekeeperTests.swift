@@ -1749,7 +1749,7 @@ struct ProviderArchitectureGatekeeperTests {
             reason: "Shared cost formatting preserves Claude balance, visibility, fill preference and cloud-credit policy."),
         AllowedProviderConstruct(
             path: "Sources/CodexBar/MenuCardView+ModelHelpers.swift",
-            anchor: "cost: snapshot.providerCost, style: .claude,",
+            anchor: "style: .claude,",
             expectedProviderIDs: ["claude"],
             expectedReferenceCount: 1,
             expectedReferenceFingerprint: ["claude@0"],

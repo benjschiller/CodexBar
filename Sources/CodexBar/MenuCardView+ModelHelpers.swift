@@ -981,7 +981,8 @@ extension UsageMenuCardView.Model {
                 : resolvedResetText
             let detailText: String? = if namedWindow.id == "claude-extra-usage" {
                 Self.providerCostSection(
-                    cost: snapshot.providerCost, style: .claude,
+                    cost: snapshot.providerCost,
+                    style: .claude,
                     preferredCurrencyCode: input.preferredCurrencyCode).map {
                     [$0.spendLine, $0.balanceLine].compactMap(\.self).joined(separator: " · ")
                 }
