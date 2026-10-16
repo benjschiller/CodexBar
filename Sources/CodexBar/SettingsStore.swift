@@ -228,6 +228,12 @@ struct SettingsStoreKeychainAccessPolicy {
     let setDisabled: (Bool) -> Void
     let isExplicitlyDisabled: () -> Bool
 
+    static var defaultPolicy: Self {
+        guard SettingsStore.isRunningTests else { return .live }
+        var disabled = false
+        return Self(setDisabled: { disabled = $0 }, isExplicitlyDisabled: { disabled })
+    }
+
     static var live: Self {
         Self(
             setDisabled: { KeychainAccessGate.isDisabled = $0 },
@@ -248,6 +254,8 @@ final class SettingsStore {
     #endif
 
     @ObservationIgnored let userDefaults: UserDefaults
+    @ObservationIgnored lazy var httpServer = HTTPServerController(
+        configURL: self.configStore.fileURL.deletingLastPathComponent().appendingPathComponent("http-server.json"))
     @ObservationIgnored let configStore: CodexBarConfigStore
     @ObservationIgnored let antigravityOAuthCredentialsStore: AntigravityOAuthCredentialsStore
     @ObservationIgnored let keychainAccessPolicy: SettingsStoreKeychainAccessPolicy
@@ -256,6 +264,9 @@ final class SettingsStore {
     @ObservationIgnored var configPersistWriteTask: Task<Void, Never>?
     @ObservationIgnored var configFileWatcher: ConfigFileWatcher?
     @ObservationIgnored var configLoading = false
+    @ObservationIgnored let configPersistenceCoordinator = SettingsConfigPersistenceCoordinator()
+    @ObservationIgnored var configNeedsReload = false
+
     @ObservationIgnored var cachedCodexAccountReconciliationSnapshot:
         CachedCodexAccountReconciliationSnapshot?
     @ObservationIgnored var cachedCodexAccountMenuProjection: CachedCodexAccountMenuProjection?
@@ -325,7 +336,7 @@ final class SettingsStore {
         copilotTokenStore: any CopilotTokenStoring = KeychainCopilotTokenStore(),
         tokenAccountStore: any ProviderTokenAccountStoring = FileTokenAccountStore(),
         antigravityOAuthCredentialsStore: AntigravityOAuthCredentialsStore = AntigravityOAuthCredentialsStore(),
-        keychainAccessPolicy: SettingsStoreKeychainAccessPolicy = .live,
+        keychainAccessPolicy: SettingsStoreKeychainAccessPolicy = .defaultPolicy,
         performInitialProviderDetection: Bool = !SettingsStore.isRunningTests)
     {
         // Legacy credential migration must see the saved policy, including shared-defaults fallback.
@@ -373,11 +384,20 @@ final class SettingsStore {
             ampCookieStore: ampCookieStore,
             copilotTokenStore: copilotTokenStore,
             tokenAccountStore: tokenAccountStore)
-        let config = CodexBarConfigMigrator.loadOrMigrate(
-            configStore: configStore,
-            userDefaults: userDefaults,
-            keychainAccessDisabled: keychainAccessPolicy.isExplicitlyDisabled(),
-            stores: legacyStores)
+        let config: CodexBarConfig
+        do {
+            config = try CodexBarConfigMigrator.loadOrMigrate(
+                configStore: configStore,
+                userDefaults: userDefaults,
+                keychainAccessDisabled: keychainAccessPolicy.isExplicitlyDisabled(),
+                stores: legacyStores)
+        } catch {
+            config = CodexBarConfig.makeDefault().normalized()
+            self.configNeedsReload = true
+            CodexBarLog.logger(LogCategories.configMigration).error(
+                "Config load failed; preserving the file until it can be reloaded",
+                metadata: ["error": "\(error)"])
+        }
         _ = Self.initializeOpenAIWebAccessPreference(
             userDefaults: userDefaults, config: config, hadExistingConfig: hadExistingConfig)
         self.userDefaults = userDefaults
@@ -606,6 +626,7 @@ extension SettingsStore {
             storedMenuBarLayout: storedMenuBarLayout,
             menuBarLayoutConditionals: menuBarLayoutConditionals,
             menuBarLayoutOverridesRaw: menuBarLayoutOverridesRaw,
+            menuBarLayoutMonospacedDigits: userDefaults.bool(forKey: "menuBarLayoutMonospacedDigits"),
             menuBarLayoutSizeRaw: userDefaults.string(forKey: "menuBarLayoutSize")
                 ?? MenuBarLayoutSize.regular.rawValue,
             menuBarLayoutGapRaw: userDefaults.string(forKey: "menuBarLayoutGap")
@@ -834,6 +855,7 @@ extension SettingsStore {
     private static func loadMenuBarLayout(userDefaults: UserDefaults) -> MenuBarLayout? {
         MenuBarLayoutPersistence.loadLayout(
             current: self.decodeMenuBarLayout(userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.layoutCurrent)),
+            v5: self.decodeMenuBarLayout(userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.layoutV5)),
             v4: self.decodeMenuBarLayout(userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.layoutV4)),
             v3: self.decodeMenuBarLayout(userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.layoutV3)),
             released: self.decodeMenuBarLayout(
@@ -848,6 +870,8 @@ extension SettingsStore {
         MenuBarLayoutPersistence.loadLibrary(
             current: self.decodeMenuBarLayoutConditionals(
                 userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.conditionalsCurrent)),
+            v5: self.decodeMenuBarLayoutConditionals(
+                userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.conditionalsV5)),
             v4: self
                 .decodeMenuBarLayoutConditionals(userDefaults
                     .data(forKey: MenuBarLayoutUserDefaultsKey.conditionalsV4)),
@@ -873,6 +897,8 @@ extension SettingsStore {
         MenuBarLayoutPersistence.loadOverrides(
             current: self.decodeMenuBarLayoutOverrides(
                 userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.overridesCurrent)),
+            v5: self.decodeMenuBarLayoutOverrides(
+                userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.overridesV5)),
             v4: self.decodeMenuBarLayoutOverrides(userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.overridesV4)),
             v3: self.decodeMenuBarLayoutOverrides(
                 userDefaults.data(forKey: MenuBarLayoutUserDefaultsKey.overridesV3)),

@@ -722,6 +722,12 @@
 "link_website" = "เว็บไซต์";
 "link_twitter" = "ทวิตเตอร์";
 "link_email" = "อีเมล";
+"link_acknowledgements" = "กิตติกรรมประกาศ";
+"acknowledgements_footer" = "CodexBar สร้างขึ้นด้วยโปรเจกต์โอเพนซอร์สเหล่านี้";
+"acknowledgements_others" = "อีก %d ราย";
+"acknowledgements_author" = "ผู้เขียน";
+"acknowledgements_authors" = "ผู้เขียน";
+"acknowledgements_license" = "สัญญาอนุญาต";
 "check_updates_auto" = "ตรวจสอบการอัปเดตโดยอัตโนมัติ";
 "update_channel" = "อัปเดตช่อง";
 "check_for_updates" = "ตรวจสอบการอัปเดต...";
@@ -1166,17 +1172,12 @@
 "CodexBar found another managed account that already uses the current system account. Resolve the duplicate account before switching." = "CodexBar พบบัญชีที่จัดการอื่นที่ใช้บัญชีระบบปัจจุบันอยู่แล้ว แก้ไขบัญชีที่ซ้ํากันก่อนเปลี่ยน";
 "CodexBar will ask macOS Keychain for “%@” so it can decrypt browser cookies and authenticate your account. Click OK to continue." = "CodexBar จะขอ \"%@\" จาก macOS Keychain เพื่อให้สามารถถอดรหัสคุกกี้ของเบราว์เซอร์และตรวจสอบบัญชีของคุณได้ คลิก ตกลง เพื่อดําเนินการต่อ";
 "CodexBar will ask macOS Keychain for the Claude Code OAuth token so it can fetch your Claude usage. Click OK to continue." = "CodexBar จะขอโทเค็น OAuth Claude Code จาก macOS Keychain เพื่อให้สามารถดึงข้อมูลการใช้งาน Claude ของคุณได้ คลิก ตกลง เพื่อดําเนินการต่อ";
-"CodexBar will ask macOS Keychain for your Amp cookie header so it can fetch usage. Click OK to continue." = "CodexBar จะขอส่วนหัวคุกกี้ Amp macOS Keychain ของคุณเพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
-"CodexBar will ask macOS Keychain for your Augment cookie header so it can fetch usage. Click OK to continue." = "CodexBar จะขอส่วนหัวคุกกี้ Augment macOS Keychain ของคุณเพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
+"CodexBar will ask macOS Keychain for your %@ cookie header so it can fetch usage. Click OK to continue." = "CodexBar จะขอส่วนหัวคุกกี้ %@ macOS Keychain ของคุณเพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
 "CodexBar will ask macOS Keychain for your Claude cookie header so it can fetch Claude web usage. Click OK to continue." = "CodexBar จะขอส่วนหัวคุกกี้ Claude macOS Keychain ของคุณเพื่อให้สามารถดึงข้อมูลการใช้งานเว็บ Claude ได้ คลิก ตกลง เพื่อดําเนินการต่อ";
-"CodexBar will ask macOS Keychain for your Cursor cookie header so it can fetch usage. Click OK to continue." = "CodexBar จะขอส่วนหัวคุกกี้ Cursor macOS Keychain ของคุณเพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
-"CodexBar will ask macOS Keychain for your Factory cookie header so it can fetch usage. Click OK to continue." = "CodexBar จะขอส่วนหัวคุกกี้ Factory macOS Keychain ของคุณเพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
 "CodexBar will ask macOS Keychain for your GitHub Copilot token so it can fetch usage. Click OK to continue." = "CodexBar จะขอโทเค็น GitHub Copilot ของคุณจาก macOS Keychain เพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
 "CodexBar will ask macOS Keychain for your Kimi auth token so it can fetch usage. Click OK to continue." = "CodexBar จะขอโทเค็นการรับรองความถูกต้อง Kimi macOS Keychain เพื่อให้สามารถดึงการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
 "CodexBar will ask macOS Keychain for your MiniMax API token so it can fetch usage. Click OK to continue." = "CodexBar จะขอโทเค็น MiniMax API ของคุณจาก macOS Keychain เพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
-"CodexBar will ask macOS Keychain for your MiniMax cookie header so it can fetch usage. Click OK to continue." = "CodexBar จะขอส่วนหัวคุกกี้ MiniMax macOS Keychain ของคุณเพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
 "CodexBar will ask macOS Keychain for your OpenAI cookie header so it can fetch Codex dashboard extras. Click OK to continue." = "CodexBar จะขอให้ macOS Keychain ป้อนส่วนหัวของคุกกี้ OpenAI ของคุณเพื่อให้สามารถดึงข้อมูลพิเศษ Codex แดชบอร์ดได้ คลิก ตกลง เพื่อดําเนินการต่อ";
-"CodexBar will ask macOS Keychain for your OpenCode cookie header so it can fetch usage. Click OK to continue." = "CodexBar จะขอส่วนหัวคุกกี้ OpenCode macOS Keychain ของคุณเพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
 "CodexBar will ask macOS Keychain for your Synthetic API key so it can fetch usage. Click OK to continue." = "CodexBar จะขอคีย์ Synthetic API macOS Keychain เพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
 "CodexBar will ask macOS Keychain for your z.ai API token so it can fetch usage. Click OK to continue." = "CodexBar จะขอโทเค็น z.ai API ของคุณจาก macOS Keychain เพื่อให้สามารถดึงข้อมูลการใช้งานได้ คลิก ตกลง เพื่อดําเนินการต่อ";
 "Could not open Cursor login in your browser." = "ไม่สามารถเปิด Cursor เข้าสู่ระบบในเบราว์เซอร์ของคุณ";
@@ -1431,6 +1432,8 @@
 "menu_bar_layout_size" = "ขนาด";
 "menu_bar_layout_size_small" = "เล็ก";
 "menu_bar_layout_size_regular" = "ปกติ";
+"menu_bar_layout_size_large" = "ใหญ่";
+"menu_bar_layout_monospaced_digits" = "ตัวเลขความกว้างคงที่";
 "menu_bar_layout_gap" = "ระยะห่าง";
 "menu_bar_layout_gap_tight" = "ชิด";
 "menu_bar_layout_gap_regular" = "ปกติ";
@@ -1453,6 +1456,9 @@
 "menu_bar_layout_token_runs_out" = "หมด";
 "menu_bar_layout_token_cost_today" = "ค่าใช้จ่ายวันนี้";
 "menu_bar_layout_token_cost_window" = "ค่าใช้จ่าย (กรอบเวลาประวัติ)";
+"menu_bar_layout_token_spend" = "ค่าใช้จ่าย %";
+"menu_bar_layout_token_spend_pace" = "อัตราค่าใช้จ่าย";
+"menu_bar_layout_token_spend_budget" = "ค่าใช้จ่าย / งบประมาณ";
 "menu_bar_layout_token_space" = "ช่องว่าง";
 "menu_bar_layout_token_line_break" = "ขึ้นบรรทัดใหม่";
 "menu_bar_layout_token_separator_accessibility" = "จุดคั่น";
@@ -1615,6 +1621,7 @@
 "menu_bar_layout_conditional_default_session_spent" = "เซสชันเกือบหมด";
 "menu_bar_layout_conditional_default_either_high" = "เซสชันหรือรายสัปดาห์อยู่ในระดับสูง";
 "menu_bar_layout_conditional_default_scoped_weekly" = "รายสัปดาห์ตามโมเดลเกิน 60%";
+"menu_bar_layout_conditional_default_spend_high" = "ใช้ค่าใช้จ่ายเกิน 90%";
 "Visible usage items" = "รายการการใช้งานที่มองเห็น";
 "Restore Defaults" = "คืนค่าเริ่มต้น";
 "Choose which usage rows appear in this provider's menu, Settings preview, and Overview." = "เลือกแถวการใช้งานที่จะแสดงในเมนูของผู้ให้บริการนี้ ตัวอย่างการตั้งค่า และภาพรวม";
@@ -1932,7 +1939,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "รีเฟรชโปรไฟล์ก่อนรีเฟรชข้อมูลเว็บ OpenAI";
 "Refreshing account status…" = "กำลังรีเฟรชสถานะบัญชี...";
 "Remaining budget compared with an ideal steady burn rate." = "งบประมาณที่เหลืออยู่เมื่อเทียบกับอัตราการเผาไหม้ที่มั่นคงในอุดมคติ";
-"Renews: %@" = "ต่ออายุ: %@";
+"Plan renews: %@" = "ต่ออายุแผน: %@";
 "Request quota" = "ขอ โควต้า";
 "Requesting login…" = "กำลังขอเข้าสู่ระบบ...";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "จำเป็น ป้อนคีย์ API ปกติหรือคีย์การจัดการ API ที่นี่ คีย์การจัดการยังเปิดใช้งานกิจกรรมบัญชีใน OpenRouter API อย่างเป็นทางการ";
@@ -2411,6 +2418,7 @@
 
 "X API cost history is not available." = "ไม่สามารถดูประวัติค่าใช้จ่ายของ X API ได้";
 "Paste a console.x.com Cookie header containing auth_token and ct0." = "วางส่วนหัว Cookie จาก console.x.com ที่มี auth_token และ ct0";
+"Paste a platform.claude.com Cookie header containing sessionKey." = "วางส่วนหัว Cookie จาก platform.claude.com ที่มี sessionKey";
 "Open X Developer Console" = "เปิดคอนโซลนักพัฒนา X";
 "update_available_notification_body" = "คลิกเพื่อเปิดการตั้งค่าการอัปเดตและติดตั้งเวอร์ชันใหม่";
 // Structured session performance layout.
@@ -2512,6 +2520,8 @@
 "Pace sign" = "เครื่องหมายอัตราการใช้งาน";
 "Ahead of pace is +" = "ใช้เร็วกว่าที่ควรเป็นคือ +";
 "Reserve is +" = "โควตาสำรองคือ +";
+"Back" = "ย้อนกลับ";
+"Forward" = "ไปข้างหน้า";
 
 "cost_reset_inferred_tooltip" = "ประมาณการ: %@ ไม่รายงานวันที่นี้ วงเงินค่าใช้จ่ายรายเดือนจะรีเซ็ตเวลา 00:00 UTC ของวันที่ 1";
 /* fal provider credentials */
@@ -2622,3 +2632,31 @@
 "Daily spend · %@" = "ค่าใช้จ่ายรายวัน · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "ใช้กับบัญชีโทเคนที่เลือก “%@” แต่ละบัญชีจะเก็บขีดจำกัดของตนเองไว้";
 "Applies to the OpenAI API key, not to token accounts." = "ใช้กับคีย์ API ของ OpenAI ไม่ใช่บัญชีโทเคน";
+"CodexBar will ask macOS Keychain for the Muse Code login token so it can fetch your Muse Code subscription usage. Click OK to continue." = "CodexBar จะขอโทเค็นเข้าสู่ระบบ Muse Code จาก macOS Keychain เพื่อให้สามารถดึงข้อมูลการใช้งานการสมัครสมาชิก Muse Code ของคุณได้ คลิก ตกลง เพื่อดำเนินการต่อ";
+/* Claude Platform provider */
+"API credit" = "เครดิต API";
+"Purchased credit" = "เครดิตที่ซื้อ";
+"Claude Platform exposes Console credit balance and monthly spend, not local token cost history." = "Claude Platform แสดงยอดเครดิตและการใช้จ่ายรายเดือนของ Console ไม่ใช่ประวัติต้นทุนโทเค็นในเครื่อง";
+
+/* App-managed HTTP server */
+"http_server_title" = "เซิร์ฟเวอร์ HTTP";
+"http_server_enable" = "เปิดใช้งานเซิร์ฟเวอร์ HTTP";
+"http_server_bind" = "ที่อยู่ IPv4 สำหรับรับการเชื่อมต่อ";
+"http_server_port" = "พอร์ต";
+"http_server_token" = "โทเค็นเซิร์ฟเวอร์";
+"http_server_show" = "แสดง";
+"http_server_generate" = "สร้าง";
+"http_server_cache" = "ช่วงเวลาแคช (วินาที)";
+"http_server_timeout" = "เวลารอคำขอ (วินาที; 0 เพื่อปิด)";
+"http_server_all_accounts" = "รวมทุกบัญชีในสแนปช็อต";
+"http_server_identity" = "ข้อมูลระบุตัวตนบนแดชบอร์ด";
+"http_server_redacted" = "ปกปิด";
+"http_server_warning" = "เปิดเผยการใช้งาน ค่าใช้จ่าย และข้อมูลบัญชีกับโครงการ แต่ไม่เปิดเผยข้อมูลรับรองของผู้ให้บริการ HTTP ส่งโทเค็นเซิร์ฟเวอร์โดยไม่เข้ารหัส ใช้เฉพาะการเชื่อมต่อ VPN หรือ Tailscale ที่เชื่อถือได้";
+"http_server_plain_http" = "อนุญาต HTTP ที่ไม่เข้ารหัสจากภายนอก Mac เครื่องนี้";
+"http_server_dashboard" = "แดชบอร์ด";
+"http_server_wildcard" = "บนอุปกรณ์อื่น ให้แทนที่ 0.0.0.0 ด้วยที่อยู่ IPv4 ของ VPN หรือ Tailscale ของ Mac เครื่องนี้";
+"http_server_footer" = "ปิดไว้โดยค่าเริ่มต้น เริ่มพร้อม CodexBar และหยุดเมื่อออกจากแอป การตั้งค่าและโทเค็นอยู่บน Mac เครื่องนี้และไม่รวมในการซิงค์หรือส่งออก ให้ Mac ตื่นอยู่เพื่อเข้าถึงจากระยะไกล";
+/* Claude desktop cookie source */
+"Claude desktop app" = "แอป Claude บนเดสก์ท็อป";
+"Use Claude desktop app cookies" = "ใช้คุกกี้จากแอป Claude บนเดสก์ท็อป";
+"For Web usage, follow the account signed into Claude.app instead of a browser." = "สำหรับการใช้งานเว็บ ให้ใช้บัญชีที่ลงชื่อเข้าใช้ใน Claude.app แทนบัญชีในเบราว์เซอร์";

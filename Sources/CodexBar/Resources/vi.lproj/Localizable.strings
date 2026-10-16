@@ -712,6 +712,12 @@
 "link_website" = "Trang web";
 "link_twitter" = "Twitter";
 "link_email" = "Email";
+"link_acknowledgements" = "Lời cảm ơn";
+"acknowledgements_footer" = "CodexBar được xây dựng bằng các dự án mã nguồn mở này.";
+"acknowledgements_others" = "%d người khác";
+"acknowledgements_author" = "Tác giả";
+"acknowledgements_authors" = "Tác giả";
+"acknowledgements_license" = "Giấy phép";
 "check_updates_auto" = "Tự động kiểm tra các bản cập nhật";
 "update_channel" = "Kênh cập nhật";
 "check_for_updates" = "Kiểm tra các bản cập nhật…";
@@ -1145,17 +1151,12 @@
 "CodexBar found another managed account that already uses the current system account. Resolve the duplicate account before switching." = "CodexBar đã tìm thấy một tài khoản được quản lý khác đã sử dụng tài khoản hệ thống hiện tại. Giải quyết tài khoản trùng lặp trước khi chuyển đổi.";
 "CodexBar will ask macOS Keychain for “%@” so it can decrypt browser cookies and authenticate your account. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho “ %@ ” để nó có thể giải mã cookie của trình duyệt và xác thực tài khoản của bạn. Nhấn OK để tiếp tục.";
 "CodexBar will ask macOS Keychain for the Claude Code OAuth token so it can fetch your Claude usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cung cấp Claude Mã OAuth token để nó có thể tìm nạp Claude Mức sử dụng của bạn. Nhấn OK để tiếp tục.";
-"CodexBar will ask macOS Keychain for your Amp cookie header so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho tiêu đề cookie Amp của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
-"CodexBar will ask macOS Keychain for your Augment cookie header so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho tiêu đề cookie Augment của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
+"CodexBar will ask macOS Keychain for your %@ cookie header so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho tiêu đề cookie %@ của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
 "CodexBar will ask macOS Keychain for your Claude cookie header so it can fetch Claude web usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain về tiêu đề cookie Claude của bạn để nó có thể tìm nạp Claude web Mức sử dụng . Nhấn OK để tiếp tục.";
-"CodexBar will ask macOS Keychain for your Cursor cookie header so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho tiêu đề cookie Con trỏ của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
-"CodexBar will ask macOS Keychain for your Factory cookie header so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho tiêu đề cookie Factory của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
 "CodexBar will ask macOS Keychain for your GitHub Copilot token so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho GitHub Copilot token của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
 "CodexBar will ask macOS Keychain for your Kimi auth token so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho Kimi auth token của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
 "CodexBar will ask macOS Keychain for your MiniMax API token so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cung cấp MiniMax API token của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
-"CodexBar will ask macOS Keychain for your MiniMax cookie header so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho tiêu đề cookie MiniMax của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
 "CodexBar will ask macOS Keychain for your OpenAI cookie header so it can fetch Codex dashboard extras. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho tiêu đề cookie OpenAI của bạn để nó có thể tìm nạp các tính năng bổ sung của trang tổng quan Codex. Nhấn OK để tiếp tục.";
-"CodexBar will ask macOS Keychain for your OpenCode cookie header so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cho tiêu đề cookie OpenCode của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
 "CodexBar will ask macOS Keychain for your Synthetic API key so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cung cấp khóa Tổng hợp API của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
 "CodexBar will ask macOS Keychain for your z.ai API token so it can fetch usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cung cấp z.ai API token của bạn để nó có thể tìm nạp Mức sử dụng . Nhấn OK để tiếp tục.";
 "Could not open Cursor login in your browser." = "Không thể mở đăng nhập Con trỏ trong trình duyệt của bạn.";
@@ -1428,6 +1429,8 @@
 "menu_bar_layout_size" = "Kích thước";
 "menu_bar_layout_size_small" = "Nhỏ";
 "menu_bar_layout_size_regular" = "Thường";
+"menu_bar_layout_size_large" = "Lớn";
+"menu_bar_layout_monospaced_digits" = "Chữ số có độ rộng cố định";
 "menu_bar_layout_gap" = "Khoảng cách";
 "menu_bar_layout_gap_tight" = "Hẹp";
 "menu_bar_layout_gap_regular" = "Thường";
@@ -1450,6 +1453,9 @@
 "menu_bar_layout_token_runs_out" = "Sắp hết";
 "menu_bar_layout_token_cost_today" = "Chi phí hôm nay";
 "menu_bar_layout_token_cost_window" = "Chi phí (Cửa sổ lịch sử)";
+"menu_bar_layout_token_spend" = "Chi phí %";
+"menu_bar_layout_token_spend_pace" = "Tốc độ chi phí";
+"menu_bar_layout_token_spend_budget" = "Chi phí / ngân sách";
 "menu_bar_layout_token_space" = "Khoảng trắng";
 "menu_bar_layout_token_line_break" = "Ngắt dòng";
 "menu_bar_layout_token_separator_accessibility" = "Dấu chấm phân cách";
@@ -1612,6 +1618,7 @@
 "menu_bar_layout_conditional_default_session_spent" = "Phiên gần cạn";
 "menu_bar_layout_conditional_default_either_high" = "Phiên hoặc tuần đang ở mức cao";
 "menu_bar_layout_conditional_default_scoped_weekly" = "Tuần theo mô hình đã dùng trên 60%";
+"menu_bar_layout_conditional_default_spend_high" = "Chi phí đã dùng trên 90%";
 "Visible usage items" = "Mục sử dụng hiển thị";
 "Restore Defaults" = "Khôi phục mặc định";
 "Choose which usage rows appear in this provider's menu, Settings preview, and Overview." = "Chọn các hàng sử dụng xuất hiện trong menu của nhà cung cấp này, bản xem trước Cài đặt và Tổng quan.";
@@ -1929,7 +1936,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "Làm mới cấu hình trước khi làm mới dữ liệu web OpenAI.";
 "Refreshing account status…" = "Đang làm mới trạng thái tài khoản…";
 "Remaining budget compared with an ideal steady burn rate." = "Ngân sách còn lại so với tốc độ đốt ổn định lý tưởng.";
-"Renews: %@" = "Gia hạn: %@";
+"Plan renews: %@" = "Gia hạn gói: %@";
 "Request quota" = "Yêu cầu Hạn mức";
 "Requesting login…" = "Đang yêu cầu đăng nhập…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Bắt buộc. Nhập khóa API thông thường hoặc khóa API quản lý tại đây. Khóa quản lý cũng cho phép Hoạt động tài khoản trên OpenRouter API chính thức.";
@@ -2408,6 +2415,7 @@
 
 "X API cost history is not available." = "Không có lịch sử chi phí X API.";
 "Paste a console.x.com Cookie header containing auth_token and ct0." = "Dán tiêu đề Cookie từ console.x.com có chứa auth_token và ct0.";
+"Paste a platform.claude.com Cookie header containing sessionKey." = "Dán tiêu đề Cookie từ platform.claude.com có chứa sessionKey.";
 "Open X Developer Console" = "Mở bảng điều khiển nhà phát triển X";
 "update_available_notification_body" = "Nhấp để mở cài đặt cập nhật và cài đặt phiên bản mới.";
 // Structured session performance layout.
@@ -2509,6 +2517,8 @@
 "Pace sign" = "Dấu nhịp sử dụng";
 "Ahead of pace is +" = "Vượt nhịp là +";
 "Reserve is +" = "Dự trữ là +";
+"Back" = "Quay lại";
+"Forward" = "Tiếp";
 
 "cost_reset_inferred_tooltip" = "Suy ra: %@ không báo cáo ngày này. Hạn mức chi tiêu hằng tháng được đặt lại vào 00:00 UTC ngày 1.";
 /* fal provider credentials */
@@ -2621,3 +2631,31 @@
 "Daily spend · %@" = "Chi tiêu hằng ngày · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Áp dụng cho tài khoản token đã chọn “%@”. Mỗi tài khoản giữ giới hạn riêng.";
 "Applies to the OpenAI API key, not to token accounts." = "Áp dụng cho khóa API OpenAI, không áp dụng cho các tài khoản token.";
+"CodexBar will ask macOS Keychain for the Muse Code login token so it can fetch your Muse Code subscription usage. Click OK to continue." = "CodexBar sẽ yêu cầu macOS Keychain cung cấp token đăng nhập Muse Code để nó có thể tìm nạp mức sử dụng gói đăng ký Muse Code của bạn. Nhấn OK để tiếp tục.";
+/* Claude Platform provider */
+"API credit" = "Tín dụng API";
+"Purchased credit" = "Tín dụng đã mua";
+"Claude Platform exposes Console credit balance and monthly spend, not local token cost history." = "Claude Platform hiển thị số dư tín dụng và chi tiêu hàng tháng trên Console, không phải lịch sử chi phí token cục bộ.";
+
+/* App-managed HTTP server */
+"http_server_title" = "Máy chủ HTTP";
+"http_server_enable" = "Bật máy chủ HTTP";
+"http_server_bind" = "Địa chỉ IPv4 lắng nghe";
+"http_server_port" = "Cổng";
+"http_server_token" = "Mã truy cập máy chủ";
+"http_server_show" = "Hiện";
+"http_server_generate" = "Tạo";
+"http_server_cache" = "Khoảng thời gian bộ nhớ đệm (giây)";
+"http_server_timeout" = "Thời gian chờ yêu cầu (giây; 0 để tắt)";
+"http_server_all_accounts" = "Bao gồm mọi tài khoản trong ảnh chụp";
+"http_server_identity" = "Danh tính trên bảng điều khiển";
+"http_server_redacted" = "Đã che";
+"http_server_warning" = "Chia sẻ mức sử dụng, chi phí, thông tin tài khoản và dự án, không bao giờ chia sẻ thông tin đăng nhập nhà cung cấp. HTTP gửi mã truy cập máy chủ không mã hóa. Chỉ dùng kết nối VPN hoặc Tailscale đáng tin cậy.";
+"http_server_plain_http" = "Cho phép HTTP không mã hóa bên ngoài máy Mac này";
+"http_server_dashboard" = "Bảng điều khiển";
+"http_server_wildcard" = "Trên thiết bị khác, thay 0.0.0.0 bằng địa chỉ IPv4 VPN hoặc Tailscale của máy Mac này.";
+"http_server_footer" = "Mặc định tắt. Khởi động cùng CodexBar và dừng khi thoát. Cài đặt và mã truy cập chỉ ở trên máy Mac này, không được đồng bộ hoặc xuất. Giữ máy Mac thức để truy cập từ xa.";
+/* Claude desktop cookie source */
+"Claude desktop app" = "Ứng dụng Claude trên máy tính";
+"Use Claude desktop app cookies" = "Dùng cookie của ứng dụng Claude trên máy tính";
+"For Web usage, follow the account signed into Claude.app instead of a browser." = "Đối với mức sử dụng web, dùng tài khoản đã đăng nhập trong Claude.app thay vì tài khoản trình duyệt.";

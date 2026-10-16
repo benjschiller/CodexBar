@@ -716,6 +716,12 @@
 "link_website" = "Веб-сайт";
 "link_twitter" = "Twitter";
 "link_email" = "Електронна пошта";
+"link_acknowledgements" = "Подяки";
+"acknowledgements_footer" = "CodexBar створено з використанням цих проєктів з відкритим кодом.";
+"acknowledgements_others" = "ще %d";
+"acknowledgements_author" = "Автор";
+"acknowledgements_authors" = "Автори";
+"acknowledgements_license" = "Ліцензія";
 "check_updates_auto" = "Автоматично перевіряти наявність оновлень";
 "update_channel" = "Оновити канал";
 "check_for_updates" = "Перевірити наявність оновлень…";
@@ -1149,17 +1155,12 @@
 "CodexBar found another managed account that already uses the current system account. Resolve the duplicate account before switching." = "CodexBar знайшов інший керований обліковий запис, який уже використовує поточний системний обліковий запис. Усуньте дублікат облікового запису перед переходом.";
 "CodexBar will ask macOS Keychain for “%@” so it can decrypt browser cookies and authenticate your account. Click OK to continue." = "CodexBar запитає у macOS Keychain «%@», щоб він міг розшифрувати файли cookie браузера та автентифікувати ваш обліковий запис. Натисніть OK, щоб продовжити.";
 "CodexBar will ask macOS Keychain for the Claude Code OAuth token so it can fetch your Claude usage. Click OK to continue." = "CodexBar запитає у macOS Keychain маркер Claude Code OAuth, щоб отримати дані про використання Claude. Натисніть OK, щоб продовжити.";
-"CodexBar will ask macOS Keychain for your Amp cookie header so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш заголовок cookie Amp, щоб отримати інформацію про використання. Натисніть OK, щоб продовжити.";
-"CodexBar will ask macOS Keychain for your Augment cookie header so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш заголовок файлу cookie Augment, щоб отримати інформацію про використання. Натисніть OK, щоб продовжити.";
+"CodexBar will ask macOS Keychain for your %@ cookie header so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш заголовок cookie %@, щоб отримати інформацію про використання. Натисніть OK, щоб продовжити.";
 "CodexBar will ask macOS Keychain for your Claude cookie header so it can fetch Claude web usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш заголовок файлу cookie Claude, щоб отримати інформацію про використання веб-сайту Claude. Натисніть OK, щоб продовжити.";
-"CodexBar will ask macOS Keychain for your Cursor cookie header so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш заголовок cookie Cursor, щоб отримати інформацію про використання. Натисніть OK, щоб продовжити.";
-"CodexBar will ask macOS Keychain for your Factory cookie header so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш заголовок Factory cookie, щоб отримати дані про використання. Натисніть OK, щоб продовжити.";
 "CodexBar will ask macOS Keychain for your GitHub Copilot token so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш маркер GitHub Copilot, щоб отримати інформацію про використання. Натисніть OK, щоб продовжити.";
 "CodexBar will ask macOS Keychain for your Kimi auth token so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш токен автентифікації Kimi, щоб отримати інформацію про використання. Натисніть OK, щоб продовжити.";
 "CodexBar will ask macOS Keychain for your MiniMax API token so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш токен MiniMax API, щоб отримати інформацію про використання. Натисніть OK, щоб продовжити.";
-"CodexBar will ask macOS Keychain for your MiniMax cookie header so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш заголовок cookie MiniMax, щоб отримати інформацію про використання. Натисніть OK, щоб продовжити.";
 "CodexBar will ask macOS Keychain for your OpenAI cookie header so it can fetch Codex dashboard extras. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш заголовок файлів cookie OpenAI, щоб він міг отримати додаткові елементи панелі інструментів Codex. Натисніть OK, щоб продовжити.";
-"CodexBar will ask macOS Keychain for your OpenCode cookie header so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш заголовок файлу cookie OpenCode, щоб отримати інформацію про використання. Натисніть OK, щоб продовжити.";
 "CodexBar will ask macOS Keychain for your Synthetic API key so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш синтетичний ключ API, щоб отримати дані про використання. Натисніть OK, щоб продовжити.";
 "CodexBar will ask macOS Keychain for your z.ai API token so it can fetch usage. Click OK to continue." = "CodexBar запитає у macOS Keychain ваш токен API z.ai, щоб отримати інформацію про використання. Натисніть OK, щоб продовжити.";
 "Could not open Cursor login in your browser." = "Не вдалося відкрити Cursor login у вашому браузері.";
@@ -1427,6 +1428,8 @@
 "menu_bar_layout_size" = "Розмір";
 "menu_bar_layout_size_small" = "Малий";
 "menu_bar_layout_size_regular" = "Звичайний";
+"menu_bar_layout_size_large" = "Великий";
+"menu_bar_layout_monospaced_digits" = "Моноширинні цифри";
 "menu_bar_layout_gap" = "Інтервал";
 "menu_bar_layout_gap_tight" = "Вузький";
 "menu_bar_layout_gap_regular" = "Звичайний";
@@ -1449,6 +1452,9 @@
 "menu_bar_layout_token_runs_out" = "Закінчиться";
 "menu_bar_layout_token_cost_today" = "Вартість сьогодні";
 "menu_bar_layout_token_cost_window" = "Вартість (Вікно історії)";
+"menu_bar_layout_token_spend" = "Витрати %";
+"menu_bar_layout_token_spend_pace" = "Темп витрат";
+"menu_bar_layout_token_spend_budget" = "Витрати / бюджет";
 "menu_bar_layout_token_space" = "Пробіл";
 "menu_bar_layout_token_line_break" = "Розрив рядка";
 "menu_bar_layout_token_separator_accessibility" = "Крапка-роздільник";
@@ -1611,6 +1617,7 @@
 "menu_bar_layout_conditional_default_session_spent" = "Сесія майже вичерпана";
 "menu_bar_layout_conditional_default_either_high" = "Сесія або тиждень на високому рівні";
 "menu_bar_layout_conditional_default_scoped_weekly" = "Тижневе вікно моделі понад 60 %";
+"menu_bar_layout_conditional_default_spend_high" = "Витрати використано понад 90 %";
 "Visible usage items" = "Видимі елементи використання";
 "Restore Defaults" = "Відновити типові значення";
 "Choose which usage rows appear in this provider's menu, Settings preview, and Overview." = "Виберіть, які рядки використання відображатимуться в меню цього постачальника, попередньому перегляді налаштувань і огляді.";
@@ -1928,7 +1935,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "Оновіть профіль перед оновленням веб-даних OpenAI.";
 "Refreshing account status…" = "Оновлення статусу облікового запису…";
 "Remaining budget compared with an ideal steady burn rate." = "Залишок бюджету в порівнянні з ідеальною стабільною швидкістю горіння.";
-"Renews: %@" = "Поновлення: %@";
+"Plan renews: %@" = "Поновлення плану: %@";
 "Request quota" = "Запит Квота";
 "Requesting login…" = "Запит на вхід…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Обов'язковий. Введіть тут звичайний ключ API або ключ керування API. Ключі керування також дозволяють активувати обліковий запис на офіційному OpenRouter API.";
@@ -2407,6 +2414,7 @@
 
 "X API cost history is not available." = "Історія витрат X API недоступна.";
 "Paste a console.x.com Cookie header containing auth_token and ct0." = "Вставте заголовок Cookie з console.x.com, що містить auth_token і ct0.";
+"Paste a platform.claude.com Cookie header containing sessionKey." = "Вставте заголовок Cookie з platform.claude.com, що містить sessionKey.";
 "Open X Developer Console" = "Відкрити консоль розробника X";
 "update_available_notification_body" = "Натисніть, щоб відкрити налаштування оновлення та встановити нову версію.";
 // Structured session performance layout.
@@ -2508,6 +2516,8 @@
 "Pace sign" = "Знак темпу витрат";
 "Ahead of pace is +" = "Випередження темпу — +";
 "Reserve is +" = "Запас — +";
+"Back" = "Назад";
+"Forward" = "Вперед";
 
 "cost_reset_inferred_tooltip" = "Припущення: %@ не повідомляє цю дату. Місячні ліміти витрат скидаються 1-го числа о 00:00 UTC.";
 /* fal provider credentials */
@@ -2620,3 +2630,31 @@
 "Daily spend · %@" = "Щоденні витрати · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Застосовується до вибраного облікового запису токена «%@». Кожен обліковий запис зберігає власні ліміти.";
 "Applies to the OpenAI API key, not to token accounts." = "Застосовується до ключа API OpenAI, а не до облікових записів токенів.";
+"CodexBar will ask macOS Keychain for the Muse Code login token so it can fetch your Muse Code subscription usage. Click OK to continue." = "CodexBar запитає у macOS Keychain маркер входу Muse Code, щоб отримати дані про використання вашої підписки Muse Code. Натисніть OK, щоб продовжити.";
+/* Claude Platform provider */
+"API credit" = "Кредит API";
+"Purchased credit" = "Придбаний кредит";
+"Claude Platform exposes Console credit balance and monthly spend, not local token cost history." = "Claude Platform показує баланс кредитів і щомісячні витрати в Console, а не локальну історію витрат на токени.";
+
+/* App-managed HTTP server */
+"http_server_title" = "HTTP-сервер";
+"http_server_enable" = "Увімкнути HTTP-сервер";
+"http_server_bind" = "IPv4-адреса прив’язки";
+"http_server_port" = "Порт";
+"http_server_token" = "Токен сервера";
+"http_server_show" = "Показати";
+"http_server_generate" = "Створити";
+"http_server_cache" = "Інтервал кешу (секунди)";
+"http_server_timeout" = "Час очікування запиту (секунди; 0 вимикає)";
+"http_server_all_accounts" = "Включати всі облікові записи до знімків";
+"http_server_identity" = "Дані користувача на панелі";
+"http_server_redacted" = "Приховані";
+"http_server_warning" = "Надає доступ до використання, витрат і відомостей про облікові записи та проєкти, але не до облікових даних провайдерів. HTTP передає токен сервера без шифрування. Використовуйте лише довірене з’єднання VPN або Tailscale.";
+"http_server_plain_http" = "Дозволити незашифрований HTTP поза цим Mac";
+"http_server_dashboard" = "Панель";
+"http_server_wildcard" = "На інших пристроях замініть 0.0.0.0 на IPv4-адресу VPN або Tailscale цього Mac.";
+"http_server_footer" = "Типово вимкнено. Запускається з CodexBar і зупиняється після виходу. Налаштування й токен залишаються на цьому Mac та не синхронізуються й не експортуються. Для віддаленого доступу Mac має не спати.";
+/* Claude desktop cookie source */
+"Claude desktop app" = "Програма Claude для комп’ютера";
+"Use Claude desktop app cookies" = "Використовувати файли cookie програми Claude";
+"For Web usage, follow the account signed into Claude.app instead of a browser." = "Для вебстатистики використовувати обліковий запис у Claude.app замість облікового запису браузера.";

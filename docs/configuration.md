@@ -296,6 +296,8 @@ Never synced, by design: `hooks` (sync payloads structurally cannot create or mo
 - Fields not relevant to a provider are ignored.
 - Omitted providers are appended with defaults during normalization.
 - Unknown or retired provider entries are retained with all their fields, settings, and secrets in their original array positions during unrelated saves. This also applies when plugin discovery fails or the plugin runtime is unavailable. `config providers` labels unavailable entries as `plugin (not loaded)`; `config dump` includes them but redacts their opaque fields unless `--show-secrets` is explicitly requested. Remove plugin data through explicit plugin deletion, or remove the entry by editing the file.
+- When a configuration read reports an error, CodexBar preserves `config.json` during startup and later settings saves. At startup it uses temporary defaults without clearing legacy credentials; repair the file and let CodexBar reload it, or remove it and restart, before saving settings. Temporary defaults and earlier queued or staged saves cannot overwrite the repaired file after a reload. Legacy migration retries on the next launch.
+- Reloading account settings from disk reloads the complete config, preserving unrelated edits. A failed config reload, plugin-settings read, or save-time config validation blocks saving until a valid full reload succeeds.
 - Keep the file private; it contains secrets.
 - Validate the file with `codexbar config validate` (JSON output available with `--format json`).
 
@@ -352,6 +354,13 @@ iCloud projection syncs onward; reset notifications, the additional menu setting
 unless explicitly exported and imported. Import does not modify `config.json` or iCloud's remote-update suppression.
 
 ### Menu bar controls
+
+**Auto** ranks each provider's eligible quota windows from the current snapshot. An exhausted quota comes
+first; otherwise a supported lane’s pace forecast that runs out before reset takes priority, with the shortest time to
+depletion first. Without such a forecast, Auto chooses the highest used percentage. Ties keep provider order.
+The unified highest-usage icon uses the same priority for providers set to Auto and displays the selected
+window's actual percentage. Explicit metric choices and provider-specific credit-pool ordering are preserved.
+This uses reported usage, duration, and reset time; it adds no observation history or background timer.
 
 The layout editor includes an optional **Tokens / min** value token (for example `49M/min`) using the provider’s latest reported complete minute. OpenAI supplies it through the **Tokens per minute** provider setting. It uses the same unavailable placeholder as other value tokens when no throughput is available. The optional **Tokens / min graph** token shows the last hour as a compact graph, using the maximum minute in each column and excluding minutes that are still reporting. Drag either token into your layout to enable it; default layouts include neither. The graph uses the status item’s own provider data and the standard unavailable placeholder when there are no reported minutes.
 

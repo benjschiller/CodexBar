@@ -702,6 +702,12 @@
 "link_website" = "웹사이트";
 "link_twitter" = "Twitter";
 "link_email" = "이메일";
+"link_acknowledgements" = "감사의 말";
+"acknowledgements_footer" = "CodexBar는 다음 오픈 소스 프로젝트로 만들어졌습니다.";
+"acknowledgements_others" = "외 %d명";
+"acknowledgements_author" = "작성자";
+"acknowledgements_authors" = "작성자";
+"acknowledgements_license" = "라이선스";
 "check_updates_auto" = "자동으로 업데이트 확인";
 "update_channel" = "업데이트 채널";
 "check_for_updates" = "업데이트 확인…";
@@ -1115,17 +1121,12 @@
 "CodexBar found another managed account that already uses the current system account. Resolve the duplicate account before switching." = "CodexBar가 현재 시스템 계정을 이미 사용 중인 다른 관리 계정을 발견했습니다. 전환하기 전에 중복된 계정을 해결하세요.";
 "CodexBar will ask macOS Keychain for “%@” so it can decrypt browser cookies and authenticate your account. Click OK to continue." = "CodexBar가 브라우저 쿠키를 복호화하고 계정을 인증할 수 있도록 macOS 키체인에 “%@”을(를) 요청합니다. 계속하려면 확인을 클릭하세요.";
 "CodexBar will ask macOS Keychain for the Claude Code OAuth token so it can fetch your Claude usage. Click OK to continue." = "CodexBar가 Claude 사용량을 가져올 수 있도록 macOS 키체인에 Claude Code OAuth 토큰을 요청합니다. 계속하려면 확인을 클릭하세요.";
-"CodexBar will ask macOS Keychain for your Amp cookie header so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 Amp 쿠키 헤더를 요청합니다. 계속하려면 확인을 클릭하세요.";
-"CodexBar will ask macOS Keychain for your Augment cookie header so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 Augment 쿠키 헤더를 요청합니다. 계속하려면 확인을 클릭하세요.";
+"CodexBar will ask macOS Keychain for your %@ cookie header so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 %@ 쿠키 헤더를 요청합니다. 계속하려면 확인을 클릭하세요.";
 "CodexBar will ask macOS Keychain for your Claude cookie header so it can fetch Claude web usage. Click OK to continue." = "CodexBar가 Claude 웹 사용량을 가져올 수 있도록 macOS 키체인에 Claude 쿠키 헤더를 요청합니다. 계속하려면 확인을 클릭하세요.";
-"CodexBar will ask macOS Keychain for your Cursor cookie header so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 Cursor 쿠키 헤더를 요청합니다. 계속하려면 확인을 클릭하세요.";
-"CodexBar will ask macOS Keychain for your Factory cookie header so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 Factory 쿠키 헤더를 요청합니다. 계속하려면 확인을 클릭하세요.";
 "CodexBar will ask macOS Keychain for your GitHub Copilot token so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 GitHub Copilot 토큰을 요청합니다. 계속하려면 확인을 클릭하세요.";
 "CodexBar will ask macOS Keychain for your Kimi auth token so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 Kimi 인증 토큰을 요청합니다. 계속하려면 확인을 클릭하세요.";
 "CodexBar will ask macOS Keychain for your MiniMax API token so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 MiniMax API 토큰을 요청합니다. 계속하려면 확인을 클릭하세요.";
-"CodexBar will ask macOS Keychain for your MiniMax cookie header so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 MiniMax 쿠키 헤더를 요청합니다. 계속하려면 확인을 클릭하세요.";
 "CodexBar will ask macOS Keychain for your OpenAI cookie header so it can fetch Codex dashboard extras. Click OK to continue." = "CodexBar가 Codex 대시보드 추가 정보를 가져올 수 있도록 macOS 키체인에 OpenAI 쿠키 헤더를 요청합니다. 계속하려면 확인을 클릭하세요.";
-"CodexBar will ask macOS Keychain for your OpenCode cookie header so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 OpenCode 쿠키 헤더를 요청합니다. 계속하려면 확인을 클릭하세요.";
 "CodexBar will ask macOS Keychain for your Synthetic API key so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 Synthetic API 키를 요청합니다. 계속하려면 확인을 클릭하세요.";
 "CodexBar will ask macOS Keychain for your z.ai API token so it can fetch usage. Click OK to continue." = "CodexBar가 사용량을 가져올 수 있도록 macOS 키체인에 z.ai API 토큰을 요청합니다. 계속하려면 확인을 클릭하세요.";
 "Could not open Cursor login in your browser." = "브라우저에서 Cursor 로그인을 열 수 없습니다.";
@@ -1397,6 +1398,8 @@
 "menu_bar_layout_size" = "크기";
 "menu_bar_layout_size_small" = "작게";
 "menu_bar_layout_size_regular" = "보통";
+"menu_bar_layout_size_large" = "크게";
+"menu_bar_layout_monospaced_digits" = "고정폭 숫자";
 "menu_bar_layout_gap" = "간격";
 "menu_bar_layout_gap_tight" = "좁게";
 "menu_bar_layout_gap_regular" = "보통";
@@ -1419,6 +1422,9 @@
 "menu_bar_layout_token_runs_out" = "소진";
 "menu_bar_layout_token_cost_today" = "오늘 비용";
 "menu_bar_layout_token_cost_window" = "비용 (기록 범위)";
+"menu_bar_layout_token_spend" = "지출 %";
+"menu_bar_layout_token_spend_pace" = "지출 속도";
+"menu_bar_layout_token_spend_budget" = "지출 / 예산";
 "menu_bar_layout_token_space" = "공백";
 "menu_bar_layout_token_line_break" = "줄 바꿈";
 "menu_bar_layout_token_separator_accessibility" = "구분점";
@@ -1580,6 +1586,7 @@
 "menu_bar_layout_conditional_default_session_spent" = "세션 거의 소진";
 "menu_bar_layout_conditional_default_either_high" = "세션 또는 주간 사용량 높음";
 "menu_bar_layout_conditional_default_scoped_weekly" = "모델별 주간 60% 초과 사용";
+"menu_bar_layout_conditional_default_spend_high" = "지출 90% 초과 사용";
 "Visible usage items" = "표시할 사용량 항목";
 "Restore Defaults" = "기본값 복원";
 "Choose which usage rows appear in this provider's menu, Settings preview, and Overview." = "이 제공업체의 메뉴, 설정 미리보기 및 개요에 표시할 사용량 행을 선택합니다.";
@@ -1896,7 +1903,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "OpenAI 웹 데이터를 새로 고치기 전에 프로필을 새로 고치십시오.";
 "Refreshing account status…" = "계정 상태 새로고침 중…";
 "Remaining budget compared with an ideal steady burn rate." = "이상적인 꾸준한 연소율과 비교한 남은 예산입니다.";
-"Renews: %@" = "갱신: %@";
+"Plan renews: %@" = "요금제 갱신: %@";
 "Request quota" = "할당량 요청";
 "Requesting login…" = "로그인을 요청하는 중…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "필수입니다. 여기에 일반 API 키 또는 관리 API 키를 입력하세요. 관리 키는 공식 OpenRouter API에서 계정 활동도 활성화합니다.";
@@ -2375,6 +2382,7 @@
 
 "X API cost history is not available." = "X API 비용 기록을 사용할 수 없습니다.";
 "Paste a console.x.com Cookie header containing auth_token and ct0." = "auth_token과 ct0이 포함된 console.x.com의 Cookie 헤더를 붙여넣으세요.";
+"Paste a platform.claude.com Cookie header containing sessionKey." = "sessionKey가 포함된 platform.claude.com의 Cookie 헤더를 붙여넣으세요.";
 "Open X Developer Console" = "X 개발자 콘솔 열기";
 "update_available_notification_body" = "클릭하여 업데이트 설정을 열고 새 버전을 설치하세요.";
 // Structured session performance layout.
@@ -2476,6 +2484,8 @@
 "Pace sign" = "사용 속도 부호";
 "Ahead of pace is +" = "기준 속도 초과는 +";
 "Reserve is +" = "여유분은 +";
+"Back" = "뒤로";
+"Forward" = "앞으로";
 
 "cost_reset_inferred_tooltip" = "추정: %@에서 이 날짜를 제공하지 않습니다. 월간 지출 한도는 매월 1일 00:00 UTC에 재설정됩니다.";
 /* fal provider credentials */
@@ -2588,3 +2598,31 @@
 "Daily spend · %@" = "일일 지출 · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "선택한 토큰 계정 “%@”에 적용됩니다. 각 계정은 자체 한도를 유지합니다.";
 "Applies to the OpenAI API key, not to token accounts." = "토큰 계정이 아닌 OpenAI API 키에 적용됩니다.";
+"CodexBar will ask macOS Keychain for the Muse Code login token so it can fetch your Muse Code subscription usage. Click OK to continue." = "CodexBar가 Muse Code 구독 사용량을 가져올 수 있도록 macOS 키체인에 Muse Code 로그인 토큰을 요청합니다. 계속하려면 확인을 클릭하세요.";
+/* Claude Platform provider */
+"API credit" = "API 크레딧";
+"Purchased credit" = "구매한 크레딧";
+"Claude Platform exposes Console credit balance and monthly spend, not local token cost history." = "Claude Platform은 로컬 토큰 비용 내역이 아닌 Console 크레딧 잔액과 월간 지출을 표시합니다.";
+
+/* App-managed HTTP server */
+"http_server_title" = "HTTP 서버";
+"http_server_enable" = "HTTP 서버 활성화";
+"http_server_bind" = "바인딩할 IPv4 주소";
+"http_server_port" = "포트";
+"http_server_token" = "서버 토큰";
+"http_server_show" = "표시";
+"http_server_generate" = "생성";
+"http_server_cache" = "캐시 간격(초)";
+"http_server_timeout" = "요청 제한 시간(초, 0은 비활성화)";
+"http_server_all_accounts" = "스냅샷에 모든 계정 포함";
+"http_server_identity" = "대시보드 식별 정보";
+"http_server_redacted" = "가림";
+"http_server_warning" = "사용량, 비용, 계정 및 프로젝트 정보를 공개하며 공급자 인증 정보는 공개하지 않습니다. HTTP는 서버 토큰을 암호화하지 않고 전송합니다. 신뢰할 수 있는 VPN 또는 Tailscale 연결에서만 사용하세요.";
+"http_server_plain_http" = "이 Mac 외부에서 암호화되지 않은 HTTP 허용";
+"http_server_dashboard" = "대시보드";
+"http_server_wildcard" = "다른 기기에서는 0.0.0.0을 이 Mac의 VPN 또는 Tailscale IPv4 주소로 바꾸세요.";
+"http_server_footer" = "기본적으로 꺼져 있습니다. CodexBar와 함께 시작되고 종료 시 중지됩니다. 설정과 토큰은 이 Mac에 보관되며 동기화 및 내보내기에서 제외됩니다. 원격 접근을 위해 Mac이 잠자기에 들어가지 않도록 하세요.";
+/* Claude desktop cookie source */
+"Claude desktop app" = "Claude 데스크톱 앱";
+"Use Claude desktop app cookies" = "Claude 데스크톱 앱 쿠키 사용";
+"For Web usage, follow the account signed into Claude.app instead of a browser." = "웹 사용량에는 브라우저 대신 Claude.app에 로그인한 계정을 사용합니다.";

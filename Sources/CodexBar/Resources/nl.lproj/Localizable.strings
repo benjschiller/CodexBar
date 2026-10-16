@@ -716,6 +716,12 @@
 "link_website" = "Website";
 "link_twitter" = "Twitteren";
 "link_email" = "E-mail";
+"link_acknowledgements" = "Dankbetuigingen";
+"acknowledgements_footer" = "CodexBar is gebouwd met deze opensourceprojecten.";
+"acknowledgements_others" = "%d anderen";
+"acknowledgements_author" = "Auteur";
+"acknowledgements_authors" = "Auteurs";
+"acknowledgements_license" = "Licentie";
 "check_updates_auto" = "Automatisch controleren op updates";
 "update_channel" = "Kanaal bijwerken";
 "check_for_updates" = "Controleer op updates…";
@@ -1149,17 +1155,12 @@
 "CodexBar found another managed account that already uses the current system account. Resolve the duplicate account before switching." = "CodexBar heeft een ander beheerd account gevonden dat al gebruikmaakt van het huidige systeemaccount. Los het dubbele account op voordat u overstapt.";
 "CodexBar will ask macOS Keychain for “%@” so it can decrypt browser cookies and authenticate your account. Click OK to continue." = "CodexBar vraagt ​​macOS-sleutelhanger om “%@”, zodat browsercookies kunnen worden gedecodeerd en uw account kan worden geverifieerd. Klik op OK om door te gaan.";
 "CodexBar will ask macOS Keychain for the Claude Code OAuth token so it can fetch your Claude usage. Click OK to continue." = "CodexBar zal macOS Keychain om het Claude Code OAuth-token vragen, zodat het uw Claude-gebruik kan ophalen. Klik op OK om door te gaan.";
-"CodexBar will ask macOS Keychain for your Amp cookie header so it can fetch usage. Click OK to continue." = "CodexBar zal macOS Keychain om je Amp-cookieheader vragen, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
-"CodexBar will ask macOS Keychain for your Augment cookie header so it can fetch usage. Click OK to continue." = "CodexBar zal macOS Keychain om uw Augment-cookie-header vragen, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
+"CodexBar will ask macOS Keychain for your %@ cookie header so it can fetch usage. Click OK to continue." = "CodexBar zal macOS Keychain om uw %@-cookieheader vragen, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
 "CodexBar will ask macOS Keychain for your Claude cookie header so it can fetch Claude web usage. Click OK to continue." = "CodexBar zal macOS Keychain om uw Claude-cookieheader vragen, zodat deze het webgebruik van Claude kan ophalen. Klik op OK om door te gaan.";
-"CodexBar will ask macOS Keychain for your Cursor cookie header so it can fetch usage. Click OK to continue." = "CodexBar zal macOS Keychain om uw Cursor-cookieheader vragen, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
-"CodexBar will ask macOS Keychain for your Factory cookie header so it can fetch usage. Click OK to continue." = "CodexBar zal macOS Keychain om uw Factory-cookieheader vragen, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
 "CodexBar will ask macOS Keychain for your GitHub Copilot token so it can fetch usage. Click OK to continue." = "CodexBar zal macOS Keychain om uw GitHub Copilot-token vragen, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
 "CodexBar will ask macOS Keychain for your Kimi auth token so it can fetch usage. Click OK to continue." = "CodexBar vraagt ​​macOS Keychain om je Kimi-authenticatietoken, zodat het gebruik kan worden opgehaald. Klik op OK om door te gaan.";
 "CodexBar will ask macOS Keychain for your MiniMax API token so it can fetch usage. Click OK to continue." = "CodexBar zal macOS Keychain om uw MiniMax API-token vragen, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
-"CodexBar will ask macOS Keychain for your MiniMax cookie header so it can fetch usage. Click OK to continue." = "CodexBar zal macOS Keychain om uw MiniMax-cookieheader vragen, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
 "CodexBar will ask macOS Keychain for your OpenAI cookie header so it can fetch Codex dashboard extras. Click OK to continue." = "CodexBar zal macOS Keychain om uw OpenAI-cookieheader vragen, zodat deze extra's op het Codex-dashboard kan ophalen. Klik op OK om door te gaan.";
-"CodexBar will ask macOS Keychain for your OpenCode cookie header so it can fetch usage. Click OK to continue." = "CodexBar zal macOS Keychain om uw OpenCode-cookieheader vragen, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
 "CodexBar will ask macOS Keychain for your Synthetic API key so it can fetch usage. Click OK to continue." = "CodexBar vraagt ​​macOS-sleutelhanger om uw synthetische API-sleutel, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
 "CodexBar will ask macOS Keychain for your z.ai API token so it can fetch usage. Click OK to continue." = "CodexBar zal macOS Keychain om uw z.ai API-token vragen, zodat deze het gebruik kan ophalen. Klik op OK om door te gaan.";
 "Could not open Cursor login in your browser." = "Kan Cursor-login niet openen in uw browser.";
@@ -1427,6 +1428,8 @@
 "menu_bar_layout_size" = "Grootte";
 "menu_bar_layout_size_small" = "Klein";
 "menu_bar_layout_size_regular" = "Normaal";
+"menu_bar_layout_size_large" = "Groot";
+"menu_bar_layout_monospaced_digits" = "Cijfers met vaste breedte";
 "menu_bar_layout_gap" = "Tussenruimte";
 "menu_bar_layout_gap_tight" = "Krap";
 "menu_bar_layout_gap_regular" = "Normaal";
@@ -1449,6 +1452,9 @@
 "menu_bar_layout_token_runs_out" = "Op";
 "menu_bar_layout_token_cost_today" = "Kosten vandaag";
 "menu_bar_layout_token_cost_window" = "Kosten (Geschiedenisvenster)";
+"menu_bar_layout_token_spend" = "Uitgaven %";
+"menu_bar_layout_token_spend_pace" = "Uitgaventempo";
+"menu_bar_layout_token_spend_budget" = "Uitgaven / begroting";
 "menu_bar_layout_token_space" = "Spatie";
 "menu_bar_layout_token_line_break" = "Regeleinde";
 "menu_bar_layout_token_separator_accessibility" = "Scheidingspunt";
@@ -1610,6 +1616,7 @@
 "menu_bar_layout_conditional_default_session_spent" = "Sessie bijna verbruikt";
 "menu_bar_layout_conditional_default_either_high" = "Sessie of week loopt hoog op";
 "menu_bar_layout_conditional_default_scoped_weekly" = "Modelweek boven 60% gebruikt";
+"menu_bar_layout_conditional_default_spend_high" = "Uitgaven boven 90% gebruikt";
 "Visible usage items" = "Zichtbare gebruiksitems";
 "Restore Defaults" = "Standaardinstellingen herstellen";
 "Choose which usage rows appear in this provider's menu, Settings preview, and Overview." = "Kies welke gebruiksrijen worden weergegeven in het menu van deze provider, het instellingenvoorbeeld en het overzicht.";
@@ -1927,7 +1934,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "Vernieuw het profiel voordat u de OpenAI-webgegevens vernieuwt.";
 "Refreshing account status…" = "Accountstatus vernieuwen…";
 "Remaining budget compared with an ideal steady burn rate." = "Resterend budget vergeleken met een ideale stabiele brandsnelheid.";
-"Renews: %@" = "Vernieuwt: %@";
+"Plan renews: %@" = "Abonnement wordt verlengd: %@";
 "Request quota" = "Quotum aanvragen";
 "Requesting login…" = "Inloggen aanvragen…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Vereist. Voer hier een gewone API-sleutel of een Management API-sleutel in. Beheersleutels maken ook accountactiviteit mogelijk op de officiële OpenRouter API.";
@@ -2406,6 +2413,7 @@
 
 "X API cost history is not available." = "Kostengeschiedenis voor X API is niet beschikbaar.";
 "Paste a console.x.com Cookie header containing auth_token and ct0." = "Plak een Cookie-header van console.x.com met auth_token en ct0.";
+"Paste a platform.claude.com Cookie header containing sessionKey." = "Plak een Cookie-header van platform.claude.com met sessionKey.";
 "Open X Developer Console" = "X-ontwikkelaarsconsole openen";
 "update_available_notification_body" = "Klik om de update-instellingen te openen en de nieuwe versie te installeren.";
 // Structured session performance layout.
@@ -2507,6 +2515,8 @@
 "Pace sign" = "Teken van gebruikstempo";
 "Ahead of pace is +" = "Boven het tempo is +";
 "Reserve is +" = "Reserve krijgt +";
+"Back" = "Terug";
+"Forward" = "Vooruit";
 
 "cost_reset_inferred_tooltip" = "Afgeleid: %@ meldt deze datum niet. Maandelijkse bestedingslimieten worden op de 1e om 00:00 UTC gereset.";
 /* fal provider credentials */
@@ -2617,3 +2627,31 @@
 "Daily spend · %@" = "Dagelijkse uitgaven · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Geldt voor het geselecteerde tokenaccount ‘%@’. Elk account behoudt zijn eigen limieten.";
 "Applies to the OpenAI API key, not to token accounts." = "Geldt voor de OpenAI API-sleutel, niet voor tokenaccounts.";
+"CodexBar will ask macOS Keychain for the Muse Code login token so it can fetch your Muse Code subscription usage. Click OK to continue." = "CodexBar zal macOS Keychain om het Muse Code login-token vragen, zodat het uw Muse Code-abonnementsgebruik kan ophalen. Klik op OK om door te gaan.";
+/* Claude Platform provider */
+"API credit" = "API-tegoed";
+"Purchased credit" = "Gekocht tegoed";
+"Claude Platform exposes Console credit balance and monthly spend, not local token cost history." = "Claude Platform toont het Console-tegoed en de maandelijkse uitgaven, niet de lokale tokenkostengeschiedenis.";
+
+/* App-managed HTTP server */
+"http_server_title" = "HTTP-server";
+"http_server_enable" = "HTTP-server inschakelen";
+"http_server_bind" = "IPv4-luisteradres";
+"http_server_port" = "Poort";
+"http_server_token" = "Servertoken";
+"http_server_show" = "Tonen";
+"http_server_generate" = "Genereren";
+"http_server_cache" = "Cache-interval (seconden)";
+"http_server_timeout" = "Time-out voor verzoeken (seconden; 0 schakelt uit)";
+"http_server_all_accounts" = "Alle accounts in momentopnamen opnemen";
+"http_server_identity" = "Identiteit op dashboard";
+"http_server_redacted" = "Afgeschermd";
+"http_server_warning" = "Deelt gebruik, kosten en account- en projectinformatie, nooit inloggegevens van providers. HTTP verstuurt het servertoken onversleuteld. Gebruik alleen een vertrouwde VPN- of Tailscale-verbinding.";
+"http_server_plain_http" = "Onversleutelde HTTP buiten deze Mac toestaan";
+"http_server_dashboard" = "Dashboard";
+"http_server_wildcard" = "Vervang op andere apparaten 0.0.0.0 door het VPN- of Tailscale-IPv4-adres van deze Mac.";
+"http_server_footer" = "Standaard uit. Start met CodexBar en stopt wanneer het afsluit. Instellingen en token blijven op deze Mac en worden niet gesynchroniseerd of geëxporteerd. Houd de Mac wakker voor externe toegang.";
+/* Claude desktop cookie source */
+"Claude desktop app" = "Claude-desktopapp";
+"Use Claude desktop app cookies" = "Cookies van de Claude-desktopapp gebruiken";
+"For Web usage, follow the account signed into Claude.app instead of a browser." = "Gebruik voor webverbruik het account dat bij Claude.app is aangemeld in plaats van het browseraccount.";

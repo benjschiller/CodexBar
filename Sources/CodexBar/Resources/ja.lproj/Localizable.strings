@@ -713,6 +713,12 @@
 "link_website" = "ウェブサイト";
 "link_twitter" = "Twitter";
 "link_email" = "メール";
+"link_acknowledgements" = "謝辞";
+"acknowledgements_footer" = "CodexBar は以下のオープンソースプロジェクトを利用しています。";
+"acknowledgements_others" = "他 %d 名";
+"acknowledgements_author" = "作者";
+"acknowledgements_authors" = "作者";
+"acknowledgements_license" = "ライセンス";
 "check_updates_auto" = "アップデートを自動的に確認";
 "update_channel" = "アップデートチャンネル";
 "check_for_updates" = "アップデートを確認…";
@@ -1146,17 +1152,12 @@
 "CodexBar found another managed account that already uses the current system account. Resolve the duplicate account before switching." = "CodexBar は、現在のシステムアカウントをすでに使用している別の管理アカウントを検出しました。切り替える前に重複アカウントを解消してください。";
 "CodexBar will ask macOS Keychain for “%@” so it can decrypt browser cookies and authenticate your account. Click OK to continue." = "CodexBar はブラウザの Cookie を復号してアカウントを認証するために、macOS キーチェーンに「%@」へのアクセスを求めます。続けるには OK をクリックしてください。";
 "CodexBar will ask macOS Keychain for the Claude Code OAuth token so it can fetch your Claude usage. Click OK to continue." = "CodexBar は Claude の使用量を取得するために、macOS キーチェーンに Claude Code の OAuth トークンへのアクセスを求めます。続けるには OK をクリックしてください。";
-"CodexBar will ask macOS Keychain for your Amp cookie header so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに Amp の Cookie ヘッダーへのアクセスを求めます。続けるには OK をクリックしてください。";
-"CodexBar will ask macOS Keychain for your Augment cookie header so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに Augment の Cookie ヘッダーへのアクセスを求めます。続けるには OK をクリックしてください。";
+"CodexBar will ask macOS Keychain for your %@ cookie header so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに %@ の Cookie ヘッダーへのアクセスを求めます。続けるには OK をクリックしてください。";
 "CodexBar will ask macOS Keychain for your Claude cookie header so it can fetch Claude web usage. Click OK to continue." = "CodexBar は Claude ウェブの使用量を取得するために、macOS キーチェーンに Claude の Cookie ヘッダーへのアクセスを求めます。続けるには OK をクリックしてください。";
-"CodexBar will ask macOS Keychain for your Cursor cookie header so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに Cursor の Cookie ヘッダーへのアクセスを求めます。続けるには OK をクリックしてください。";
-"CodexBar will ask macOS Keychain for your Factory cookie header so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに Factory の Cookie ヘッダーへのアクセスを求めます。続けるには OK をクリックしてください。";
 "CodexBar will ask macOS Keychain for your GitHub Copilot token so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに GitHub Copilot のトークンへのアクセスを求めます。続けるには OK をクリックしてください。";
 "CodexBar will ask macOS Keychain for your Kimi auth token so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに Kimi の認証トークンへのアクセスを求めます。続けるには OK をクリックしてください。";
 "CodexBar will ask macOS Keychain for your MiniMax API token so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに MiniMax の API トークンへのアクセスを求めます。続けるには OK をクリックしてください。";
-"CodexBar will ask macOS Keychain for your MiniMax cookie header so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに MiniMax の Cookie ヘッダーへのアクセスを求めます。続けるには OK をクリックしてください。";
 "CodexBar will ask macOS Keychain for your OpenAI cookie header so it can fetch Codex dashboard extras. Click OK to continue." = "CodexBar は Codex ダッシュボードの追加情報を取得するために、macOS キーチェーンに OpenAI の Cookie ヘッダーへのアクセスを求めます。続けるには OK をクリックしてください。";
-"CodexBar will ask macOS Keychain for your OpenCode cookie header so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに OpenCode の Cookie ヘッダーへのアクセスを求めます。続けるには OK をクリックしてください。";
 "CodexBar will ask macOS Keychain for your Synthetic API key so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに Synthetic の API キーへのアクセスを求めます。続けるには OK をクリックしてください。";
 "CodexBar will ask macOS Keychain for your z.ai API token so it can fetch usage. Click OK to continue." = "CodexBar は使用量を取得するために、macOS キーチェーンに z.ai の API トークンへのアクセスを求めます。続けるには OK をクリックしてください。";
 "Could not open Cursor login in your browser." = "ブラウザで Cursor のログイン画面を開けませんでした。";
@@ -1428,6 +1429,8 @@
 "menu_bar_layout_size" = "サイズ";
 "menu_bar_layout_size_small" = "小";
 "menu_bar_layout_size_regular" = "標準";
+"menu_bar_layout_size_large" = "大";
+"menu_bar_layout_monospaced_digits" = "等幅数字";
 "menu_bar_layout_gap" = "間隔";
 "menu_bar_layout_gap_tight" = "狭い";
 "menu_bar_layout_gap_regular" = "標準";
@@ -1450,6 +1453,9 @@
 "menu_bar_layout_token_runs_out" = "使い切り";
 "menu_bar_layout_token_cost_today" = "今日のコスト";
 "menu_bar_layout_token_cost_window" = "コスト（履歴期間）";
+"menu_bar_layout_token_spend" = "支出 %";
+"menu_bar_layout_token_spend_pace" = "支出ペース";
+"menu_bar_layout_token_spend_budget" = "支出 / 予算";
 "menu_bar_layout_token_space" = "空白";
 "menu_bar_layout_token_line_break" = "改行";
 "menu_bar_layout_token_separator_accessibility" = "区切り点";
@@ -1611,6 +1617,7 @@
 "menu_bar_layout_conditional_default_session_spent" = "セッションがほぼ上限";
 "menu_bar_layout_conditional_default_either_high" = "セッションまたは週間が高水準";
 "menu_bar_layout_conditional_default_scoped_weekly" = "モデル別週間の使用率 60% 超";
+"menu_bar_layout_conditional_default_spend_high" = "支出使用率 90% 超";
 "Visible usage items" = "表示する使用量項目";
 "Restore Defaults" = "デフォルトに戻す";
 "Choose which usage rows appear in this provider's menu, Settings preview, and Overview." = "このプロバイダーのメニュー、設定プレビュー、概要に表示する使用量の行を選択します。";
@@ -1679,7 +1686,7 @@
 "%@m" = "%@分";
 "%d CONNECTED" = "接続済み：%d 件";
 "%d DAYS" = "%d 日";
-"%d days" = "%d 日";
+"%d days" = "%d日間";
 "%d more accounts ready" = "%d より多くのアカウントの準備ができました";
 "%d percent" = "%d パーセント";
 "%d subscriptions" = "%d 件のサブスクリプション";
@@ -1928,7 +1935,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "OpenAI Web データを更新する前に、プロファイルを更新してください。";
 "Refreshing account status…" = "アカウントのステータスを更新しています…";
 "Remaining budget compared with an ideal steady burn rate." = "理想的な安定した燃焼速度と比較した残りの予算。";
-"Renews: %@" = "更新: %@";
+"Plan renews: %@" = "プラン更新日: %@";
 "Request quota" = "リクエスト クォータ";
 "Requesting login…" = "ログインをリクエスト中…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "必須。ここに通常の API キーまたは管理 API キーを入力します。管理キーにより、公式 OpenRouter API でのアカウント アクティビティも有効になります。";
@@ -2407,6 +2414,7 @@
 
 "X API cost history is not available." = "X API の費用履歴は利用できません。";
 "Paste a console.x.com Cookie header containing auth_token and ct0." = "auth_token と ct0 を含む console.x.com の Cookie ヘッダーを貼り付けてください。";
+"Paste a platform.claude.com Cookie header containing sessionKey." = "sessionKey を含む platform.claude.com の Cookie ヘッダーを貼り付けてください。";
 "Open X Developer Console" = "X 開発者コンソールを開く";
 "update_available_notification_body" = "クリックしてアップデート設定を開き、新しいバージョンをインストールします。";
 // Structured session performance layout.
@@ -2508,6 +2516,8 @@
 "Pace sign" = "ペースの符号";
 "Ahead of pace is +" = "ペース超過を + で表示";
 "Reserve is +" = "余裕を + で表示";
+"Back" = "戻る";
+"Forward" = "進む";
 
 "cost_reset_inferred_tooltip" = "推定: %@ はこの日付を報告しません。月間の支出上限は毎月1日 00:00 UTC にリセットされます。";
 /* fal provider credentials */
@@ -2620,3 +2630,31 @@
 "Daily spend · %@" = "日別の支出 · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "選択中のトークンアカウント「%@」に適用されます。各アカウントは独自の上限を保持します。";
 "Applies to the OpenAI API key, not to token accounts." = "OpenAI APIキーに適用されます。トークンアカウントには適用されません。";
+"CodexBar will ask macOS Keychain for the Muse Code login token so it can fetch your Muse Code subscription usage. Click OK to continue." = "CodexBar は Muse Code のサブスクリプション使用量を取得するために、macOS キーチェーンに Muse Code のログイン トークンへのアクセスを求めます。続けるには OK をクリックしてください。";
+/* Claude Platform provider */
+"API credit" = "API クレジット";
+"Purchased credit" = "購入済みクレジット";
+"Claude Platform exposes Console credit balance and monthly spend, not local token cost history." = "Claude Platform は、ローカルのトークンコスト履歴ではなく、Console のクレジット残高と月間支出を表示します。";
+
+/* App-managed HTTP server */
+"http_server_title" = "HTTPサーバー";
+"http_server_enable" = "HTTPサーバーを有効にする";
+"http_server_bind" = "バインドするIPv4アドレス";
+"http_server_port" = "ポート";
+"http_server_token" = "サーバートークン";
+"http_server_show" = "表示";
+"http_server_generate" = "生成";
+"http_server_cache" = "キャッシュ間隔（秒）";
+"http_server_timeout" = "リクエストのタイムアウト（秒、0で無効）";
+"http_server_all_accounts" = "スナップショットにすべてのアカウントを含める";
+"http_server_identity" = "ダッシュボードの識別情報";
+"http_server_redacted" = "伏せ字";
+"http_server_warning" = "使用量、費用、アカウント、プロジェクトの情報を公開します。プロバイダーの認証情報は公開しません。HTTPはサーバートークンを暗号化せず送信します。信頼できるVPNまたはTailscale接続でのみ使用してください。";
+"http_server_plain_http" = "このMac以外からの暗号化されていないHTTPを許可";
+"http_server_dashboard" = "ダッシュボード";
+"http_server_wildcard" = "他のデバイスでは、0.0.0.0をこのMacのVPNまたはTailscaleのIPv4アドレスに置き換えてください。";
+"http_server_footer" = "デフォルトではオフです。CodexBarと共に起動し、終了時に停止します。設定とトークンはこのMacに保存され、同期や書き出しの対象外です。リモートアクセス中はMacをスリープさせないでください。";
+/* Claude desktop cookie source */
+"Claude desktop app" = "Claudeデスクトップアプリ";
+"Use Claude desktop app cookies" = "ClaudeデスクトップアプリのCookieを使用";
+"For Web usage, follow the account signed into Claude.app instead of a browser." = "Webの使用量には、ブラウザではなくClaude.appにログイン中のアカウントを使用します。";

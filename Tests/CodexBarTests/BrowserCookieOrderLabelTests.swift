@@ -21,8 +21,17 @@ struct BrowserCookieOrderStatusStringTests {
         let order = try #require(ProviderDefaults.metadata[.claude]?.browserCookieOrder)
 
         #expect(order.first == .chrome)
-        #expect(order.count == Browser.defaultImportOrder.count)
-        #expect(Set(order) == Set(Browser.defaultImportOrder))
+        #expect(order.count == Browser.defaultImportOrder.count + 1)
+        #expect(Set(order) == Set(Browser.defaultImportOrder + [.claudeDesktop]))
+    }
+
+    @Test
+    func `Claude desktop import requires explicit selection and excludes other browsers`() {
+        #expect(!ClaudeWebAPIFetcher.cookieImportOrder.contains(.claudeDesktop))
+        ClaudeWebSessionKeyImport.$desktopApp.withValue(true) {
+            #expect(ClaudeWebAPIFetcher.cookieImportOrder == [.claudeDesktop])
+        }
+        #expect(ClaudeWebAPIFetcher.cookieImportOrder.first == .chrome)
     }
 
     @Test
@@ -73,5 +82,16 @@ struct BrowserCookieOrderStatusStringTests {
         #expect(MistralCookieImporter.resolvedImportOrder([.firefox]) == [.firefox])
     }
 
+    @Test
+    func `orders listing firefox also include its release channels`() {
+        // Channel-owned profiles share `Firefox/Profiles` but only import through their own
+        // `Browser` case, so an order that stops at `.firefox` can never reach them.
+        let family: Set<Browser> = [.firefox, .firefoxBeta, .firefoxDeveloperEdition, .firefoxNightly]
+        let violators = ProviderDefaults.metadata.compactMap { provider, metadata -> UsageProvider? in
+            guard let order = metadata.browserCookieOrder, order.contains(where: family.contains) else { return nil }
+            return family.isSubset(of: Set(order)) ? nil : provider
+        }
+        #expect(violators.isEmpty, "orders missing Firefox release channels: \(violators)")
+    }
     #endif
 }
