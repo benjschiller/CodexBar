@@ -929,10 +929,10 @@ extension SettingsStore {
         }
     }
 
-    var mergedOverviewSelectedProviders: [UsageProvider] {
+    var mergedOverviewSelectedProviders: [ProviderInstanceID] {
         get {
             Self.normalizeProviders(
-                self.mergedOverviewSelectedProvidersRaw.compactMap(UsageProvider.init(rawValue:)),
+                self.mergedOverviewSelectedProvidersRaw.compactMap(ProviderInstanceID.init(rawValue:)),
                 maxCount: Self.mergedOverviewProviderLimit)
         }
         set {
@@ -958,14 +958,14 @@ extension SettingsStore {
         }
     }
 
-    private func mergedOverviewSelectionApplies(to activeProviders: [UsageProvider]) -> Bool {
+    private func mergedOverviewSelectionApplies(to activeProviders: [ProviderInstanceID]) -> Bool {
         guard let editedRaw = self.mergedOverviewSelectionEditedActiveProvidersRaw else { return false }
         let editedSet = Set(editedRaw)
         let activeSet = Set(Self.normalizeProviders(activeProviders).map(\.rawValue))
         return editedSet == activeSet
     }
 
-    private func markMergedOverviewSelectionEdited(for activeProviders: [UsageProvider]) {
+    private func markMergedOverviewSelectionEdited(for activeProviders: [ProviderInstanceID]) {
         let signature = Set(Self.normalizeProviders(activeProviders).map(\.rawValue))
         self.mergedOverviewSelectionEditedActiveProvidersRaw = Array(signature).sorted()
     }
@@ -977,8 +977,8 @@ extension SettingsStore {
     }
 
     func resolvedMergedOverviewProviders(
-        activeProviders: [UsageProvider],
-        maxVisibleProviders: Int = SettingsStore.mergedOverviewProviderLimit) -> [UsageProvider]
+        activeProviders: [ProviderInstanceID],
+        maxVisibleProviders: Int = SettingsStore.mergedOverviewProviderLimit) -> [ProviderInstanceID]
     {
         guard maxVisibleProviders > 0 else { return [] }
         let normalizedActive = Self.normalizeProviders(activeProviders)
@@ -997,8 +997,8 @@ extension SettingsStore {
 
     @discardableResult
     func reconcileMergedOverviewSelectedProviders(
-        activeProviders: [UsageProvider],
-        maxVisibleProviders: Int = SettingsStore.mergedOverviewProviderLimit) -> [UsageProvider]
+        activeProviders: [ProviderInstanceID],
+        maxVisibleProviders: Int = SettingsStore.mergedOverviewProviderLimit) -> [ProviderInstanceID]
     {
         guard maxVisibleProviders > 0 else {
             self.clearMergedOverviewSelectionPreference()
@@ -1032,10 +1032,10 @@ extension SettingsStore {
 
     @discardableResult
     func setMergedOverviewProviderSelection(
-        provider: UsageProvider,
+        provider: ProviderInstanceID,
         isSelected: Bool,
-        activeProviders: [UsageProvider],
-        maxVisibleProviders: Int = SettingsStore.mergedOverviewProviderLimit) -> [UsageProvider]
+        activeProviders: [ProviderInstanceID],
+        maxVisibleProviders: Int = SettingsStore.mergedOverviewProviderLimit) -> [ProviderInstanceID]
     {
         guard maxVisibleProviders > 0 else {
             self.clearMergedOverviewSelectionPreference()
@@ -1147,9 +1147,12 @@ extension SettingsStore {
 }
 
 extension SettingsStore {
-    private static func normalizeProviders(_ providers: [UsageProvider], maxCount: Int? = nil) -> [UsageProvider] {
-        var seen: Set<UsageProvider> = []
-        var normalized: [UsageProvider] = []
+    private static func normalizeProviders(
+        _ providers: [ProviderInstanceID],
+        maxCount: Int? = nil) -> [ProviderInstanceID]
+    {
+        var seen: Set<ProviderInstanceID> = []
+        var normalized: [ProviderInstanceID] = []
         for provider in providers where !seen.contains(provider) {
             seen.insert(provider)
             normalized.append(provider)

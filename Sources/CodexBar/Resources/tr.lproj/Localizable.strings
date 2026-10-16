@@ -1938,7 +1938,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "OpenAI web verilerini yenilemeden önce profili yenileyin.";
 "Refreshing account status…" = "Hesap durumu yenileniyor…";
 "Remaining budget compared with an ideal steady burn rate." = "İdeal sabit yazma hızıyla karşılaştırıldığında kalan bütçe.";
-"Renews: %@" = "Yeniler: %@";
+"Plan renews: %@" = "Plan yenilenir: %@";
 "Request quota" = "Kota talebinde bulunun";
 "Requesting login…" = "Giriş isteniyor…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Gerekli. Buraya normal bir API anahtarı veya Yönetim API anahtarı girin. Yönetim anahtarları ayrıca resmi OpenRouter API'deki hesap Etkinliğini de etkinleştirir.";
@@ -2519,6 +2519,8 @@
 "Pace sign" = "Kullanım hızı işareti";
 "Ahead of pace is +" = "Hızın üzerinde kullanım +";
 "Reserve is +" = "Rezerv +";
+"Back" = "Geri";
+"Forward" = "İleri";
 
 "cost_reset_inferred_tooltip" = "Çıkarım: %@ bu tarihi bildirmez. Aylık harcama limitleri her ayın 1'inde 00:00 UTC'de sıfırlanır.";
 /* fal provider credentials */
@@ -2636,3 +2638,26 @@
 "API credit" = "API kredisi";
 "Purchased credit" = "Satın alınan kredi";
 "Claude Platform exposes Console credit balance and monthly spend, not local token cost history." = "Claude Platform, yerel token maliyet geçmişini değil, Console kredi bakiyesini ve aylık harcamayı gösterir.";
+
+/* App-managed HTTP server */
+"http_server_title" = "HTTP sunucusu";
+"http_server_enable" = "HTTP sunucusunu etkinleştir";
+"http_server_bind" = "Bağlanılacak IPv4 adresi";
+"http_server_port" = "Bağlantı noktası";
+"http_server_token" = "Sunucu belirteci";
+"http_server_show" = "Göster";
+"http_server_generate" = "Oluştur";
+"http_server_cache" = "Önbellek aralığı (saniye)";
+"http_server_timeout" = "İstek zaman aşımı (saniye; 0 devre dışı bırakır)";
+"http_server_all_accounts" = "Anlık görüntülere tüm hesapları dahil et";
+"http_server_identity" = "Panodaki kimlik";
+"http_server_redacted" = "Gizlenmiş";
+"http_server_warning" = "Kullanım, maliyet, hesap ve proje bilgilerini paylaşır; sağlayıcı kimlik bilgilerini asla paylaşmaz. HTTP sunucu belirtecini şifrelemeden gönderir. Yalnızca güvenilir bir VPN veya Tailscale bağlantısı kullanın.";
+"http_server_plain_http" = "Bu Mac dışında şifrelenmemiş HTTP’ye izin ver";
+"http_server_dashboard" = "Pano";
+"http_server_wildcard" = "Diğer cihazlarda 0.0.0.0 yerine bu Mac’in VPN veya Tailscale IPv4 adresini kullanın.";
+"http_server_footer" = "Varsayılan olarak kapalıdır. CodexBar ile başlar ve kapatıldığında durur. Ayarlar ve belirteç bu Mac’te kalır; eşitleme ve dışa aktarmaya dahil edilmez. Uzaktan erişim için Mac’i uyanık tutun.";
+/* Claude desktop cookie source */
+"Claude desktop app" = "Claude masaüstü uygulaması";
+"Use Claude desktop app cookies" = "Claude masaüstü uygulamasının çerezlerini kullan";
+"For Web usage, follow the account signed into Claude.app instead of a browser." = "Web kullanımı için tarayıcı hesabı yerine Claude.app içinde oturum açılan hesabı kullan.";
